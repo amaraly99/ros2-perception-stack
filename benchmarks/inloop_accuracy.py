@@ -66,13 +66,24 @@ import statistics
 import sys
 
 # ---------------------------------------------------------------------------
-# Intrinsics. The Simulation 3D Camera block renders at fx=fy=1200 (HFOV 29.9
-# deg), checked against the block itself in commit 4839666. The 554 in
-# hil_ros_init_LT.m is an assumed 60 deg FOV that the block never used.
+# Intrinsics. The default is the model every Table 13/14 run used (sha256
+# 946390cf..., fx=fy=1200, HFOV 29.9 deg), checked against the block itself in
+# commit 4839666. From 2026-10-04 the shared model renders at fx=fy=554 (HFOV
+# 60.0 deg); runs on it are scored with --fx 554 and form a separate series.
 # ---------------------------------------------------------------------------
 FX = FY = 1200.0
 CX, CY = 320.0, 240.0
 WIDTH, HEIGHT = 640, 480
+
+# Geometry gate (17.20). The 40 px threshold was set on the fx 1200 model, where
+# it is an angle of atan(40/1200) = 1.91 deg. A pixel error is that angle times
+# fx, so the default gate scales with fx: 40 px at 1200, 18.5 px at 554. At fx
+# 1200 the gate is exactly 40 px, as before.
+RMS_GATE_PX_AT_1200 = 40.0
+
+
+def default_rms_gate(fx):
+    return RMS_GATE_PX_AT_1200 * fx / 1200.0
 TARGET_CLASS = "stop sign"
 
 # ---------------------------------------------------------------------------
@@ -614,13 +625,18 @@ def triangulate(poses, dets, min_conf=0.5):
     }
 
 
-def reprojection_rms(poses, dets, target):
+def reprojection_rms(poses, dets, target, clock_offset_ns=None):
     """RMS reprojection error of the FROZEN target against single-sign frames.
 
     This is the geometry check that replaces the old refit-and-compare: with a
     frozen target there is nothing to fit, so the question is only whether that
     one point reprojects onto the detections. A large value means the geometry
     or the target is wrong, and nothing downstream is meaningful.
+
+    With clock_offset_ns the pose is the CAPTURE pose (header stamp + offset,
+    17.24), the pose the detector actually saw. Without it the pose is the
+    delivery pose (bag log time), which also measures the detector's latency and
+    so fails slow detectors for a reason that is not geometry (17.20).
     """
     track = PoseTrack(poses)
     tot = n = 0
@@ -628,7 +644,10 @@ def reprojection_rms(poses, dets, target):
         hits = [d for d in rec["dets"] if d[0] == TARGET_CLASS]
         if len(hits) != 1:
             continue
-        pose = track.at(rec["log_ns"])
+        if track.at(rec["log_ns"]) is None:
+            continue
+        t_ns = rec["stamp_ns"] + clock_offset_ns if clock_offset_ns is not None else rec["log_ns"]
+        pose = track.at(t_ns)
         if not pose:
             continue
         uv = project(pose, target)
@@ -666,7 +685,9 @@ def main():
     ap.add_argument("--mount", default=f"{MOUNT_FWD},{MOUNT_LAT},{MOUNT_UP}",
                     help="camera mount offset fwd,lat,up in metres")
     ap.add_argument("--sign-width", type=float, default=SIGN_WIDTH_M)
-    ap.add_argument("--rms-gate", type=float, default=40.0)
+    ap.add_argument("--rms-gate", type=float, default=None,
+                    help="geometry gate in px; default 40 px scaled by fx/1200 "
+                         "(40 at fx 1200, 18.5 at fx 554)")
     args = ap.parse_args()
     if not args.triangulate:
         if args.clock_offset_ns is None and not args.legacy_publish_match:
@@ -677,6 +698,7 @@ def main():
             sys.exit("error: give either --clock-offset-ns or --legacy-publish-match, not both")
 
     FX = FY = args.fx
+    rms_gate = args.rms_gate if args.rms_gate is not None else default_rms_gate(FX)
     CAM_PITCH = math.radians(args.cam_pitch_deg)
     SIGN_WIDTH_M = args.sign_width
     MOUNT_FWD, MOUNT_LAT, MOUNT_UP = [float(v) for v in args.mount.split(",")]
@@ -713,12 +735,26 @@ def main():
     if len(target) != 3:
         sys.exit("--target needs three comma-separated numbers")
 
-    rms, n_rms = reprojection_rms(poses, dets, target)
+    # Gate at the CAPTURE pose (header stamp + clock offset), the pose the detector
+    # saw. At the delivery pose the RMS also contains the drone's motion during the
+    # detector's latency (17.20), which is the effect this scorer measures, not a
+    # geometry error. The delivery RMS is printed as a diagnostic only. The legacy
+    # lookup has no clock offset, so it keeps the delivery gate.
+    rms_del, n_del = reprojection_rms(poses, dets, target)
+    if args.clock_offset_ns is not None:
+        rms, n_rms = reprojection_rms(poses, dets, target, args.clock_offset_ns)
+        gate_timing = "capture"
+    else:
+        rms, n_rms = rms_del, n_del
+        gate_timing = "delivery"
     if rms is None:
         sys.exit("no single-sign in-view detections: cannot check the geometry")
-    print(f"geometry check: frozen target reprojects at {rms:.1f} px RMS over {n_rms} frames")
-    if rms > args.rms_gate and not args.force:
-        sys.exit(f"\nrefusing to score: {rms:.0f} px RMS exceeds the {args.rms_gate:.0f} px "
+    print(f"geometry check: frozen target reprojects at {rms:.1f} px RMS over {n_rms} frames "
+          f"at {gate_timing} (gate {rms_gate:.1f} px at fx {FX:g})")
+    if rms_del is not None and gate_timing == "capture":
+        print(f"  diagnostic: {rms_del:.1f} px RMS over {n_del} frames at delivery (not gated)")
+    if rms > rms_gate and not args.force:
+        sys.exit(f"\nrefusing to score: {rms:.1f} px RMS exceeds the {rms_gate:.1f} px "
                  "gate, so the projection model does not describe this run.\nCheck the "
                  "target, --fx, the mount offsets and the camera pitch. --force to override.")
 
@@ -737,6 +773,9 @@ def main():
     res["capture_timing"] = ("header_stamp_plus_clock_offset" if args.clock_offset_ns is not None
                              else "legacy_publish_match")
     res["geometry"]["frozen_target_reprojection_rms_px"] = rms
+    res["geometry"]["rms_gate_px"] = rms_gate
+    res["geometry"]["gate_timing"] = gate_timing
+    res["geometry"]["frozen_target_reprojection_rms_delivery_px"] = rms_del
 
     if args.cam_stamps:
         fr = count_skipped_frames(args.cam_stamps, caps)

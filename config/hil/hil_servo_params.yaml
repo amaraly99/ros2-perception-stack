@@ -10,8 +10,10 @@
 #   angular.y = pitch RATE        (+ = NOSE DOWN, integrated by Simulink)
 #   angular.z = yaw   RATE        (+ = YAW LEFT)
 #
-# Drone Simulink ICs: x=0, y=15, z=10, yaw=0, pitch=0.
-# Stop sign world position (from /sim/target_pose): (35.5, 23.7, 3.2, pi).
+# Shared Simulink model from 2026-10-04 (sha256 b8ec8250...): drone ICs x=5.13, y=4.30, z=10,
+# yaw=2*pi-0.0460, pitch=0 (30 m from the stop sign, pointed at it). /sim/target_pose publishes
+# that frozen stop sign, (35.1, 2.92, 3.08, pi). Before 2026-10-04 it published (35.5, 23.7, 3.2, pi),
+# which is a different sign. Comment only: this file is loaded for the proportional controller.
 #
 visp_servo_node:
   ros__parameters:
