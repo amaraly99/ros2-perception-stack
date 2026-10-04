@@ -255,7 +255,7 @@ for N in $(seq 1 "$RUNS"); do
     # runs this previously flagged as failed). Starting it alongside warmup
     # gives discovery the full WARMUP+45s to complete instead.
     CMDVEL_TIMEOUT=$((WARMUP + 45))
-    in_container "timeout ${CMDVEL_TIMEOUT} ros2 topic echo --once /cmd_vel > /dev/null 2>&1" &
+    in_container "timeout ${CMDVEL_TIMEOUT} ros2 topic echo --once /cmd_vel geometry_msgs/msg/Twist > /dev/null" 2>> "$STACK_LOG" &
     CMDVEL_PID=$!
 
     # 4+5. measure — collection OVERLAPS the SLAM warmup instead of following a dead

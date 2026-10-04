@@ -51,7 +51,7 @@
 #
 # Env vars (override before invoking):
 #   MATLAB_HOST_IP   — Windows host IP for unicast DDS discovery (REQUIRED)
-#   DDS              — cyclonedds (default) | fastrtps
+#   DDS              — fastrtps (default, matches MATLAB) | cyclonedds
 #   ROS_DOMAIN_ID    — defaults to 0
 #   TELEMETRY_CSV    — producer 7-stamp telemetry path (default /tmp/yolo_telemetry.csv)
 #   TARGET_CLASS     — override visp target class (default derived from --detector)
@@ -249,11 +249,21 @@ sleep 0.5
 # ── 1. Docker container (detached) ────────────────────────────────────────────
 sep
 log "1/4  Starting Docker container (detached)..."
+# Pass the Hailo device only when it is actually present. The NPU pre-flight
+# above already refuses a --backend npu run without it, so a missing node here
+# means a CPU-backend run on a host with no HAT; passing --device unconditionally
+# made docker run fail for those too.
+HAILO_DEVICE_ARGS=()
+if [[ -e /dev/hailo0 ]]; then
+    HAILO_DEVICE_ARGS=(--device=/dev/hailo0:/dev/hailo0)
+else
+    log "No /dev/hailo0 — starting container without the Hailo device (CPU-only host)"
+fi
 sudo docker run -d \
     --entrypoint "" \
     --name ros2_perception_stack \
     --net=host --ipc=host --privileged \
-    --device=/dev/hailo0:/dev/hailo0 \
+    "${HAILO_DEVICE_ARGS[@]}" \
     -v "${WS}:/workspace" \
     -v /tmp:/tmp \
     -e DISPLAY=:0 -e QT_X11_NO_MITSHM=1 \
@@ -337,6 +347,14 @@ case "$DETECTOR_TYPE" in
                       --telemetry_csv "$TELEMETRY_CSV")
         ;;
 esac
+# A registry entry may name its own NPU producer: a non-YOLO HEF whose output the YOLO parser
+# cannot read (ssd_mobilenet_v2: TF label space, plain-resize input). CPU path unchanged.
+if [[ "$DETECTOR_TYPE" == "yolo" && "$BACKEND" == "npu" ]]; then
+    NPU_PRODUCER=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["models"][sys.argv[2]].get("npu_producer",""))' \
+                   "${WS}/models/model_registry.json" "$MODEL_ID")
+    [[ -n "$NPU_PRODUCER" ]] && PRODUCER_CMD=(python3 -u "${WS}/src/yolo_producer/${NPU_PRODUCER}"
+                      --model_id "$MODEL_ID" --conf "$CONF_THRESH" --telemetry_csv "$TELEMETRY_CSV")
+fi
 taskset -c "${DETECTOR_CORE}" "${PRODUCER_CMD[@]}" > /tmp/yolo_producer.log 2>&1 &
 YOLO_PID=$!
 for i in $(seq 1 20); do

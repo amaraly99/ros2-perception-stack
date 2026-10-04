@@ -17,6 +17,28 @@
     "iou": 0.45
   },
   "models": {
+    "centernet_resnet_v1_18": {
+      "_comment": "Non-YOLO: Hailo Model Zoo centernet_resnet_v1_18_postprocess (CenterNet, GluonCV ResNet-18, COCO), one set of weights on both backends. onnx: models/export_centernet_resnet_v1_18.py from the zoo's pretrained file (end-to-end [1,100,6], COCO-80 ids). hef: zoo v5.1.0 build for Hailo-10H (peak finder on device), run by npu_producer.",
+      "family": "centernet", "variant": "resnet_v1_18",
+      "input_size": 512, "classes": 80,
+      "hef": "hef/centernet_resnet_v1_18_postprocess.hef",
+      "onnx": "onnx/centernet_resnet_v1_18/centernet_resnet_v1_18_e2e.onnx",
+      "onnx_layout": "yolo26_e2e",
+      "hef_postproc": "raw_tensor",
+      "npu_producer": "centernet_hailo_producer.py",
+      "conf": 0.20, "iou": 0.45
+    },
+    "ssd_mobilenet_v2": {
+      "_comment": "Non-YOLO: Hailo Model Zoo ssd_mobilenet_v2 (TF OD API, COCO), one set of weights on both backends. onnx: models/export_ssd_mobilenet_v2.py from the zoo's pretrained file (end-to-end [1,100,6], COCO-80 ids). hef: zoo v5.1.0 build for Hailo-10H, run by npu_producer.",
+      "family": "ssd", "variant": "mobilenet_v2",
+      "input_size": 640, "classes": 80,
+      "hef": "hef/ssd_mobilenet_v2.hef",
+      "onnx": "onnx/ssd_mobilenet_v2/ssd_mobilenet_v2_e2e.onnx",
+      "onnx_layout": "yolo26_e2e",
+      "hef_postproc": "ondevice_nms",
+      "npu_producer": "ssd_hailo_producer.py",
+      "conf": 0.20, "iou": 0.60
+    },
     "yolov8n": {
       "family": "v8", "variant": "n",
       "input_size": 640, "classes": 80,

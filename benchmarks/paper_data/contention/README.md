@@ -73,8 +73,8 @@ frequency scaling rather than resource sharing. The `cpu`-condition numbers shou
 be read as "small" rather than as a measured quantity.
 
 **The working-set explanation for the medium-tier step is not demonstrated.** The
-detector sweep shows the in-loop loss stepping up from 22.7–26.0 % (nano/small) to
-27.3–32.1 % (medium), which invites the explanation that a larger weight footprint
+detector sweep shows the in-loop loss stepping up from 23–26 % (nano/small) to
+28–32 % (medium), which invites the explanation that a larger weight footprint
 is more exposed to a contended cache. Under a *saturating* memory co-tenant both
 scales slow by nearly the same factor (255 % vs 246 %), so that hypothesis is
 neither confirmed nor refuted here — saturation is a different regime from SLAM's

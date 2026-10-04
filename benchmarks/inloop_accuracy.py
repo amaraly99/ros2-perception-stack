@@ -10,11 +10,16 @@ change under load; the usefulness of its output does.
 
 This scores a recorded HIL run against the target's known world position:
 
-    centroid error (px)  distance between the detected box centre and the
-                         projected true target centre
-    miss rate            fraction of frames where the target was in view and
-                         nothing was detected
-    false-positive rate  fraction of detections that are not the target class
+    centroid error       distance between the detected box centre and the
+                         projected true target centre, in px and normalised by
+                         the projected sign width (see "Why normalised" below)
+    hit / miss /         hit = a target-class box centred within HIT_FRAC of a
+    mislocalisation      sign width; miss = target visible, nothing detected;
+                         mislocalisation = detected, but not on the target
+    false positives      split into class FP (wrong class, harmless: the
+                         controller filters by class) and localisation FP
+                         (right class, wrong object -- the one that would
+                         actually steer the controller at the wrong thing)
 
 Because the model is deterministic, any in-loop change must come from timing.
 So the error is reported twice, and the pair is the experiment's own bug check:
@@ -23,41 +28,30 @@ So the error is reported twice, and the pair is the experiment's own bug check:
                  detection quality proper and should be FLAT across detector
                  configurations. If it moves, suspect a bug before a finding.
     at-delivery  against the drone pose when the detection reached the consumer.
-                 This is what the controller actually acts on, and it should grow
-                 with detector latency.
+                 This is what the controller acts on, and it should grow with
+                 detector latency.
 
-Geometry, established against recorded runs rather than assumed (see --triangulate):
-camera is pinhole, 640x480, fx=fy=554, cx=320, cy=240 (HFOV 60 deg), per
-matlab/hil_ros_init_LT.m. World bearing of an image column is
-
-    bearing = yaw - atan2(u - cx, fx)
-
-with /sim/drone_pose carrying [x, y, z, pitch, yaw]. Fitting that convention to
-671 stop-sign observations in bags/hil_full_20260606_002324 triangulates a single
-static sign with a median residual of 0.32 m; the opposite sign convention gives
-2.27 m, so the choice is measured, not guessed.
-
-    # check what the data says the target position is, before trusting any
-    python3 benchmarks/inloop_accuracy.py --bag BAG.mcap --triangulate
+GEOMETRY (2026-09-22: corrected -- see "The camera is not at the drone origin")
+camera is pinhole, 640x480, cx=320, cy=240, fx=fy set by --fx (1200 for the
+current Simulink model). /sim/drone_pose carries [x, y, z, pitch, yaw]; only
+x, y, z and yaw are used, because the body pitch channel is identically 0 in
+every run checked (three B3 bags, 0.000 deg throughout).
 
     # score a run against a known target position
-    python3 benchmarks/inloop_accuracy.py --bag BAG.mcap --target 29.42,6.01,4.5 \
-        [--telemetry run1_telemetry.csv] [--label yolo26n_npu]
+    python3 benchmarks/inloop_accuracy.py --bag BAG.mcap --target 35.1,2.92,3.08 \
+        --telemetry run1_telemetry.csv --cam-stamps run1_cam_stamps.csv \
+        --label yolo26n_cpu --json-out out.json
 
-Known blocker, measured rather than assumed. /sim/target_pose is published by
-matlab/hil_ros_init_LT.m as a hardcoded constant (35.5, 23.7, 3.2) and
-republished at ~1 Hz; it is not a live feed of the scene. Fitting the observed
-sign position in the two archived HIL bags gives:
+    # diagnostic only: try to estimate the target from the run itself
+    python3 benchmarks/inloop_accuracy.py --bag BAG.mcap --triangulate
 
-    bag                      x            y             z
-    hil_full_20260606   35.50/34.75   23.70/ 3.14   3.20/3.15
-    hil_full_20260523   35.50/33.77   23.70/ 3.43   3.20/2.87
-                        (published/observed)
-
-x and z agree to within 1.7 m, y is off by 20.56 m and 20.27 m. Two runs two
-weeks apart give the same offset, so this is a fixed frame or origin mismatch on
-the y axis, not a wrong target. It must be resolved on the simulator side before
-any in-loop accuracy number is scored against /sim/target_pose.
+--triangulate is a DIAGNOSTIC, not a source of ground truth, and on the mission
+trajectory it does not work at all: yaw is constant (integrator IC 2*pi), the
+bearing spread is 1.9 deg, and the bearing-only fit walks out to x=70 m pinned
+to the edge of its search box while reporting a comfortable 14 px RMS. Depth is
+unobservable from bearings when the drone does not turn. The target must come
+from the scene, or from the size-vs-motion fit documented in
+paper_data/inloop_accuracy/README.md. It is frozen once and never refit per row.
 
 Requires: mcap, mcap-ros2-support (pure python, no ROS install needed).
 """
@@ -71,10 +65,60 @@ import os
 import statistics
 import sys
 
-FX = FY = 554.0
+# ---------------------------------------------------------------------------
+# Intrinsics. The Simulation 3D Camera block renders at fx=fy=1200 (HFOV 29.9
+# deg), checked against the block itself in commit 4839666. The 554 in
+# hil_ros_init_LT.m is an assumed 60 deg FOV that the block never used.
+# ---------------------------------------------------------------------------
+FX = FY = 1200.0
 CX, CY = 320.0, 240.0
 WIDTH, HEIGHT = 640, 480
 TARGET_CLASS = "stop sign"
+
+# ---------------------------------------------------------------------------
+# The camera is NOT at the drone origin. Both of these come from the
+# Simulation 3D Camera block in matlab/hil_closed_loop.slx:
+#
+#     tmountOffset = [0.2, 0, 0.2]   -> 0.2 m forward, 0.2 m up, body frame
+#     rmountOffset = [0, 5, 0]       -> 5 degrees of camera pitch
+#
+# Neither was modelled before 2026-09-22, and the pitch is not a detail: it
+# puts a CONSTANT fy*tan(5 deg) = 105 px vertical bias on every projected point,
+# on a 480 px image. Left in, it fails essentially every long-range detection
+# (the sign is 27 px wide at 40 m) and passes most close-range ones, which reads
+# as a clean and completely false "detectors degrade at long range".
+#
+# The value is not taken on trust from the model file. Fitting a free pitch term
+# to the three B3 bags recovers -4.981, -4.997 and -5.002 deg, and the vertical
+# residual collapses from sd 0.73 m to 0.0015. The model says 5; the detections
+# say 5.00, three times, without either knowing about the other. We use the
+# model's declared magnitude and carry the sign that fits the data.
+# ---------------------------------------------------------------------------
+MOUNT_FWD = 0.2     # m, along the body heading
+MOUNT_LAT = 0.0     # m, positive left
+MOUNT_UP = 0.2      # m
+CAM_PITCH = math.radians(-5.0)
+
+# Physical target size, needed to turn a pixel error into a scale-free one and
+# to project a hit radius. Fitted at 0.913-0.928 m from box width and 0.938-0.945
+# from box height across three runs; a US 36-inch stop sign is 0.914 m, which is
+# not a number the regression was pushed toward.
+SIGN_WIDTH_M = 0.914
+
+# A hit is a target-class box centred within HIT_FRAC sign-widths of the truth.
+# Fixed pixel radii are meaningless here: the sign spans 27 px at 40 m and 250 px
+# at 4.4 m, so any constant would be unreachable at one end and trivial at the other.
+HIT_FRAC = 0.5
+HIT_FRAC_SENS = 0.25    # sensitivity check, pre-registered alongside the primary
+
+# Approach vs parked. The drone reaches its standoff at t ~= 37 s and then sits
+# motionless; while it is stationary the at-capture and at-delivery poses are the
+# same pose, so the headline metric is identically zero by construction. The two
+# phases are therefore scored and reported separately, never pooled.
+PARKED_SPEED = 0.05     # m/s
+RANGE_BINS = [(4, 8), (8, 16), (16, 24), (24, 32), (32, 40)]
+MIN_N_MEDIAN = 10       # below this a bin is not reported at all
+MIN_N_P90 = 20          # below this the p90 is suppressed but the median stands
 
 POSE_TOPIC = "/sim/drone_pose"
 TARGET_TOPIC = "/sim/target_pose"
@@ -104,6 +148,9 @@ def read_bag(path, cache_dir=None):
         if topic == POSE_TOPIC:
             d = list(m.ros_msg.data)
             if len(d) >= 5:
+                # d[3] is body pitch, identically 0 in every run checked, so the
+                # projection ignores it. If a future model pitches the airframe,
+                # this is the line to revisit.
                 poses.append((m.log_time_ns, d[0], d[1], d[2], d[4]))
         elif topic == TARGET_TOPIC:
             target_pose = list(m.ros_msg.data)
@@ -124,181 +171,93 @@ def read_bag(path, cache_dir=None):
 
 
 class PoseTrack:
-    """Drone pose, looked up by bag (epoch) timestamp."""
+    """Drone pose, looked up by bag (epoch) timestamp, with ground speed."""
 
     def __init__(self, poses):
         self.t = [p[0] for p in poses]
         self.p = poses
+        self._speed = self._compute_speed(poses)
 
-    def at(self, ts):
+    @staticmethod
+    def _compute_speed(poses):
+        """Central-difference ground speed over +/-0.25 s.
+
+        A single-sample difference is far too noisy at this pose rate (~16 Hz
+        delivered) to threshold at 0.05 m/s; the window makes the approach/parked
+        split stable to within a couple of samples at the transition.
+        """
+        sp = [0.0] * len(poses)
+        for i in range(len(poses)):
+            lo, hi = i, i
+            while lo > 0 and poses[i][0] - poses[lo][0] < 0.25e9:
+                lo -= 1
+            while hi < len(poses) - 1 and poses[hi][0] - poses[i][0] < 0.25e9:
+                hi += 1
+            dt = (poses[hi][0] - poses[lo][0]) / 1e9
+            if dt > 0:
+                dist = math.dist(poses[lo][1:4], poses[hi][1:4])
+                sp[i] = dist / dt
+        return sp
+
+    def _idx(self, ts):
         i = bisect.bisect_left(self.t, ts)
         cands = [j for j in (i - 1, i) if 0 <= j < len(self.p)]
         if not cands:
             return None
-        j = min(cands, key=lambda j: abs(self.t[j] - ts))
-        return self.p[j]
+        return min(cands, key=lambda j: abs(self.t[j] - ts))
+
+    def at(self, ts):
+        i = self._idx(ts)
+        return self.p[i] if i is not None else None
+
+    def speed_at(self, ts):
+        i = self._idx(ts)
+        return self._speed[i] if i is not None else None
+
+
+def camera_pose(pose):
+    """Body pose -> camera position in the world, applying the mount translation."""
+    _, x, y, z, yaw = pose
+    cx = x + MOUNT_FWD * math.cos(yaw) - MOUNT_LAT * math.sin(yaw)
+    cy = y + MOUNT_FWD * math.sin(yaw) + MOUNT_LAT * math.cos(yaw)
+    return cx, cy, z + MOUNT_UP, yaw
 
 
 def project(pose, target):
-    """World target -> (u, v, ground_range). None if behind the camera."""
-    _, x, y, z, yaw = pose
-    dx, dy, dz = target[0] - x, target[1] - y, target[2] - z
+    """World target -> (u, v, ground_range, fwd). None if behind the camera.
+
+    Image x is mirrored relative to the textbook right-handed convention on this
+    simulator's camera: the minus sign on u is what makes project() agree with the
+    bearing convention the data fits. Measured, not assumed -- against 671
+    stop-sign observations the minus gives a 9.4 px median column error and the
+    plus gives 202 px.
+
+    The pitch rotation is applied about the camera's right axis, after the yaw
+    frame and before the perspective divide. `fwd` after rotation is the depth
+    along the optical axis, which is what the projected sign width divides by.
+    """
+    ccx, ccy, ccz, yaw = camera_pose(pose)
+    dx, dy, dz = target[0] - ccx, target[1] - ccy, target[2] - ccz
     fwd = dx * math.cos(yaw) + dy * math.sin(yaw)
     right = -dx * math.sin(yaw) + dy * math.cos(yaw)
-    if fwd <= 0.1:
+    cp, sp = math.cos(CAM_PITCH), math.sin(CAM_PITCH)
+    f = fwd * cp + dz * sp
+    h = -fwd * sp + dz * cp
+    if f <= 0.1:
         return None
-    # Image x is mirrored relative to the textbook right-handed convention on
-    # this simulator's camera: the minus sign here is what makes project() agree
-    # with the bearing convention the triangulation fits (bearing = yaw -
-    # atan2(u - cx, fx)). Measured, not assumed -- against 671 stop-sign
-    # observations the minus gives a 9.4 px median column error and the plus
-    # gives 202 px.
-    u = CX - FX * (right / fwd)
-    v = CY - FY * (dz / fwd)
-    return u, v, math.hypot(dx, dy)
+    u = CX - FX * (right / f)
+    v = CY - FY * (h / f)
+    return u, v, math.hypot(dx, dy), f
 
 
-def in_view(uv):
-    return uv is not None and 0 <= uv[0] < WIDTH and 0 <= uv[1] < HEIGHT
+def sign_width_px(fwd):
+    """Apparent width of the sign at optical-axis depth `fwd`."""
+    return FX * SIGN_WIDTH_M / fwd if fwd > 0.1 else float("inf")
 
 
-def triangulate(poses, dets, min_conf=0.5):
-    """Estimate the target position from the run, and say whether to believe it.
-
-    Two stages. A linear bearing-only intersection gives a starting point, then a
-    direct search minimises actual pixel reprojection error over (x, y, z).
-
-    The reason for the second stage is that bearing-only intersection is
-    degenerate when the drone flies a near-constant heading: the rays are almost
-    parallel, depth is unconstrained, and the perpendicular residual stays small
-    for a whole family of wrong answers along the viewing direction. That is not
-    hypothetical -- it is what bags/hil_full_20260606_002324 does, where the
-    bearing fit reports a 0.32 m residual yet the reprojection error sweeps from
-    -400 px at close range to +270 px at long range.
-
-    So the number to trust is `pixel_rms`, not the bearing residual, and
-    `bearing_spread_deg` says whether the geometry constrained the answer at all.
-
-    This uses the detector's own bearings, so it is a consistency check on the
-    target position and the camera convention. It is not an independent ground
-    truth, and a good fit does not prove the point is where the simulator put the
-    object.
-    """
-    track = PoseTrack(poses)
-    rows = []
-    for rec in dets:
-        # Only frames holding exactly ONE instance of the target class. With two
-        # signs in view, "highest confidence" jumps between objects and the fit
-        # degrades badly: on bags/hil_full_20260606_002324 that contamination
-        # alone moves the reprojection RMS from 38 px to 46 px, and it was what
-        # first made the geometry look irreconcilable.
-        hits = [d for d in rec["dets"] if d[0] == TARGET_CLASS]
-        if len(hits) != 1 or hits[0][1] < min_conf:
-            continue
-        pose = track.at(rec["log_ns"])
-        if pose:
-            rows.append((pose, hits[0]))
-    if len(rows) < 10:
-        return None
-
-    # --- stage 1: linear bearing-only intersection -----------------------
-    a11 = a12 = a22 = b1 = b2 = 0.0
-    thetas = []
-    for pose, d in rows:
-        _, x, y, _, yaw = pose
-        th = yaw - math.atan2(d[2] - CX, FX)
-        thetas.append(th)
-        s_, c_ = math.sin(th), math.cos(th)
-        rhs = x * s_ - y * c_
-        a11 += s_ * s_; a12 += -s_ * c_; a22 += c_ * c_
-        b1 += s_ * rhs; b2 += -c_ * rhs
-    det = a11 * a22 - a12 * a12
-    if abs(det) < 1e-9:
-        return None
-    tx = (b1 * a22 - a12 * b2) / det
-    ty = (a11 * b2 - b1 * a12) / det
-
-    # How much angular baseline was there? Near zero means depth is guesswork.
-    tmin, tmax = min(thetas), max(thetas)
-    spread = math.degrees(abs(math.atan2(math.sin(tmax - tmin), math.cos(tmax - tmin))))
-
-    zs = []
-    for pose, d in rows:
-        _, x, y, z, _ = pose
-        rng = math.hypot(tx - x, ty - y)
-        if rng > 3:
-            zs.append(z + rng * ((CY - d[3]) / FY))
-    tz = statistics.median(zs) if zs else 0.0
-
-    # --- stage 2: minimise pixel reprojection error over (x, y, z) --------
-    def cost(t):
-        tot = n = 0
-        for pose, d in rows:
-            uv = project(pose, t)
-            if uv is None:
-                continue
-            tot += (uv[0] - d[2]) ** 2 + (uv[1] - d[3]) ** 2
-            n += 1
-        return (tot / n) if n else float("inf")
-
-    # Coarse global grid first. A local search seeded from the linear solution
-    # walks away down the flat valley that bearing-only geometry creates, and
-    # reports a confident-looking position tens of metres from anything real.
-    # The grid is bounded by where the drone actually flew, padded generously.
-    xs = [p[1] for p in poses]; ys = [p[2] for p in poses]; zs_p = [p[3] for p in poses]
-    lo = [min(xs) - 40, min(ys) - 40, min(zs_p) - 10]
-    hi = [max(xs) + 40, max(ys) + 40, max(zs_p) + 10]
-    best_t, best_c = [tx, ty, tz], cost([tx, ty, tz])
-    steps = 12
-    for i in range(steps + 1):
-        gx = lo[0] + (hi[0] - lo[0]) * i / steps
-        for j in range(steps + 1):
-            gy = lo[1] + (hi[1] - lo[1]) * j / steps
-            for k in range(7):
-                gz = lo[2] + (hi[2] - lo[2]) * k / 6
-                c = cost([gx, gy, gz])
-                if c < best_c:
-                    best_t, best_c = [gx, gy, gz], c
-
-    # Then refine locally, clamped to the searched box. Without the clamp the
-    # search walks out to hundreds of metres whenever no point fits well, and
-    # reports that runaway position as though it were an answer.
-    step = max((hi[0] - lo[0]) / steps, 1.0)
-    for _ in range(300):
-        start_c = best_c
-        for axis in range(3):
-            for delta in (step, -step):
-                cand = list(best_t)
-                cand[axis] = min(hi[axis], max(lo[axis], cand[axis] + delta))
-                c = cost(cand)
-                if c < best_c:
-                    best_t, best_c = cand, c
-        if best_c > start_c * (1.0 - 1e-6):
-            step /= 2.0
-            if step < 0.01:
-                break
-    at_bound = any(abs(best_t[a] - lo[a]) < 1e-6 or abs(best_t[a] - hi[a]) < 1e-6
-                   for a in range(3))
-
-    resid = []
-    for (pose, d), th in zip(rows, thetas):
-        _, x, y, _, _ = pose
-        resid.append(abs((tx - x) * math.sin(th) - (ty - y) * math.cos(th)))
-
-    return {
-        "x": best_t[0], "y": best_t[1], "z": best_t[2],
-        "pixel_rms": math.sqrt(best_c),
-        "linear_xy": (tx, ty),
-        "bearing_residual_m": statistics.median(resid),
-        "bearing_spread_deg": spread,
-        "at_search_bound": at_bound,
-        "n": len(rows),
-    }
-
-
-def _best(dets):
-    hits = [d for d in dets if d[0] == TARGET_CLASS]
-    return max(hits, key=lambda d: d[1]) if hits else None
+def in_view(uv, margin=0):
+    return uv is not None and margin <= uv[0] < WIDTH - margin \
+        and margin <= uv[1] < HEIGHT - margin
 
 
 def load_capture_times(path):
@@ -314,6 +273,111 @@ def load_capture_times(path):
     return out
 
 
+def count_skipped_frames(cam_stamps_path, capture_pairs):
+    """Exact count of camera frames the detector never processed.
+
+    The detector reads the newest slot of a 4-slot SHM ring and never queues, so
+    a frame it was too busy to collect is overwritten and leaves no telemetry row
+    and no detection message -- invisible to any per-message metric. But
+    <run>_cam_stamps.csv logs EVERY camera frame, and its t_shm_write_mono_ns is
+    the identical CLOCK_MONOTONIC value that telemetry records as ts_capture
+    (the documented join key, latency_stage_report.py:11-13). So the skipped set
+    is an exact set difference, not an estimate from a rate ratio.
+
+    The two files are written by independently started and stopped processes, so their
+    windows do not coincide. Measured on b3_bag r1: cam_stamps spans 99.3 s and telemetry
+    104.2 s, and 22 telemetry rows (5.2 %) fall AFTER the stamp log closes -- the camera
+    bridge flushes and closes stamp_log_ while it is still filling SHM slots, so the
+    detector keeps processing for ~5 s with nothing logging those frames. Checked
+    2026-09-23: 0 of the 22 fall inside the stamp-log window, so it is a shutdown-ordering
+    artifact and not a lost-frame bug.
+
+    The count is therefore taken over the OVERLAP of the two windows. Outside it one side
+    is blind, and a frame that no one logged is not evidence that the detector skipped it.
+    """
+    cam = []
+    with open(cam_stamps_path) as f:
+        for row in csv.DictReader(f):
+            try:
+                cam.append(int(row["t_shm_write_mono_ns"]))
+            except (KeyError, ValueError):
+                continue
+    processed = {c for _, c in (capture_pairs or [])}
+    if not cam or not processed:
+        return None
+    lo = max(min(cam), min(processed))
+    hi = min(max(cam), max(processed))
+    if hi <= lo:
+        return None
+    cam_w = [t for t in cam if lo <= t <= hi]
+    proc_w = {t for t in processed if lo <= t <= hi}
+    if not cam_w:
+        return None
+    matched = sum(1 for t in cam_w if t in proc_w)
+    return {
+        "window_s": (hi - lo) / 1e9,
+        "camera_frames": len(cam_w),
+        "processed_frames": matched,
+        "skipped_frames": len(cam_w) - matched,
+        "skip_rate": (len(cam_w) - matched) / len(cam_w),
+        "telemetry_rows_unmatched_in_window": len(proc_w) - matched,
+        "cam_rows_outside_overlap": len(cam) - len(cam_w),
+        "telemetry_rows_outside_overlap": len(processed) - len(proc_w),
+    }
+
+
+def _stats(vals, label_norm=None):
+    if not vals:
+        return None
+    v = sorted(vals)
+    out = {"n": len(v), "median_px": statistics.median(v),
+           "mean_px": statistics.fmean(v)}
+    if len(v) >= MIN_N_P90:
+        out["p90_px"] = v[min(len(v) - 1, int(0.9 * len(v)))]
+    if label_norm:
+        w = sorted(label_norm)
+        out["median_norm"] = statistics.median(w)
+        if len(w) >= MIN_N_P90:
+            out["p90_norm"] = w[min(len(w) - 1, int(0.9 * len(w)))]
+    return out
+
+
+def _bin_of(rng):
+    for lo, hi in RANGE_BINS:
+        if lo <= rng < hi:
+            return f"{lo}-{hi}m"
+    return None
+
+
+def _summarise(rows):
+    """rows: list of per-detection dicts -> one metric block."""
+    if not rows:
+        return None
+    cap = [r["err_cap"] for r in rows if r["err_cap"] is not None]
+    cap_n = [r["norm_cap"] for r in rows if r["norm_cap"] is not None]
+    dlv = [r["err_del"] for r in rows if r["err_del"] is not None]
+    dlv_n = [r["norm_del"] for r in rows if r["norm_del"] is not None]
+    visible = [r for r in rows if r["visible"]]
+    hits = [r for r in visible if r["hit"]]
+    hits_s = [r for r in visible if r["hit_sens"]]
+    miss = [r for r in visible if r["no_detection"]]
+    mis = [r for r in visible if r["mislocalised"]]
+    out = {
+        "n_messages": len(rows),
+        "n_target_visible": len(visible),
+        "centroid_err_at_capture": _stats(cap, cap_n),
+        "centroid_err_at_delivery": _stats(dlv, dlv_n),
+    }
+    if visible:
+        out["hit_rate"] = len(hits) / len(visible)
+        out["hit_rate_sensitivity_0p25"] = len(hits_s) / len(visible)
+        out["miss_rate_per_processed_frame"] = len(miss) / len(visible)
+        out["mislocalisation_rate"] = len(mis) / len(visible)
+    if len(visible) < MIN_N_MEDIAN:
+        out["below_reporting_floor"] = True
+    return out
+
+
 def score(poses, dets, target, capture_pairs=None):
     track = PoseTrack(poses)
 
@@ -326,9 +390,8 @@ def score(poses, dets, target, capture_pairs=None):
 
     cap_t = [p[0] for p in capture_pairs] if capture_pairs else []
 
-    err_capture, err_delivery = [], []
-    misses = present = 0
-    fp = total_dets = 0
+    rows = []
+    fp_class = fp_loc = total_dets = 0
 
     for rec in dets:
         pose_del = track.at(rec["log_ns"])
@@ -345,130 +408,324 @@ def score(poses, dets, target, capture_pairs=None):
             if cands:
                 j = min(cands, key=lambda j: abs(cap_t[j] - rec["stamp_ns"]))
                 cap_ns = capture_pairs[j][1]
-        pose_cap = track.at(cap_ns + offset)
+        cap_bag_ns = cap_ns + offset
+        pose_cap = track.at(cap_bag_ns)
         uv_cap = project(pose_cap, target) if pose_cap else None
+        speed = track.speed_at(cap_bag_ns)
 
         total_dets += len(rec["dets"])
-        fp += sum(1 for d in rec["dets"] if d[0] != TARGET_CLASS)
+        fp_class += sum(1 for d in rec["dets"] if d[0] != TARGET_CLASS)
 
-        best = _best(rec["dets"])
-        if in_view(uv_cap):
-            present += 1
-            if best is None:
-                misses += 1
+        visible = in_view(uv_cap)
+        tgt_hits = [d for d in rec["dets"] if d[0] == TARGET_CLASS]
+        best = max(tgt_hits, key=lambda d: d[1]) if tgt_hits else None
+
+        err_cap = err_del = norm_cap = norm_del = None
+        hit = hit_s = mislocalised = False
+
         if best is not None:
-            if in_view(uv_cap):
-                err_capture.append(math.hypot(uv_cap[0] - best[2], uv_cap[1] - best[3]))
+            w_px = sign_width_px(uv_cap[3]) if uv_cap else float("inf")
+            if visible:
+                err_cap = math.hypot(uv_cap[0] - best[2], uv_cap[1] - best[3])
+                norm_cap = err_cap / w_px if w_px > 0 else None
+                hit = norm_cap is not None and norm_cap <= HIT_FRAC
+                hit_s = norm_cap is not None and norm_cap <= HIT_FRAC_SENS
+                mislocalised = not hit
             if in_view(uv_del):
-                err_delivery.append(math.hypot(uv_del[0] - best[2], uv_del[1] - best[3]))
+                err_del = math.hypot(uv_del[0] - best[2], uv_del[1] - best[3])
+                wd = sign_width_px(uv_del[3])
+                norm_del = err_del / wd if wd > 0 else None
+            # A target-class box that is not on the target is a localisation FP:
+            # the scene holds a second stop sign, and this is the failure that
+            # would actually steer the controller at the wrong object.
+            if visible and not hit:
+                fp_loc += 1
+            elif not visible:
+                fp_loc += 1
 
-    def stats(v):
-        if not v:
-            return None
-        v = sorted(v)
-        return {"n": len(v), "median_px": statistics.median(v),
-                "mean_px": statistics.fmean(v),
-                "p90_px": v[min(len(v) - 1, int(0.9 * len(v)))]}
+        rows.append({
+            "range": uv_cap[2] if uv_cap else None,
+            "bin": _bin_of(uv_cap[2]) if uv_cap else None,
+            "speed": speed,
+            "visible": visible,
+            "no_detection": visible and best is None,
+            "mislocalised": mislocalised,
+            "hit": hit, "hit_sens": hit_s,
+            "err_cap": err_cap, "err_del": err_del,
+            "norm_cap": norm_cap, "norm_del": norm_del,
+        })
 
-    return {
-        "frames_with_detections": len(dets),
+    # --- split by phase, then by range bin ---------------------------------
+    out = {
+        "geometry": {
+            "fx": FX, "cx": CX, "cy": CY,
+            "mount_fwd_lat_up_m": [MOUNT_FWD, MOUNT_LAT, MOUNT_UP],
+            "cam_pitch_deg": math.degrees(CAM_PITCH),
+            "sign_width_m": SIGN_WIDTH_M,
+            "hit_frac": HIT_FRAC, "hit_frac_sensitivity": HIT_FRAC_SENS,
+        },
         "clock_offset_spread_ms": offset_spread_ms,
-        "target_in_view_frames": present,
-        "miss_rate": (misses / present) if present else None,
-        "false_positive_rate": (fp / total_dets) if total_dets else None,
-        "centroid_err_at_capture": stats(err_capture),
-        "centroid_err_at_delivery": stats(err_delivery),
+        "frames_with_detections": len(dets),
+        "false_positive_rate_class": (fp_class / total_dets) if total_dets else None,
+        "false_positive_localisation_count": fp_loc,
+        "segments": {},
+    }
+
+    for name, sel in (("approach", lambda r: r["speed"] is not None and r["speed"] >= PARKED_SPEED),
+                      ("parked", lambda r: r["speed"] is not None and r["speed"] < PARKED_SPEED)):
+        seg = [r for r in rows if sel(r)]
+        if not seg:
+            continue
+        rngs = [r["range"] for r in seg if r["range"] is not None]
+        block = {
+            "overall": _summarise(seg),
+            "range_m": [min(rngs), max(rngs)] if rngs else None,
+            "bins": {},
+        }
+        for lo, hi in RANGE_BINS:
+            key = f"{lo}-{hi}m"
+            b = [r for r in seg if r["bin"] == key]
+            s = _summarise(b)
+            # A bin below the floor is reported as absent, not as zero: an
+            # unstable median from 4 samples is worse than no number.
+            if s and not s.get("below_reporting_floor"):
+                block["bins"][key] = s
+            elif b:
+                block["bins"][key] = {"n_messages": len(b), "below_reporting_floor": True}
+        out["segments"][name] = block
+
+    return out
+
+
+# ---------------------------------------------------------------------------
+# Diagnostic only. Kept because it is the thing that proves the trajectory
+# cannot yield a target position, which is worth being able to re-demonstrate.
+# ---------------------------------------------------------------------------
+def triangulate(poses, dets, min_conf=0.5):
+    """Estimate the target position from the run, and say whether to believe it.
+
+    On the mission trajectory this DOES NOT WORK and is expected to fail loudly:
+    yaw is constant, the bearing spread is ~1.9 deg, and depth is unobservable.
+    It is retained as a diagnostic and as the check that a future trajectory with
+    real yaw variation would pass. Never use its output as ground truth.
+    """
+    track = PoseTrack(poses)
+    rows = []
+    for rec in dets:
+        # Only frames holding exactly ONE instance of the target class. With two
+        # signs in view, "highest confidence" jumps between objects and the fit
+        # degrades badly.
+        hits = [d for d in rec["dets"] if d[0] == TARGET_CLASS]
+        if len(hits) != 1 or hits[0][1] < min_conf:
+            continue
+        pose = track.at(rec["log_ns"])
+        if pose:
+            rows.append((pose, hits[0]))
+    if len(rows) < 10:
+        return None
+
+    a11 = a12 = a22 = b1 = b2 = 0.0
+    thetas = []
+    for pose, d in rows:
+        _, x, y, _, yaw = pose
+        th = yaw - math.atan2(d[2] - CX, FX)
+        thetas.append(th)
+        s_, c_ = math.sin(th), math.cos(th)
+        rhs = x * s_ - y * c_
+        a11 += s_ * s_; a12 += -s_ * c_; a22 += c_ * c_
+        b1 += s_ * rhs; b2 += -c_ * rhs
+    det = a11 * a22 - a12 * a12
+    if abs(det) < 1e-9:
+        return None
+    tx = (b1 * a22 - a12 * b2) / det
+    ty = (a11 * b2 - b1 * a12) / det
+    tmin, tmax = min(thetas), max(thetas)
+    spread = math.degrees(abs(math.atan2(math.sin(tmax - tmin), math.cos(tmax - tmin))))
+
+    zs = []
+    for pose, d in rows:
+        _, x, y, z, _ = pose
+        rng = math.hypot(tx - x, ty - y)
+        if rng > 3:
+            zs.append(z + rng * ((CY - d[3]) / FY))
+    tz = statistics.median(zs) if zs else 0.0
+
+    def cost(t):
+        tot = n = 0
+        for pose, d in rows:
+            uv = project(pose, t)
+            if uv is None:
+                continue
+            tot += (uv[0] - d[2]) ** 2 + (uv[1] - d[3]) ** 2
+            n += 1
+        return (tot / n) if n else float("inf")
+
+    xs = [p[1] for p in poses]; ys = [p[2] for p in poses]; zs_p = [p[3] for p in poses]
+    lo = [min(xs) - 40, min(ys) - 40, min(zs_p) - 10]
+    hi = [max(xs) + 40, max(ys) + 40, max(zs_p) + 10]
+    best_t, best_c = [tx, ty, tz], cost([tx, ty, tz])
+    steps = 12
+    for i in range(steps + 1):
+        gx = lo[0] + (hi[0] - lo[0]) * i / steps
+        for j in range(steps + 1):
+            gy = lo[1] + (hi[1] - lo[1]) * j / steps
+            for k in range(7):
+                gz = lo[2] + (hi[2] - lo[2]) * k / 6
+                c = cost([gx, gy, gz])
+                if c < best_c:
+                    best_t, best_c = [gx, gy, gz], c
+    step = max((hi[0] - lo[0]) / steps, 1.0)
+    for _ in range(300):
+        start_c = best_c
+        for axis in range(3):
+            for delta in (step, -step):
+                cand = list(best_t)
+                cand[axis] = min(hi[axis], max(lo[axis], cand[axis] + delta))
+                c = cost(cand)
+                if c < best_c:
+                    best_t, best_c = cand, c
+        if best_c > start_c * (1.0 - 1e-6):
+            step /= 2.0
+            if step < 0.01:
+                break
+    at_bound = any(abs(best_t[a] - lo[a]) < 1e-6 or abs(best_t[a] - hi[a]) < 1e-6
+                   for a in range(3))
+    resid = []
+    for (pose, d), th in zip(rows, thetas):
+        _, x, y, _, _ = pose
+        resid.append(abs((tx - x) * math.sin(th) - (ty - y) * math.cos(th)))
+    return {
+        "x": best_t[0], "y": best_t[1], "z": best_t[2],
+        "pixel_rms": math.sqrt(best_c),
+        "bearing_residual_m": statistics.median(resid),
+        "bearing_spread_deg": spread,
+        "at_search_bound": at_bound,
+        "n": len(rows),
     }
 
 
+def reprojection_rms(poses, dets, target):
+    """RMS reprojection error of the FROZEN target against single-sign frames.
+
+    This is the geometry check that replaces the old refit-and-compare: with a
+    frozen target there is nothing to fit, so the question is only whether that
+    one point reprojects onto the detections. A large value means the geometry
+    or the target is wrong, and nothing downstream is meaningful.
+    """
+    track = PoseTrack(poses)
+    tot = n = 0
+    for rec in dets:
+        hits = [d for d in rec["dets"] if d[0] == TARGET_CLASS]
+        if len(hits) != 1:
+            continue
+        pose = track.at(rec["log_ns"])
+        if not pose:
+            continue
+        uv = project(pose, target)
+        if uv is None or not in_view(uv):
+            continue
+        tot += (uv[0] - hits[0][2]) ** 2 + (uv[1] - hits[0][3]) ** 2
+        n += 1
+    return (math.sqrt(tot / n), n) if n else (None, 0)
+
+
 def main():
+    global FX, FY, CAM_PITCH, SIGN_WIDTH_M, MOUNT_FWD, MOUNT_LAT, MOUNT_UP
     ap = argparse.ArgumentParser()
     ap.add_argument("--bag", required=True, help="path to the .mcap file")
     ap.add_argument("--target", help="true target as x,y,z in world coordinates")
     ap.add_argument("--telemetry", help="<run>_telemetry.csv, for capture timestamps")
+    ap.add_argument("--cam-stamps", help="<run>_cam_stamps.csv, for the exact skipped-frame count")
     ap.add_argument("--triangulate", action="store_true",
-                    help="estimate the target position from the run and exit")
+                    help="DIAGNOSTIC: estimate the target from the run and exit. "
+                         "Degenerate on the mission trajectory; not ground truth")
     ap.add_argument("--force", action="store_true",
-                    help="score even if the consistency check fails")
+                    help="score even if the geometry check fails")
     ap.add_argument("--label", default=None)
     ap.add_argument("--json-out", default=None)
-    ap.add_argument("--cache-dir", default=None,
-                    help="cache extracted streams here; these bags are GB-sized")
+    ap.add_argument("--cache-dir", default=None)
+    ap.add_argument("--fx", type=float, default=FX)
+    ap.add_argument("--cam-pitch-deg", type=float, default=math.degrees(CAM_PITCH),
+                    help="camera pitch; model declares 5 deg, data fits -5.00")
+    ap.add_argument("--mount", default=f"{MOUNT_FWD},{MOUNT_LAT},{MOUNT_UP}",
+                    help="camera mount offset fwd,lat,up in metres")
+    ap.add_argument("--sign-width", type=float, default=SIGN_WIDTH_M)
+    ap.add_argument("--rms-gate", type=float, default=40.0)
     args = ap.parse_args()
+
+    FX = FY = args.fx
+    CAM_PITCH = math.radians(args.cam_pitch_deg)
+    SIGN_WIDTH_M = args.sign_width
+    MOUNT_FWD, MOUNT_LAT, MOUNT_UP = [float(v) for v in args.mount.split(",")]
+
+    print(f"camera: fx=fy={FX:g}  mount=[{MOUNT_FWD},{MOUNT_LAT},{MOUNT_UP}] m  "
+          f"pitch={args.cam_pitch_deg:+.3f} deg  sign={SIGN_WIDTH_M:.3f} m")
 
     poses, dets, bag_target = read_bag(args.bag, args.cache_dir)
     print(f"poses={len(poses)}  detection messages={len(dets)}")
     if bag_target:
-        print(f"/sim/target_pose in bag: {bag_target[:3]}")
-
-    tri = triangulate(poses, dets)
-    if tri:
-        print(f"estimated from {tri['n']} detections: "
-              f"x={tri['x']:.2f} y={tri['y']:.2f} z={tri['z']:.2f}")
-        print(f"  reprojection RMS      : {tri['pixel_rms']:.1f} px  "
-              f"(from {tri['n']} single-instance detections)")
-        print(f"  bearing spread        : {tri['bearing_spread_deg']:.1f} deg")
-        if tri["bearing_spread_deg"] < 20.0:
-            print("  WARNING: little angular baseline, so depth is poorly "
-                  "constrained and this position is not trustworthy.")
-        if tri["at_search_bound"]:
-            print("  WARNING: the best fit sits on the edge of the search box, "
-                  "which means no interior point fitted well.")
-        if tri["pixel_rms"] > 40.0:
-            print()
-            print("  FAILED CONSISTENCY CHECK: no single static point reprojects "
-                  "onto these detections")
-            print(f"  (best achievable RMS {tri['pixel_rms']:.0f} px on a "
-                  f"{WIDTH}x{HEIGHT} image).")
-            print("  The projection model does not describe this run. Check, in "
-                  "order: whether the")
-            print("  camera is fixed to the body yaw axis, whether /sim/drone_pose "
-                  "is time-aligned")
-            print("  with the imagery, and whether more than one instance of the "
-                  "target class is")
-            print("  in the scene. Do not score until this check passes.")
-        if bag_target:
-            d = [bag_target[a] - tri[k] for a, k in enumerate("xyz")]
-            gap = math.sqrt(sum(v * v for v in d))
-            print()
-            print("  against /sim/target_pose "
-                  f"({bag_target[0]:.2f}, {bag_target[1]:.2f}, {bag_target[2]:.2f}):")
-            for a, k in enumerate("xyz"):
-                flag = "  <-- disagrees" if abs(d[a]) > 2.0 else ""
-                print(f"    {k}: published {bag_target[a]:7.2f}  "
-                      f"observed {tri[k]:7.2f}  diff {d[a]:+7.2f} m{flag}")
-            if gap > 2.0:
-                axes = [k for a, k in enumerate("xyz") if abs(d[a]) > 2.0]
-                print(f"  WARNING: /sim/target_pose disagrees on {', '.join(axes)}. "
-                      "A single-axis gap")
-                print("  points at a frame or origin mismatch rather than a wrong "
-                      "target. Resolve it")
-                print("  on the simulator side before scoring against this topic.")
-    else:
-        print("estimation failed: too few target-class detections")
+        print(f"/sim/target_pose in bag: {bag_target[:3]}  "
+              "(hardcoded constant, NOT a live feed -- see README)")
 
     if args.triangulate:
+        tri = triangulate(poses, dets)
+        if not tri:
+            print("estimation failed: too few target-class detections")
+            return 0
+        print(f"\nestimated from {tri['n']} detections: "
+              f"x={tri['x']:.2f} y={tri['y']:.2f} z={tri['z']:.2f}")
+        print(f"  reprojection RMS : {tri['pixel_rms']:.1f} px")
+        print(f"  bearing spread   : {tri['bearing_spread_deg']:.1f} deg")
+        if tri["bearing_spread_deg"] < 20.0:
+            print("  WARNING: little angular baseline. Depth is unobservable and this")
+            print("  position is NOT trustworthy. Expected on the mission trajectory.")
+        if tri["at_search_bound"]:
+            print("  WARNING: best fit sits on the edge of the search box.")
         return 0
-    if not args.target:
-        sys.exit("--target x,y,z is required to score (run --triangulate first)")
 
+    if not args.target:
+        sys.exit("--target x,y,z is required. It is frozen in DEVIATIONS and must "
+                 "not be refit per row; --triangulate is a diagnostic, not a source.")
     target = [float(v) for v in args.target.split(",")]
     if len(target) != 3:
         sys.exit("--target needs three comma-separated numbers")
-    if tri and tri["pixel_rms"] > 40.0 and not args.force:
-        sys.exit("\nrefusing to score: the consistency check above failed, so any "
-                 "metric this\nproduced would be meaningless. Pass --force only if "
-                 "you understand why.")
+
+    rms, n_rms = reprojection_rms(poses, dets, target)
+    if rms is None:
+        sys.exit("no single-sign in-view detections: cannot check the geometry")
+    print(f"geometry check: frozen target reprojects at {rms:.1f} px RMS over {n_rms} frames")
+    if rms > args.rms_gate and not args.force:
+        sys.exit(f"\nrefusing to score: {rms:.0f} px RMS exceeds the {args.rms_gate:.0f} px "
+                 "gate, so the projection model does not describe this run.\nCheck the "
+                 "target, --fx, the mount offsets and the camera pitch. --force to override.")
 
     caps = load_capture_times(args.telemetry) if args.telemetry else None
     if args.telemetry and not caps:
-        print(f"warning: no usable rows in {args.telemetry}; "
-              "falling back to header stamps for capture time")
+        print(f"warning: no usable rows in {args.telemetry}; at-capture will collapse "
+              "onto the publish stamp and the bug check cannot run")
 
     res = score(poses, dets, target, caps)
     res["label"] = args.label or os.path.basename(args.bag)
     res["target"] = target
     res["capture_times_from_telemetry"] = bool(caps)
+    res["geometry"]["frozen_target_reprojection_rms_px"] = rms
+
+    if args.cam_stamps:
+        fr = count_skipped_frames(args.cam_stamps, caps)
+        if fr:
+            res["frames"] = fr
+            vis = sum(s["overall"]["n_target_visible"]
+                      for s in res["segments"].values() if s.get("overall"))
+            miss_proc = sum(s["overall"].get("miss_rate_per_processed_frame", 0)
+                            * s["overall"]["n_target_visible"]
+                            for s in res["segments"].values() if s.get("overall"))
+            # Per camera frame, a skipped frame and a missed frame are the same
+            # thing to the controller: no detection arrived.
+            if fr["camera_frames"]:
+                res["miss_rate_per_camera_frame"] = \
+                    (miss_proc + fr["skipped_frames"]) / fr["camera_frames"]
+                res["miss_rate_per_processed_frame"] = \
+                    (miss_proc / vis) if vis else None
 
     print()
     print(json.dumps(res, indent=2))

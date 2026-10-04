@@ -27,9 +27,12 @@ overlap against the reference is undefined.
 
 ## Geometry, established from data rather than assumed
 
-Camera is pinhole, 640x480, `fx=fy=554`, `cx=320`, `cy=240` (HFOV 60 deg), from
-`matlab/hil_ros_init_LT.m:34`. `/sim/drone_pose` carries `[x, y, z, pitch, yaw]`
-and `/sim/target_pose` carries `[x, y, z, yaw]`.
+Camera is pinhole, 640x480, `cx=320`, `cy=240`. Focal length is passed with
+`--fx`: the Simulink camera block renders at `fx=fy=1200` (HFOV 29.9 deg) in the
+current model and had 750 in the June model. The 554 in
+`matlab/hil_ros_init_LT.m:34` is an assumed 60 deg FOV the block never used.
+`/sim/drone_pose` carries `[x, y, z, pitch, yaw]` and `/sim/target_pose` carries
+`[x, y, z, yaw]`.
 
 The world bearing of an image column is
 
@@ -39,28 +42,36 @@ The sign of that term was chosen by measurement, not convention: fitting it to
 the archived detections triangulates a single static sign with a 0.32 m bearing
 residual, while the opposite sign gives 2.27 m.
 
-## The blocker
+## The target position: an apparent offset, most likely a different sign
 
-**`/sim/target_pose` is a hardcoded constant, not a live feed.**
-`matlab/hil_ros_init_LT.m:81` sets it to `[35.5, 23.7, 3.2, pi]` and republishes
-that value at ~1 Hz. Both archived bags carry the identical value two weeks
-apart.
+`/sim/target_pose` is a hardcoded constant, `[35.5, 23.7, 3.2, pi]`
+(`matlab/hil_ros_init_LT.m:81`), republished at ~1 Hz.
 
-Fitting the position that actually reprojects onto the detections:
+Fitting the position that reprojects onto the detections in the two archived
+bags, both recorded with the June Simulink model:
 
-| bag | x pub/obs | y pub/obs | z pub/obs |
-|---|---|---|---|
-| `hil_full_20260606_002324` | 35.50 / 34.75 | 23.70 / 3.14 | 3.20 / 3.15 |
-| `hil_full_20260523_153453` | 35.50 / 33.77 | 23.70 / 3.43 | 3.20 / 2.87 |
+| bag | fx | fitted x, y, z | RMS | drone parks at |
+|---|---|---|---|---|
+| `hil_full_20260606_002324` | 554 | 34.75, 3.14, 3.15 | 33.5 px | 32.51, 4.24 |
+| `hil_full_20260606_002324` | 750 | 38.03, 1.51, 3.18 | 38.6 px | |
+| `hil_full_20260606_002324` | 1200 | 46.04, -2.24, 3.31 | 46.5 px (fails) | |
+| `hil_full_20260523_153453` | 554 | 33.77, 3.43, 2.87 | 78.4 px (fails) | 31.67, -1.64 |
 
-x and z agree to within 1.7 m. y is wrong by 20.56 m and 20.27 m. Two
-independent runs give the same offset, so this is a fixed frame or origin
-mismatch on one axis, not a wrong target.
+The fitted y sits about 20 m from the published 23.7 at every focal length, so
+the focal length does not explain the gap. What does fit:
 
-**Ahmed to resolve on the simulator side**: either publish the sign's live scene
-position on `/sim/target_pose`, or confirm the fixed world coordinates and the
-frame they are expressed in. Until then no in-loop accuracy number can be scored
-against that topic, and the tool refuses to try.
+- In both bags the drone itself parks at y = -2 to 4, beside the fitted sign,
+  so those runs flew to a sign near y = 3.
+- The scene holds a second stop sign (trap 1 below).
+- The June model started the drone at integrator ICs x 0, y 20, z 5; the model
+  used since July starts it at x -15, y 10, z 10.
+- The paper's HIL figure (a July run) shows the drone at (30.6, 22.8), 5.0 m from
+  the published constant with a 2.5 deg bearing error and the sign centred.
+
+The likeliest reading is that the June runs approached the other sign, and the
+constant is right for the current model. **Before scoring**, record one bag with
+the current model and run `--triangulate --fx 1200` on it; the published
+constant should agree. Only if it does not is a simulator-side change needed.
 
 ## Two traps found while validating, both now guarded
 

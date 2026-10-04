@@ -24,8 +24,12 @@ from typing import List, Tuple
 import cv2
 import numpy as np
 
-# ─── Hailo imports ────────────────────────────────────────────────
-from hailo_platform import VDevice, FormatType, HailoSchedulingAlgorithm
+# ─── Hailo imports (optional: only needed for --backend npu; this module is
+#     also imported for its SHM classes on CPU-only hosts without hailo_platform)
+try:
+    from hailo_platform import VDevice, FormatType, HailoSchedulingAlgorithm
+except ModuleNotFoundError:
+    VDevice = FormatType = HailoSchedulingAlgorithm = None
 
 # ─── POSIX shm / sem via ctypes ──────────────────────────────────
 _rt = ctypes.CDLL("librt.so.1", use_errno=True)
