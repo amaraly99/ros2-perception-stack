@@ -378,12 +378,20 @@ def _summarise(rows):
     return out
 
 
-def score(poses, dets, target, capture_pairs=None):
+def score(poses, dets, target, capture_pairs=None, clock_offset_ns=None,
+          legacy_publish_match=False):
+    if clock_offset_ns is None and not legacy_publish_match:
+        raise ValueError("score() needs clock_offset_ns (realtime - monotonic); the legacy "
+                         "lookup runs only with legacy_publish_match=True")
     track = PoseTrack(poses)
 
-    # Detection headers are stamped on the Pi's monotonic clock; the bag logs
-    # epoch. The offset is constant, so estimate it robustly and reuse it to put
-    # capture timestamps on the bag's clock.
+    # Detection headers carry the frame's CAPTURE time (telemetry ts_capture: the
+    # camera bridge's SHM write, CLOCK_MONOTONIC); the bag logs epoch. With the
+    # recording host's realtime - monotonic offset (clock_offset_ns) the capture
+    # pose is taken at header stamp + offset (DEVIATIONS 17.24). The legacy lookup
+    # below runs only on explicit request (legacy_publish_match): it treats the
+    # stamp as a publish time and adds the median (log - stamp) offset, which
+    # includes the pipeline latency (17.23).
     offs = [r["log_ns"] - r["stamp_ns"] for r in dets]
     offset = statistics.median(offs) if offs else 0
     offset_spread_ms = (max(offs) - min(offs)) / 1e6 if offs else 0.0
@@ -399,16 +407,18 @@ def score(poses, dets, target, capture_pairs=None):
             continue
         uv_del = project(pose_del, target)
 
-        # Capture-time pose: telemetry maps publish -> capture on the monotonic
-        # clock; without it fall back to the header stamp.
-        cap_ns = rec["stamp_ns"]
-        if cap_t:
-            i = bisect.bisect_left(cap_t, rec["stamp_ns"])
-            cands = [j for j in (i - 1, i) if 0 <= j < len(capture_pairs)]
-            if cands:
-                j = min(cands, key=lambda j: abs(cap_t[j] - rec["stamp_ns"]))
-                cap_ns = capture_pairs[j][1]
-        cap_bag_ns = cap_ns + offset
+        # Capture-time pose.
+        if clock_offset_ns is not None:
+            cap_bag_ns = rec["stamp_ns"] + clock_offset_ns
+        else:
+            cap_ns = rec["stamp_ns"]
+            if cap_t:
+                i = bisect.bisect_left(cap_t, rec["stamp_ns"])
+                cands = [j for j in (i - 1, i) if 0 <= j < len(capture_pairs)]
+                if cands:
+                    j = min(cands, key=lambda j: abs(cap_t[j] - rec["stamp_ns"]))
+                    cap_ns = capture_pairs[j][1]
+            cap_bag_ns = cap_ns + offset
         pose_cap = track.at(cap_bag_ns)
         uv_cap = project(pose_cap, target) if pose_cap else None
         speed = track.speed_at(cap_bag_ns)
@@ -636,6 +646,12 @@ def main():
     ap.add_argument("--target", help="true target as x,y,z in world coordinates")
     ap.add_argument("--telemetry", help="<run>_telemetry.csv, for capture timestamps")
     ap.add_argument("--cam-stamps", help="<run>_cam_stamps.csv, for the exact skipped-frame count")
+    ap.add_argument("--clock-offset-ns", type=int, default=None,
+                    help="recording host's realtime - CLOCK_MONOTONIC (ns); capture pose at "
+                         "header stamp + this (DEVIATIONS 17.24). Required for scoring")
+    ap.add_argument("--legacy-publish-match", action="store_true",
+                    help="use the pre-17.24 at-capture lookup (stamp treated as publish time) "
+                         "instead of --clock-offset-ns; output labelled legacy_publish_match")
     ap.add_argument("--triangulate", action="store_true",
                     help="DIAGNOSTIC: estimate the target from the run and exit. "
                          "Degenerate on the mission trajectory; not ground truth")
@@ -652,6 +668,13 @@ def main():
     ap.add_argument("--sign-width", type=float, default=SIGN_WIDTH_M)
     ap.add_argument("--rms-gate", type=float, default=40.0)
     args = ap.parse_args()
+    if not args.triangulate:
+        if args.clock_offset_ns is None and not args.legacy_publish_match:
+            sys.exit("error: --clock-offset-ns is required (the recording host's realtime - "
+                     "CLOCK_MONOTONIC in ns, DEVIATIONS 17.24). The pre-17.24 lookup runs only "
+                     "with --legacy-publish-match.")
+        if args.clock_offset_ns is not None and args.legacy_publish_match:
+            sys.exit("error: give either --clock-offset-ns or --legacy-publish-match, not both")
 
     FX = FY = args.fx
     CAM_PITCH = math.radians(args.cam_pitch_deg)
@@ -704,10 +727,15 @@ def main():
         print(f"warning: no usable rows in {args.telemetry}; at-capture will collapse "
               "onto the publish stamp and the bug check cannot run")
 
-    res = score(poses, dets, target, caps)
+    if args.legacy_publish_match:
+        print("warning: --legacy-publish-match: at-capture uses the pre-17.24 lookup "
+              "(stamp treated as publish time, DEVIATIONS 17.23)", file=sys.stderr)
+    res = score(poses, dets, target, caps, args.clock_offset_ns, args.legacy_publish_match)
     res["label"] = args.label or os.path.basename(args.bag)
     res["target"] = target
     res["capture_times_from_telemetry"] = bool(caps)
+    res["capture_timing"] = ("header_stamp_plus_clock_offset" if args.clock_offset_ns is not None
+                             else "legacy_publish_match")
     res["geometry"]["frozen_target_reprojection_rms_px"] = rms
 
     if args.cam_stamps:
