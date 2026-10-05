@@ -1,0 +1,17 @@
+{
+ "_doc": "Fixed run protocol for the fx 554 consolidation pass (prompt 5Q, 2026-10-05). Read by batch.sh and check_run.py. Values are rules fixed before data, not measurements; a change after the first table run is a POST-HOC DEVIATIONS entry.",
+ "fx": 554.0,
+ "start": "20 m on the sign line, z 7.5, fixed hold (config/sim_geometry.json start_xyz_yaw; config/held_reference.json)",
+ "controller": "ibvs, SLAM pose and depth off; stack config ours_fx554_A_ibvs (NPU, placement A) or ours_fx554_B_ibvs (CPU, placement B)",
+ "t14_bins_m": [[18, 20], [12, 18], [6, 12], [2, 6]],
+ "t14_bins_note": "horizontal range to the frozen sign, lo <= r < hi, as inloop_accuracy.py --bins",
+ "geometry_gate_px": 18.4667,
+ "geometry_gate_note": "40 px x 554 / 1200 = 18.47 px at capture (inloop_accuracy.py default_rms_gate); check_run requires the scorer's rms_gate_px to equal this within 0.01",
+ "sign_height_m": 0.914,
+ "standoff_note": "expected standoff from the pinned FSM ratios read from each run's params dump: d(r) = cam_fy * sign_height_m / (r * image_height); vx -> 0 at target_bbox_ratio, REACHED needs >= hold_bbox_ratio. Reported per run with the closest approach and the overshoot, whether or not overshoot happens.",
+ "mission_window_s": {"default": 60, "yolo26m_cpu": 90, "yolov8m_cpu": 90, "yolov11m_cpu": 90},
+ "between_runs": {"temp_wait_above_c": 70.0, "temp_poll_s": 15, "temp_max_wait_s": 900, "disk_min_gb": 10, "npu_open_budget_per_boot": 60},
+ "npu_open_budget_note": "INFERRED from two boots on Pi-3 (2026-10-04, 2026-10-05): the Hailo-10H returned ENXIO after about 70 successful VDevice opens per boot. 60 leaves a margin. Count = 'Creating vdevice' lines in ~/.hailo/hailort/hailort.log since boot.",
+ "sentinel": {"model": "yolo26n", "backend": "npu", "det_hz": 16.261, "cmd_vel_hz": 16.259, "det_latency_ms": 35.839, "tol_frac": 0.05,
+              "note": "first run of every session, not counted in a row; A3 means (DEVIATIONS 17.57), latency rule 17.59 (f)"}
+}

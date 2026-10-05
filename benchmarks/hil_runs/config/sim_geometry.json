@@ -1,0 +1,25 @@
+{
+  "_doc": "Single source for the current simulator geometry on the Pi side (2026-10-04). Read by ic_guard.py, check_run.py and smoke_run_hold.sh. Values for the fx 1200 / 45 m series are NOT here; those runs keep their own recorded settings. 2026-10-04 (5D): start moved from 30 m to 20 m on the same line; model hash d0cdc6e1 (Windows rebuild, 2026-10-04). 2026-10-04 (5G): start z lowered from 10 to 7.5 at the same 20 m point and yaw, look-down to the sign 13.1 deg (stage5 approach at 20 m: 13.6 deg; z 10 was 19.8 deg); model hash a38a664c (Windows rebuild, z only changed from d0cdc6e1).",
+  "fx": 554.0,
+  "model_sha256": "a38a664c4600d21ed118e3ece5eaf6c461369153f31e342ad86ca9d7f5b0c3c6",
+  "target_xyz": [
+    35.1,
+    2.92,
+    3.08
+  ],
+  "start_xyz_yaw": [
+    15.12,
+    3.84,
+    7.5,
+    "2*pi-0.0460"
+  ],
+  "start_bearing_tol_deg": 5.0,
+  "smoke_final_dist_window_m": [
+    1.6,
+    2.8
+  ],
+  "smoke_final_dist_window_status": "PROVISIONAL until Amar answers on target_bbox_ratio 0.55 / hold_bbox_ratio 0.50. Derived: fx 1200 runs that reached the frozen sign stopped 4.58-4.96 m (n=6); x 554/1200 = 2.11-2.29 m; widened by 0.5 m each side.",
+  "start_yaw_deg": 357.3636,
+  "start_tol_m": 0.1,
+  "start_yaw_tol_deg": 0.5
+}

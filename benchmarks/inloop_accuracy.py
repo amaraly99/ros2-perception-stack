@@ -659,7 +659,7 @@ def reprojection_rms(poses, dets, target, clock_offset_ns=None):
 
 
 def main():
-    global FX, FY, CAM_PITCH, SIGN_WIDTH_M, MOUNT_FWD, MOUNT_LAT, MOUNT_UP
+    global FX, FY, CAM_PITCH, SIGN_WIDTH_M, MOUNT_FWD, MOUNT_LAT, MOUNT_UP, RANGE_BINS
     ap = argparse.ArgumentParser()
     ap.add_argument("--bag", required=True, help="path to the .mcap file")
     ap.add_argument("--target", help="true target as x,y,z in world coordinates")
@@ -688,7 +688,19 @@ def main():
     ap.add_argument("--rms-gate", type=float, default=None,
                     help="geometry gate in px; default 40 px scaled by fx/1200 "
                          "(40 at fx 1200, 18.5 at fx 554)")
+    ap.add_argument("--bins", default=None,
+                    help="range bin edges in m, ascending, e.g. 2,6,12,18,20 (lo <= range < hi); "
+                         "default the fx 1200 / 45 m bins 4,8,16,24,32,40")
+    ap.add_argument("--det-stamp-window", default=None,
+                    help="LO,HI in ns: score only detection messages whose header stamp is in [LO, HI] "
+                         "(poses are kept whole). For comparing two bags of one run over the window both cover")
     args = ap.parse_args()
+    if args.bins:
+        edges = [float(v) for v in args.bins.split(",")]
+        if len(edges) < 2 or any(b <= a for a, b in zip(edges, edges[1:])):
+            sys.exit("error: --bins needs at least two ascending edges")
+        RANGE_BINS = [(int(a) if a.is_integer() else a, int(b) if b.is_integer() else b)
+                      for a, b in zip(edges, edges[1:])]
     if not args.triangulate:
         if args.clock_offset_ns is None and not args.legacy_publish_match:
             sys.exit("error: --clock-offset-ns is required (the recording host's realtime - "
@@ -707,6 +719,11 @@ def main():
           f"pitch={args.cam_pitch_deg:+.3f} deg  sign={SIGN_WIDTH_M:.3f} m")
 
     poses, dets, bag_target = read_bag(args.bag, args.cache_dir)
+    if args.det_stamp_window:
+        lo, hi = (int(v) for v in args.det_stamp_window.split(","))
+        n0 = len(dets)
+        dets = [r for r in dets if lo <= r["stamp_ns"] <= hi]
+        print(f"det stamp window [{lo}, {hi}]: kept {len(dets)} of {n0} detection messages")
     print(f"poses={len(poses)}  detection messages={len(dets)}")
     if bag_target:
         print(f"/sim/target_pose in bag: {bag_target[:3]}  "

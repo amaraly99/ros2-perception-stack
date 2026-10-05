@@ -1,0 +1,23 @@
+{
+ "_doc": "The fixed held render (prompt 5Q, 2026-10-05). Windows start_hold pauses at sim t = 0.30; two holds on Pi-3 gave this render byte for byte. Every run's final held render must have this sha1 (hold_gate.sh); a different render fails the run. Model a38a664c.",
+ "sim_model_sha256": "a38a664c4600d21ed118e3ece5eaf6c461369153f31e342ad86ca9d7f5b0c3c6",
+ "hold_sim_t": 0.3,
+ "render_sha1": "58713f672f94b798af4ce92189320a8a9ca483fc",
+ "inloop_frame_hash": 3967328708,
+ "fixture_png": "fixtures/held_58713f67.png",
+ "measured_in": "stage6/holds_5Q/hold1 and hold2 (2026-10-05 04:18-04:19 UTC)",
+ "npu_reference": {
+  "config": "yolo26n_npu",
+  "dets": [
+   [
+    "stop sign",
+    0.611,
+    25.0,
+    27.0,
+    319.5,
+    318.5
+   ]
+  ],
+  "note": "gate_render.py all_dets (class, conf, w, h, cx, cy) on in-loop pixels of the held render, holds_5Q hold1 and hold2 identical. batch.sh checks it at the start and end of every session (1 NPU open each); a mismatch stops the batch."
+ }
+}

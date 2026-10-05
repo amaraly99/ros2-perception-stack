@@ -868,6 +868,69 @@ index 0000000000000000000000000000000000000000..eb021a6cd9deb4ee7916b6f3c66087b6
 +
 +init_gate:
 +  enabled: false
+diff --git a/config/hil/stack/ours_fx554_B_ibvs.yaml b/config/hil/stack/ours_fx554_B_ibvs.yaml
+new file mode 100644
+index 0000000000000000000000000000000000000000..f52d65fe6e402ad141472dac532d8ff35460cb30
+--- /dev/null
++++ b/config/hil/stack/ours_fx554_B_ibvs.yaml
+@@ -0,0 +1,57 @@
++# ours_fx554_B_ibvs.yaml -- Ahmed's detector runs on this launcher (exp/detector-accuracy).
++# Placement B: YOLO on the CPU (onnxruntime), producer on cores 0,1; OV2SLAM on cores 2,3 as
++# co-load only (use_slam_pose / use_slam_depth off); controller ibvs.
++# Shared Simulink model from 2026-10-04 (sha256 b8ec8250...): the camera renders at fx = fy = 554,
++# start (5.13, 4.30, 10, 2*pi-0.0460). cam_fx 554 is set explicitly (same as bench_fsm.yaml) so the
++# run record shows it. Same as ours_fx1200_A_ibvs.yaml in every other line.
++# Bags (mode: record) carry /sim/drone_pose, /sim/target_pose and /yolo/detections for the
++# in-loop scorer, plus /bench/state for the mission metrics.
++mode: record
++
++network:
++  matlab_host_ip: 192.168.56.1
++  interface:      eth0
++  dds:            fastrtps
++  ros_domain_id:  0
++
++camera:
++  stamp_log: /tmp/sim_cam_stamps.csv
++
++detector:
++  type:     yolo
++  cpu:      "0-3"         # yolo_bridge: taskset -c 0-3 = all four Pi 5 cores, the same allowed set as
++                          # unpinned and the same prefix the detector sweep used (node_cores 0-3)
++  host_cpu: "0,1"
++  yolo:
++    model:         yolo26n            # models/model_registry.json id (run_stack_hil.sh --model overrides)
++    backend:       cpu
++    models_dir:    /home/ahmed/ROS2-PROJECT-SPRING2026/models
++    confidence:    0.20
++    telemetry_csv: /tmp/yolo_telemetry.csv
++
++controller:
++  type: ibvs
++  cpu:  "0-3"             # all four cores, equivalent to unpinned (an empty value is rejected by ros2 launch)
++  cam_fx: 554.0
++  use_slam_depth: false
++  use_slam_pose:  false
++
++slam:
++  enabled:           true
++  type:              ov2slam
++  image:             ros2_perception_stack
++  container_name:    slam_ov2slam
++  cpu:               "2,3"
++  startup_delay_sec: 5
++  restart:           unless-stopped
++  command:           "ros2 run ov2slam ov2slam_node /workspace/camera_calib/hil_sim_ov2slam.yaml"
++  topics:
++    image_in: /ovcam/image_raw
++    pose_out: /slam/pose
++  remap:
++    - "/ovcam/image_raw:=/ovcam/image_raw"
++    - "vo_pose:=/slam/pose"
++    - "slam_tracking_state:=/slam/tracking_state"
++
++init_gate:
++  enabled: false
 diff --git a/models/model_registry.json b/models/model_registry.json
 new file mode 100644
 index 0000000000000000000000000000000000000000..e95a4168ff165fd86cdc7f64c3cb0ee3bf43d87e

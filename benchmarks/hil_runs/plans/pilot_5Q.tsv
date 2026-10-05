@@ -1,0 +1,8 @@
+# Pilot block (prompt 5Q Part B step 7): YOLO26n, ibvs, placement A, 3 CPU + 3 NPU, bagged. Validation, not table data.
+# key	model	backend	role   (batch.sh plan; npu: placement A / ours_fx554_A_ibvs, cpu: B / ours_fx554_B_ibvs; window from config/protocol_fx554.json)
+p1	yolo26n	npu	pilot
+p2	yolo26n	npu	pilot
+p3	yolo26n	npu	pilot
+p1	yolo26n	cpu	pilot
+p2	yolo26n	cpu	pilot
+p3	yolo26n	cpu	pilot
