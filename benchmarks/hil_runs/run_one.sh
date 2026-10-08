@@ -39,6 +39,10 @@ echo "run: $L cfg=$CFG duration=${DUR}s gate=$GATE_CONFIGS ours=$HIL_OURS_PIN ba
 # 5R: SoC temperature and LIVE throttle bits (0xF) at the start and the end of the run; the peak comes from the 1 Hz telemetry
 export RUN_T_START=$(vcgencmd measure_temp | sed 's/[^0-9.]//g') RUN_TH_START=$(vcgencmd get_throttled | cut -d= -f2)
 echo "soc_start: ${RUN_T_START} C throttled ${RUN_TH_START} (live bits $(( RUN_TH_START & 0xF )))" | tee -a "$O/run.log"
+# 8A: an NPU failure during the run (a new kernel "Device disconnected", or a HailoRT driver/open failure in hailort.log since
+# the run started) marks the run INVALID; batch.sh then stops and opens the NPU no more (no retry anywhere)
+HLOG="$HOME/.hailo/hailort/hailort.log"
+export RUN_HDISC_START=$(sudo dmesg | grep -c 'Device disconnected') RUN_LT_START=$(date '+%F %T')
 echo "status_pre: $(hil status)" | tee -a "$O/run.log"
 sed 's/^/runtime: /' "$HIL_RUNTIME/SHA256SUMS" | tee -a "$O/run.log"
 python3 -c "import time,json;t=time.time_ns();m=time.monotonic_ns();print(json.dumps({'utc_ns':t,'monotonic_ns':m,'realtime_minus_monotonic_ns':t-m}))" > "$S/${L}_clock_offset.json"
@@ -65,6 +69,9 @@ echo "check_rc=$CRC" | tee -a "$O/run.log"
 # pin record: the stack's pin (smoke_run_hold.sh) plus what this run adds; a new file, the stack's pin is not rewritten
 export RUN_T_END=$(vcgencmd measure_temp | sed 's/[^0-9.]//g') RUN_TH_END=$(vcgencmd get_throttled | cut -d= -f2)
 echo "soc_end: ${RUN_T_END} C throttled ${RUN_TH_END} (live bits $(( RUN_TH_END & 0xF )))" | tee -a "$O/run.log"
+export RUN_HDISC_END=$(sudo dmesg | grep -c 'Device disconnected') \
+  RUN_HFAIL=$(awk -v b="[$RUN_LT_START" '/Failed to open device file \/dev\/hailo|HAILO_DRIVER_OPERATION_FAILED/ { s=$1" "$2; if (substr(s,1,length(b)) >= b) n++ } END { print n+0 }' "$HLOG" 2>/dev/null)
+echo "npu_health: kernel 'Device disconnected' ${RUN_HDISC_START} -> ${RUN_HDISC_END}, HailoRT driver/open failures during the run ${RUN_HFAIL:-0}" | tee -a "$O/run.log"
 python3 - "$O" "$S/${L}_pin.json" "$S/${L}_clock_offset.json" "$L" "$RC" "$CRC" <<'PY' | tee -a "$O/run.log"
 import hashlib, json, os, re, subprocess, sys
 O, pin_p, co_p, label, rc, crc = sys.argv[1:7]
@@ -88,12 +95,16 @@ flags = [int(r["cur_flags"]) for r in rows if r.get("cur_flags") not in (None, "
 ts, te = float(E["RUN_T_START"]), float(E["RUN_T_END"])
 lb, la = live(E["RUN_TH_START"]), live(E["RUN_TH_END"])
 during = sum(1 for x in flags if x != 0)
+hd = int(E["RUN_HDISC_END"] or 0) - int(E["RUN_HDISC_START"] or 0); hf = int(E.get("RUN_HFAIL") or 0)   # 8A
 why = [w for w, bad in (("live throttle bits before the run", lb != 0), ("live throttle bits after the run", la != 0),
-                        (f"throttle during the run ({during} telemetry rows)", during > 0), ("no run telemetry", not rows)) if bad]
+                        (f"throttle during the run ({during} telemetry rows)", during > 0), ("no run telemetry", not rows),
+                        (f"NPU failure during the run ({hd} kernel 'Device disconnected', {hf} HailoRT driver/open failures)",
+                         hd > 0 or hf > 0)) if bad]
 thermal = {"soc_temp_start_c": ts, "soc_temp_peak_c": max(temps + [ts, te]), "soc_temp_end_c": te,
            "telemetry_rows": len(rows), "telemetry_source": f"stack/{label}_thermal.csv (1 Hz, smoke_run_hold.sh)",
            "throttled_word_start": E["RUN_TH_START"], "throttled_word_end": E["RUN_TH_END"],
            "live_bits_start": lb, "live_bits_end": la, "throttle_rows_during": during,
+           "npu_disconnects_during": hd, "npu_driver_failures_during": hf,
            "valid": not why, "invalid_reason": "; ".join(why) or None}
 try: pin = json.load(open(pin_p))
 except (OSError, ValueError) as e: pin = {"stack_pin_error": str(e)}

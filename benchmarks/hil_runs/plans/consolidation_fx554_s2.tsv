@@ -1,0 +1,37 @@
+# Consolidation pass fx 554, session 2 of 4: 32 runs dealt from 120 row runs + 4 SSD (expect_stop).
+# make_plans.py --seed 20261005 --sessions 4; deal seeds 202610050 (npu) 202610051 (cpu), session shuffle seed 2026100502. Sentinel first (not counted).
+# 33 runs; NPU opens this session: 2 + 2 x 17 = 36 <= 40. Power cycle before the session.
+# key	model	backend	role   (batch.sh plan; npu: placement A / ours_fx554_A_ibvs, cpu: B / ours_fx554_B_ibvs; window from config/protocol_fx554.json)
+sen2	yolo26n	npu	sentinel
+c5	centernet_resnet_v1_18	npu	row
+c4	yolov11s	npu	row
+c1	yolo26s	cpu	row
+c6	yolov11m	cpu	row
+c4	yolo26n	cpu	row
+c3	yolo26m	npu	row
+c1	yolov11n	cpu	row
+c3	yolov8s	cpu	row
+c1	yolo26m	npu	row
+c2	yolo26s	cpu	row
+c1	yolov8m	cpu	row
+c5	yolo26n	npu	row
+c2	yolov8s	npu	row
+c5	yolo26s	npu	row
+c5	yolo26m	cpu	row
+c4	yolov11m	cpu	row
+c1	yolov11n	npu	row
+c4	centernet_resnet_v1_18	cpu	row
+c3	yolov8m	cpu	row
+c5	yolo26s	cpu	row
+c6	yolo26s	npu	row
+c5	yolov8n	cpu	row
+c5	yolov8m	npu	row
+c5	yolov8s	cpu	row
+c2	centernet_resnet_v1_18	npu	row
+c3	yolov8n	npu	row
+c1	yolov8s	cpu	row
+c3	yolov11s	cpu	row
+c5	yolov8n	npu	row
+c2	yolo26s	npu	row
+c3	yolov8m	npu	row
+c4	yolov8m	npu	row

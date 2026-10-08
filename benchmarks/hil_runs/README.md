@@ -28,7 +28,8 @@ Outputs never go into the repo. Every batch and every run writes into a new fold
 | `one_run_hold_gated.sh` | supervisor hold, pre-run IC guard, hold-time check, gate hook, resume watcher, runner | `stage6/one_run_hold_gated.sh` |
 | `runner_adapter_hold.sh` | maps the old runner flags to the worktree runner | `integration_3F/diag/runner_adapter_hold.sh` |
 | `hold_gate.sh` | while held: render settles, is the reference render, own-config gate, approach recorder up | `stage6/hold_gate.sh` |
-| `hold_once.sh` | one held start without the stack; with `--gate all` the once-per-session gate | `stage6/holds_5J/hold_once.sh` |
+| `hold_once.sh` | one held start without the stack; with `--gate <configs>` the once-per-session gate (batch.sh: the 11 CPU configurations, no NPU, 5R) | `stage6/holds_5J/hold_once.sh` |
+| `power_marker.sh` | run by Ahmed after a full power removal: the marker batch.sh needs and consumes (NPU open budget per power-on, 8A) | new |
 | `rec.sh` | render-hash logger and approach recorder, each in its own container | `stage6/rec.sh` |
 | `sidecar_stoprule.sh` | detection logger in the stack container, 10 s stop rule | `stage6/sidecar_stoprule.sh` |
 | `gate_render.py`, `one_image_npu.py`, `inloop_pixels.py` | in-loop pixel gate on the held render | `stage6/`, `stage4/`, `stage6/tools_5M/` |

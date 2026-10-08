@@ -11,19 +11,28 @@
 # Order of work:
 #   0. refuse an existing batch_dir; our repo must be clean, and its HEAD is pinned for the whole batch (HIL_OURS_PIN);
 #      SIM_MODEL_SHA256 must equal the model in sim_geometry.json and held_reference.json; runtime files must verify.
-#   1. session gate, once: a held start (hold_once.sh --gate all): hold time, reference render, all 22 configurations.
+#      8A (Ahmed): a power marker is needed. After a full power removal Ahmed runs power_marker.sh, which writes
+#      $HIL_POWER_DIR/power_cycled_<YYYYMMDD_HHMM>; the batch refuses to start unless one exists that is newer than this boot
+#      (/proc/stat btime) and not yet consumed, and consumes it (writes <marker>.consumed with the batch id). So the NPU open
+#      budget (opens since boot) only restarts after a confirmed power-on: a soft reboot gives no new marker, so no batch.
+#   1. session gate, once: a held start (hold_once.sh): hold time, reference render, the 11 CPU configurations. 5R (Ahmed): no
+#      NPU configuration here; bursts of single-image NPU processes are when the Hailo-10H failed (5Q, 5R soft-reboot test).
 #      Then the NPU reference check (5R): yolo26n NPU on the held reference fixture must give the box and conf of
 #      held_reference.json npu_reference (1 open); repeated at the end of the session (also after a stop); a mismatch stops.
 #   2. per run, before it: temperature (wait while above 70 C, give up after 15 min), live throttle bits, supervisor
 #      sim=stopped, free disk, no container up, no /tmp leftovers, our repo still clean at the pin, and for an NPU run the
-#      NPU budget (/dev/hailo0 present, no "Device disconnected" since boot, opens since boot + 2 <= budget).
+#      NPU budget (/dev/hailo0 present, no "Device disconnected" since boot, no HailoRT driver/open failure in hailort.log
+#      since boot (8A), opens since boot + 2 <= budget). The same check comes before every NPU open of the batch, so after an
+#      NPU failure nothing opens the NPU again until a power-on (and the batch has stopped: the run is INVALID, run_one.sh).
 #   3. the run: run_one.sh into <batch_dir>/<NNN>_<label>/ (fixed hold, own-config gate, stack, resume, teardown, check_run).
-#   4. per run, after it: run rc 0, check_run rc 0, teardown (no container, supervisor sim=stopped); for a sentinel, Det Hz,
+#   4. per run, after it: the stack run rc 0 (smoke_rc), every PLUMBING check of check_run passes (5R, Ahmed: the outcome
+#      check final_dist_in_window_provisional is reported, never a stop: a run that does not reach is data for Reach),
+#      teardown (no container, supervisor sim=stopped); for a sentinel, Det Hz,
 #      /cmd_vel Hz and Det latency within 5 % of the A3 means.
 # The batch STOPS at the first failed check: it writes STOPPED.txt (reason) and remaining.tsv (runs not started), and never
 # retries a run. A failed run stays in its folder and is listed in batch_state.tsv; Ahmed decides what happens next.
 set -u; set -o noclobber
-PLAN="$1"; BD="$2"
+PLAN="$(readlink -f "$1")"; BD="$(readlink -m "$2")"     # 5R fix: absolute, before the cd below (a relative plan was not found)
 source "$(dirname "$(readlink -f "$0")")/hil_env.sh"
 PROTO="$HIL_RUNS/config/protocol_fx554.json"
 [ -e "$BD" ] && { echo "batch: REFUSE: $BD exists (every batch writes into a new folder)"; exit 20; }
@@ -34,6 +43,7 @@ BATCH_ID="$(basename "$BD")"; export BATCH_ID
 pj() { python3 -c "import json,sys; j=json.load(open(sys.argv[1])); exec(sys.argv[2])" "$PROTO" "$1"; }
 log() { echo "$(date -u +%FT%TZ) $*" | tee -a "$BD/batch.log"; }
 grep -vE '^\s*(#|$)' "$PLAN" > "$BD/plan.tsv"; cp "$PLAN" "$BD/plan_source.tsv"
+[ -s "$BD/plan.tsv" ] || { echo "batch: REFUSE: no runs in $PLAN"; exit 20; }   # 5R fix: an empty plan is refused, not "done"
 printf 'n\tkey\tmodel\tbackend\trole\tdir\trun_rc\tcheck_rc\tstart_utc\tend_utc\tnpu_opens_before\tnpu_opens_after\n' > "$BD/batch_state.tsv"
 REF_START=0
 stop() {  # stop <reason> <first not-started line number (1-based in plan.tsv)>
@@ -61,15 +71,27 @@ if [ -n "${HIL_CODE_COMMIT:-}" ]; then    # 5R: the run code at HEAD must be the
     ':(exclude)benchmarks/hil_runs/hil_env.sh' || stop "run code at HEAD differs from HIL_CODE_COMMIT $HIL_CODE_COMMIT" 1
   log "run code = HIL_CODE_COMMIT ${HIL_CODE_COMMIT:0:7} (hil_env.sh aside)"
 fi
+BT=$(awk '/^btime/ {print $2}' /proc/stat)                     # 8A: power marker, newer than this boot and not consumed
+PM=$(for f in "$HIL_POWER_DIR"/power_cycled_*; do
+       [[ "$f" =~ /power_cycled_[0-9]{8}_[0-9]{4}$ ]] && [ -f "$f" ] && [ ! -e "$f.consumed" ] && [ "$(stat -c %Y "$f")" -gt "$BT" ] && echo "$f"
+     done | sort | tail -1)
+[ -n "$PM" ] || stop "no unconsumed power marker newer than this boot ($(date -d "@$BT" '+%F %T')) in $HIL_POWER_DIR: run power_marker.sh after a full power removal" 1
+echo "consumed by batch $BATCH_ID at $(date -u +%FT%TZ), boot $(date -d "@$BT" '+%F %T')" > "$PM.consumed" || stop "cannot write $PM.consumed" 1
+log "power marker $(basename "$PM") consumed (boot $(date -d "@$BT" '+%F %T')): NPU open budget counts from this power-on"
 log "sim model ${SIM_MODEL_SHA256:0:8}, $(vcgencmd get_throttled), $(vcgencmd measure_temp)"
 
 npu_opens() {  # VDevice creates since boot (HailoRT logs local time, as uptime -s)
   local b; b=$(uptime -s)
   awk -v b="[$b" '/Creating vdevice/ { s=$1" "$2; if (substr(s,1,length(b)) >= b) n++ } END { print n+0 }' "$HOME/.hailo/hailort/hailort.log" 2>/dev/null
 }
+npu_fails() {  # 8A: HailoRT driver/open failures since boot (the 5R ENXIO: "Failed to open device file /dev/hailo0 with error 6")
+  local b; b=$(uptime -s)
+  awk -v b="[$b" '/Failed to open device file \/dev\/hailo|HAILO_DRIVER_OPERATION_FAILED/ { s=$1" "$2; if (substr(s,1,length(b)) >= b) n++ } END { print n+0 }' "$HOME/.hailo/hailort/hailort.log" 2>/dev/null
+}
 npu_ok() {  # npu_ok <opens needed>
   [ -e /dev/hailo0 ] || { echo "/dev/hailo0 missing"; return 1; }
   sudo dmesg | grep -q 'Device disconnected' && { echo "dmesg: hailo 'Device disconnected' since boot (power cycle needed)"; return 1; }
+  local f; f=$(npu_fails); [ "${f:-0}" -eq 0 ] || { echo "hailort.log: $f driver/open failures since boot (power cycle needed)"; return 1; }
   local n budget; n=$(npu_opens); budget=$(pj 'print(j["between_runs"]["npu_open_budget_per_boot"])')
   [ $((n + $1)) -le "$budget" ] || { echo "NPU budget: $n opens since boot + $1 > $budget (power cycle before more NPU work)"; return 1; }
   echo "NPU ok: $n opens since boot"
@@ -118,9 +140,9 @@ REF
 }
 
 # ── 1. session gate ──────────────────────────────────────────────────────────
-r=$(npu_ok 11) || stop "before the session gate: $r" 1; log "$r"
+r=$(npu_ok 2) || stop "before the session gate: $r" 1; log "$r"
 r=$(pre_run_checks cpu) || stop "before the session gate: $r" 1; log "$r"
-bash "$HIL_RUNS/hold_once.sh" "$BD/000_session_gate" --gate all < /dev/null > "$BD/session_gate.out" 2>&1; GRC=$?
+bash "$HIL_RUNS/hold_once.sh" "$BD/000_session_gate" --gate yolo26n_cpu yolo26s_cpu yolo26m_cpu yolov8n_cpu yolov8s_cpu yolov8m_cpu yolov11n_cpu yolov11s_cpu yolov11m_cpu centernet_resnet_v1_18_cpu ssd_mobilenet_v2_cpu < /dev/null > "$BD/session_gate.out" 2>&1; GRC=$?
 log "session gate rc=$GRC: $(grep -E 'hold ok|GATE|FAIL' "$BD/000_session_gate/hold.log" | tail -2 | cut -d' ' -f2- | tr '\n' ' ')"
 [ "$GRC" -eq 0 ] || stop "session gate failed (rc $GRC, see 000_session_gate/)" 1
 r=$(ref_check start) || stop "start-of-session $r" 1; log "start-of-session $r"; REF_START=1
@@ -157,8 +179,24 @@ EXPECT
 ) || stop "run $NNN ($KEY): $r" "$((N + 1))"
     log "run $NNN: $r"
   else
-  [ "$RRC" -eq 0 ] || stop "run $NNN ($KEY) failed: run_one rc $RRC (see $(basename "$RD")/run.log and ${NNN}_run_one.out)" "$((N + 1))"
-  [ "$CRC" = 0 ] || stop "run $NNN ($KEY): check_run rc $CRC (see $(basename "$RD")/check/)" "$((N + 1))"
+  SRC=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['smoke_rc'])" "$RD/run_result.json" 2>/dev/null || echo "$RRC")
+  [ "$SRC" = 0 ] || stop "run $NNN ($KEY) failed: stack run rc $SRC, run_one rc $RRC (see $(basename "$RD")/run.log and ${NNN}_run_one.out)" "$((N + 1))"
+  r=$(python3 - "$RD" <<'PLUMB'
+import glob, json, os, sys
+OUTCOME = {"final_dist_in_window_provisional"}            # reported per run, not a stop (5R)
+try:
+    c = json.load(open(glob.glob(os.path.join(sys.argv[1], "check", "*_check.json"))[0]))
+except (IndexError, OSError, ValueError) as e:
+    print(f"no check_run result ({e})"); sys.exit(1)
+bad = [k for k, v in c["checks"].items() if not v and k not in OUTCOME]
+out = [k for k, v in c["checks"].items() if not v and k in OUTCOME]
+i = c["info"]
+print(("plumbing FAIL: " + ", ".join(bad)) if bad else
+      f"plumbing ok; outcome: reached {i.get('reached')} final {i.get('final_dist_frozen_sign_m')} m" + (f" (outside window: {out})" if out else ""))
+sys.exit(1 if bad else 0)
+PLUMB
+) || stop "run $NNN ($KEY): check_run $r (see $(basename "$RD")/check/)" "$((N + 1))"
+  log "run $NNN: $r"
   fi
   [ -z "$(sudo docker ps -q)" ] || stop "after run $NNN: a container is still up (teardown incomplete)" "$((N + 1))"
   v=$(python3 -c "import json,sys; j=json.load(open(sys.argv[1])); print('ok' if j['valid'] else 'INVALID: ' + j['invalid_reason'])" "$RD/run_result.json" 2>&1)

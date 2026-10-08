@@ -28,8 +28,9 @@ def cpu_dets(mid, rgb, threads=4, pred=None):
         return [tuple(float(v) for v in x[:6]) for x in pred.infer(rgb, timing={}) if x[5] >= 0.20]
 
 
-def npu_dets(png, mid, gap_s=5, tries=3):
-    """One one_image_npu.py process per call, 5 s gap, 3 tries, as in 5I. None if every try failed."""
+def npu_dets(png, mid, gap_s=5, tries=1):
+    """One one_image_npu.py process per call, 5 s gap. None if it failed. 8A (Ahmed): 1 try, no retry after an NPU failure
+    (5I used 3 tries; a retry is another VDevice open on a Hailo-10H that may have just failed)."""
     from yolo_producer import COCO_NAMES
     for _ in range(tries):
         time.sleep(gap_s)
