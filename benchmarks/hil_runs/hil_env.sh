@@ -7,7 +7,7 @@ HIL_RUNS="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"                    # be
 : "${HIL_AMAR_PIN:=449066089465aa713382e13c1d4f043f29be96ab}"                # its HEAD
 : "${HIL_PATCH:=$HIL_OURS/integration/ours_on_4490660.patch}"                # our stack on that HEAD, committed (5R: + ours_fx554_B_ibvs.yaml)
 : "${HIL_PATCH_SHA:=d27ca98d75ff564b589653ef5b7db2a37e3789071e5e8681cb67fdb6d9262ea3}"   # 2026-10-04b (e337034b) + that one file
-: "${HIL_CODE_COMMIT:=37986af73b5e2183cc1a720b93c622e8d0d62e6f}"            # commit of the run code; batch.sh refuses a HEAD whose
+: "${HIL_CODE_COMMIT:=ac20aa99d851ece60219364131185476a938e09d}"            # commit of the run code; batch.sh refuses a HEAD whose
                                                                              # hil_runs, scorer or integration/ differ from it
 : "${HIL_GEOM:=$HIL_RUNS/config/sim_geometry.json}"                         # sim geometry, read by every check
 : "${HIL_HELD_REF:=$HIL_RUNS/config/held_reference.json}"                   # the fixed held render (5Q)
