@@ -1,0 +1,38 @@
+# Session 1 without the SSD expect_stop line (9C, Ahmed 2026-10-09): ssd_mobilenet_v2 detects nothing
+# on the held frame (pilot 2 session gate: ssd_mobilenet_v2_cpu []), the 10 s stop rule only arms after
+# resume (sidecar_stoprule.sh), so under the 8I resume gate the x1 run can never resume and would stop
+# the batch at position 16 with 'expect_stop FAIL: guard exit 8'. The SSD rows (here, s3 x2, s4 x1 x2)
+# are DEFERRED to a planning-chat decision (DEVIATIONS 17.70). consolidation_fx554_s1.tsv is unchanged;
+# this file is s1 minus its line 'x1 ssd_mobilenet_v2 cpu expect_stop', byte-identical otherwise.
+sen1	yolo26n	npu	sentinel
+c4	yolov11n	cpu	row
+c2	yolo26n	npu	row
+c4	yolov11m	npu	row
+c5	yolov11m	npu	row
+c5	yolov8m	cpu	row
+c5	yolov11n	cpu	row
+c3	yolo26n	npu	row
+c1	yolo26n	cpu	row
+c6	yolo26n	cpu	row
+c6	yolo26m	cpu	row
+c4	yolov8s	npu	row
+c3	yolov8n	cpu	row
+c1	centernet_resnet_v1_18	npu	row
+c2	yolov8n	cpu	row
+c6	yolov8n	npu	row
+c2	yolov8s	cpu	row
+c5	yolo26m	npu	row
+c1	yolov8s	npu	row
+c4	yolo26s	npu	row
+c1	yolov11s	npu	row
+c3	yolo26n	cpu	row
+c6	yolov8s	npu	row
+c2	yolov11s	npu	row
+c2	yolo26m	npu	row
+c3	yolov11m	cpu	row
+c3	centernet_resnet_v1_18	npu	row
+c6	yolov11s	cpu	row
+c6	centernet_resnet_v1_18	cpu	row
+c1	yolov11m	cpu	row
+c4	yolov8m	cpu	row
+c1	yolo26n	npu	row
