@@ -108,7 +108,14 @@ pre_run_checks() {  # pre_run_checks <backend>
   done
   echo "temp $t C (waited ${w} s)"
   th=$(vcgencmd get_throttled | cut -d= -f2); [ $(( th & 0xF )) -eq 0 ] || { echo "live throttle bits set: $th"; return 1; }
-  st=$(hil status); case "$st" in *sim=stopped*state=stopped*) ;; *) echo "supervisor not stopped: $st"; return 1 ;; esac
+  # 8I: a freshly started supervisor replies sim=stopped with state=idle; a torn-down one replies state=stopped.
+  # Both mean "the model is not running and nothing is held", so both are accepted and no manual `hil stop` is needed
+  # before a session (session 1 of 2026-10-08 needed one; DEVIATIONS 17.67).
+  st=$(hil status)
+  case "$st" in
+    *sim=stopped*state=stopped*|*sim=stopped*state=idle*) ;;
+    *) echo "supervisor not stopped: $st"; return 1 ;;
+  esac
   local d; for d in "$BD" "$HIL_WT"; do                              # run folders, and the stack's bags in the worktree
     free=$(df -BG --output=avail "$d" | tail -1 | tr -dc 0-9); [ "$free" -ge "$min" ] || { echo "free disk ${free} GB < ${min} GB at $d"; return 1; }
   done
@@ -168,7 +175,7 @@ import glob, json, os, sys
 rd, rrc = sys.argv[1], int(sys.argv[2])
 if not os.path.exists(os.path.join(rd, "STOP_RULE.txt")):
     print("expect_stop FAIL: no STOP_RULE.txt (the stop rule did not fire)"); sys.exit(1)
-if rrc in (4, 5, 6, 7, 10, 11, 12, 13, 14, 20):
+if rrc in (4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 20):   # 8I: 8 = resume gate, no detection on the held frame
     print(f"expect_stop FAIL: guard exit {rrc}"); sys.exit(1)
 c = json.load(open(glob.glob(os.path.join(rd, "check", "*_check.json"))[0]))["checks"]
 need = ["pi_interface_eth0", "rmw_fastrtps", "cam_fx_expected", "slam_pose_off", "start_pose_expected",

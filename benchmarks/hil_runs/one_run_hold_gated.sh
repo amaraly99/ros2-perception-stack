@@ -6,6 +6,9 @@
 #   so the placement preset decides).
 # 5Q (benchmarks/hil_runs): paths from hil_env.sh; L2_OUT is required (the run's own folder) and is the working directory;
 # the held state must report the fixed hold sim time (config/held_reference.json hold_sim_t) or the run stops (exit 7).
+# 8I/8J: the hold is released only once the detector has produced a target box on the held frame AND the controller's
+# sim-health latch is engaged; neither within L2_DET_WAIT_S (default 30 s) marks the run INVALID and stops the batch
+# (exit 8). The gate writes the exact resume wall ns to RUN_DIR/t_resume_ns.txt. Post-run IC guard: run_one.sh.
 set -u
 M="$1"; K="$2"
 source "$(dirname "$(readlink -f "$0")")/hil_env.sh"
@@ -127,14 +130,72 @@ if [ -n "${HOLD_GATE_CMD:-}" ]; then
   fi
 fi
 
-# ── resume watcher: release the hold the moment the stack is up ────────────────
+# ── resume watcher: release the hold only after the detector's FIRST target box (8I, DEVIATIONS 17.67) ──
+# Until 8I the hold was released the moment the stack was up. Before its first detection the FSM sits in
+# SEARCHING/FULL_ROTATE and commands search_spin_speed (0.5 rad/s), and the supervisor applies the last
+# /cmd_vel it received during the hold, so a detector that needs seconds per frame (CPU m-models: about
+# 2.0 s) starts the mission already turning away from the sign. Run 006 of 2026-10-08 lost 53.00 deg of
+# heading that way. The gate costs paused seconds only: detector start-up now falls outside the measured
+# window, which is the usual convention for latency work.
+# Source of truth for "first target detection": the sidecar's detection logger (/tmp/r20_dets.log; host
+# wall ns in field 1, count of stop-sign boxes at conf >= 0.20 in field 3), the same file the 10 s stop
+# rule reads. The host needs no ROS for it, and its class and confidence match the controller's
+# target_class / min_confidence. On timeout the run is INVALID and the batch stops: the session gate
+# already proved every configuration detects the held frame, so no detection here is plumbing, not a result.
+# 8J (B): the gate waits for TWO conditions, so every run starts in the same state.
+#   (i)  a target detection on the held frame, and
+#   (ii) the controller's sim-health latch engaged ("Sim health LOST: SIM_PAUSED", cmd_vel held at 0).
+# Why (ii). The latch needs sim_unhealthy_entry_sec = 1.0 s of observed PAUSED, which accrues in wall time while the
+# model is held, so whether it was engaged at resume used to depend on how long the controller had been up: session 1
+# resumed 001, 003, 004 latched (motionless, first non-zero /cmd_vel at +0.63, +0.60, +0.51 s) and 002, 005, 006
+# unlatched with a live command already in force (002 vx 1.488, 005 vx 1.481, 006 wz +0.500). That split lines up with
+# CPU against NPU, which is exactly the confound session 1 was discarded for. Holding until the latch is engaged makes
+# it the same for every run: motionless at resume, commands from about +0.5 s when the 0.5 s recovery debounce clears.
+# The latch is deterministic without touching the controller, because waiting costs only paused wall time and the
+# condition is a pure function of it (DEVIATIONS 17.67; VERIFIED on 001, 003, 004: one LOST line each, no RECOVERED
+# before resume). The log line is RCLCPP_ERROR, unthrottled, emitted once per transition, and lands in the same stack
+# log the "HIL stack is running" wait already reads, so no fixed-wait fallback is needed.
+# NOTE the gate does NOT wait for APPROACHING. Lock-on needs consecutive_dets_ >= lockon_consec (2) while
+# watchdog_tick zeroes that counter whenever a detection is older than 2 x watchdog_period_sec (0.4 s), so a CPU
+# m-model at about 0.5 Hz may never lock on; gating on APPROACHING would time out and stop the batch on its first
+# such run. See DEVIATIONS 17.67 (e).
+DETLOG="${L2_DETLOG:-/tmp/r20_dets.log}"
+RUN_ROOT="$(dirname "$OUT")"
 rm -f "$STACK_LOG_PATH"
 (
   for _ in $(seq 1 "${L2_RESUME_WAIT_S:-180}"); do
     if [ -f "$STACK_LOG_PATH" ] && grep -q "HIL stack is running" "$STACK_LOG_PATH" 2>/dev/null; then
+      DT=""; LATCHED=""
+      for _d in $(seq 1 $(( ${L2_DET_WAIT_S:-30} * 4 ))); do
+        [ -z "$DT" ] && DT=$(awk '$3 > 0 { print $1; exit }' "$DETLOG" 2>/dev/null)
+        [ -z "$LATCHED" ] && grep -q "Sim health LOST" "$STACK_LOG_PATH" 2>/dev/null && LATCHED=1
+        [ -n "$DT" ] && [ -n "$LATCHED" ] && break
+        sleep 0.25
+      done
+      if [ -z "$DT" ] || [ -z "$LATCHED" ]; then
+        GR="no detection on held frame"
+        [ -n "$DT" ] && GR="sim-health latch not engaged (cmd_vel not held at 0)"
+        [ -z "$DT" ] && [ -z "$LATCHED" ] && GR="no detection on held frame and sim-health latch not engaged"
+        echo "$(date -u +%FT%TZ) resume gate: $GR within ${L2_DET_WAIT_S:-30} s (det=${DT:-none} latched=${LATCHED:-no}) -> not resuming" >> "$MLOG"
+        echo "$GR" > "$RUN_ROOT/NO_DET_ON_HELD_FRAME.txt"
+        hil stop >> "$MLOG" 2>&1
+        (cd "$HIL_WT" && ./run_stack_hil.sh stop) >> "$MLOG" 2>&1
+        exit 8
+      fi
+      echo "$DT" > "$RUN_ROOT/t_first_det_ns.txt"
+      echo "$(date -u +%FT%TZ) resume gate: first target detection on the held frame at t_first_det_ns=$DT, sim-health latch engaged" >> "$MLOG"
       for _t in 1 2 3 4 5; do
+        # 8J (A): the EXACT resume time. This wall ns is taken immediately before the resume command is sent and is
+        # what every check uses (t_resume_ns.txt). The sidecar's value, which it derives by polling the matlab log
+        # every 0.25 s, lags this by up to that poll interval and now goes to t_resume_ns_sidecar.txt for comparison
+        # only. The lag mattered once the gate made every run resume with a detection already in hand: session 1's
+        # run 005 resumed in APPROACHING and its "pre-resume" pose was already 0.0894 m along, against start_tol_m
+        # 0.1 m. t_resume_ns.txt stays one field so its readers (ic_guard.py, check_run.py) need no format change.
+        TRW=$(date +%s%N)
         rr=$(hil resume)
+        [ -f "$RUN_ROOT/t_resume_ns.txt" ] || echo "$TRW" > "$RUN_ROOT/t_resume_ns.txt"
         echo "$(date -u +%FT%TZ) resume -> $rr" >> "$MLOG"
+        echo "$(date -u +%FT%TZ) resume gate: resume sent at wall ns $TRW, $(python3 -c "print(f'{($TRW - $DT) / 1e9:.3f}')") s after the first detection" >> "$MLOG"
         s2=$(hil status)
         echo "$(date -u +%FT%TZ) status after resume: $s2" >> "$MLOG"
         case "$s2" in *sim=running*) exit 0 ;; esac
@@ -171,25 +232,14 @@ wait "$WP" 2>/dev/null; WRC=$?
 kill "$TP" "$MP" "$CP" 2>/dev/null; wait "$TP" "$MP" "$CP" 2>/dev/null
 { echo "exit_rc: $RC"; echo "early_watch_rc: $WRC"; echo "end_utc: $(date -u +%FT%TZ)"; echo; } >> "$LOG"
 
-# ── POST-RUN IC GUARD (17.14) + pre/post pose agreement check ─────────────────
-GUARD_INT="${IC_GUARD_PYTHON:-$HIL_MCAP_PY}"
-GUARD_PY="$HIL_RUNS/ic_guard.py"
-GRC=2
-if [ -f "$GUARD_PY" ] && [ -x "$GUARD_INT" ]; then
-  GLINE=$("$GUARD_INT" "$GUARD_PY" "$OUT/level2_${TAG}_run1" 2>&1); GRC=$?
-  GJSON=$("$GUARD_INT" "$GUARD_PY" --json "$OUT/level2_${TAG}_run1" 2>/dev/null)
-  echo "$(date -u +%FT%TZ) $GLINE" >> "$OUT/ic_guard.log"
-  [ -n "$GJSON" ] && echo "$GJSON" >> "$OUT/ic_guard.jsonl"
-  echo "ic_guard: $GLINE" >> "$LOG"
-  # STEP 1 check: does the first RECORDED pose match the pre-run HELD pose?
-  POSTYAW=$(echo "$GJSON" | python3 -c "import sys,json;print(f\"{json.load(sys.stdin)['yaw_deg']:.2f}\")" 2>/dev/null)
-  if [ -n "$POSTYAW" ] && [ -n "${PRE_YAW:-}" ]; then
-    DY=$(python3 -c "print(f'{abs((($POSTYAW)-($PRE_YAW)+180)%360-180):.2f}')" 2>/dev/null)
-    echo "pose_match: pre_yaw=$PRE_YAW post_yaw=$POSTYAW dyaw=${DY}deg" | tee -a "$LOG" >> "$OUT/pose_match.log"
-  fi
-else
-  echo "ic_guard: SKIPPED" >> "$LOG"
-fi
+# ── 8I: the post-run IC guard (17.14) now runs in run_one.sh, not here. It reads the LAST pre-resume
+# /sim/drone_pose from RUN_DIR/approach_bag, and that bag is still the live recorder's /tmp/r20_bag at
+# this point: run_one.sh stops the recorder and moves it into RUN_DIR after this script returns. A bad
+# initial condition still stops the batch, through check_run.py's start_pose_expected on that same
+# pre-resume pose; what changes is that smoke_rc now means only "did the stack run".
 echo >> "$LOG"
-if [ "$RC" -ne 0 ]; then exit "$RC"; fi
-exit "$GRC"
+if [ -f "$RUN_ROOT/NO_DET_ON_HELD_FRAME.txt" ]; then
+  echo "resume gate: no target detection on the held frame -> run INVALID" >> "$LOG"
+  exit 8   # 8 = resume gate: no detection on the held frame
+fi
+exit "$RC"

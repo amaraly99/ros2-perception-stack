@@ -7,7 +7,11 @@ Run with ~/venvs/mcap/bin/python (needs mcap_ros2). Plumbing checks only: no num
 5Q (benchmarks/hil_runs): paths from hilpaths.py; the scorer gets the Table 14 bins of config/protocol_fx554.json and its cache
 goes to --out-dir (never into the input folder); new checks geometry_gate_is_protocol (the scorer gate equals the protocol's
 18.47 px) and held_render_is_reference (DIR/held_final_sha1.txt, written by hold_gate.sh, is the render of config/held_reference.json); new info
-standoff_expected_m (from the run's own FSM ratios), closest_dist_frozen_sign_m and overshoot_m (always reported)."""
+standoff_expected_m (from the run's own FSM ratios), closest_dist_frozen_sign_m and overshoot_m (always reported).
+8I: new check first_det_before_resume (the detector's first target box must land before the resume; source r20_dets.log and
+t_resume_ns.txt in --pre-resume-dir). 8J: new check latched_at_resume (the controller's sim-health latch must be engaged at
+resume, from the stack log's "Sim health LOST"/"RECOVERED" stamps), and t_resume_ns.txt now carries the resume gate's exact
+wall ns (the sidecar's polled value moved to t_resume_ns_sidecar.txt). See DEVIATIONS 17.67."""
 import glob, json, math, os, re, subprocess, sys
 from collections import deque
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -107,7 +111,7 @@ else:
     elif not ab:
         sp_err = f"no approach bag in {pre_dir}/approach_bag"
     else:
-        tr = int(open(tr_p).read().strip()); pre = []
+        tr = int(open(tr_p).read().split()[0]); pre = []   # 8J: field 1 is the gate's exact resume wall ns
         try:
             from mcap_ros2.reader import read_ros2_messages as _rr
             for x in _rr(ab[0], topics=["/sim/drone_pose"]):
@@ -143,6 +147,51 @@ else:
     I["start_pose_error"] = sp_err
     print(f"START POSE CHECK FAILED: {sp_err}", file=sys.stderr)
     C["start_pose_expected"] = False
+
+# 3c. 8I (DEVIATIONS 17.67): the held start's precondition. The detector's FIRST target box must land BEFORE resume.
+#     Until 8I the hold was released as soon as the stack was up, so a detector that needs seconds per frame left the FSM
+#     in SEARCHING, and its 0.5 rad/s search spin was the /cmd_vel the supervisor applied at resume (run 006 of
+#     2026-10-08: 53.00 deg of heading lost before the first detection arrived at resume + 2.87 s). Plumbing, not a
+#     result: the session gate has already shown that every configuration detects the held frame, so a run that starts
+#     without one is INVALID and the batch stops. Source: the sidecar's detection logger r20_dets.log (field 1 host wall
+#     ns, field 3 the count of stop-sign boxes at conf >= 0.20, the controller's own target class and min_confidence),
+#     on the same host clock as t_resume_ns.txt.
+tr_ns, fd_ns = None, None
+if pre_dir:
+    try:
+        tr_ns = int(open(os.path.join(pre_dir, "t_resume_ns.txt")).read().split()[0])
+    except (OSError, ValueError) as e:
+        I["t_resume_ns_error"] = str(e)
+    dl = os.path.join(pre_dir, "r20_dets.log")
+    if os.path.exists(dl):
+        for _ln in open(dl, errors="replace"):
+            _f = _ln.split()
+            if len(_f) >= 3 and _f[2].isdigit() and int(_f[2]) > 0:
+                fd_ns = int(_f[0]); break
+        if fd_ns is None:
+            I["first_det_error"] = f"no detection message with a target box in {dl}"
+    else:
+        I["first_det_error"] = f"missing {dl}"
+else:
+    I["first_det_error"] = "no --pre-resume-dir given"
+I["t_resume_ns"], I["first_det_ns"] = tr_ns, fd_ns
+I["first_det_before_resume_s"] = round((tr_ns - fd_ns) / 1e9, 3) if (tr_ns and fd_ns) else None
+C["first_det_before_resume"] = bool(tr_ns and fd_ns and fd_ns < tr_ns)
+
+# 8J (B3): the other half of one start state. The controller's sim-health latch must be ENGAGED at resume, so the run
+#     begins motionless with cmd_vel held at 0 and takes its first command about 0.5 s later when the recovery debounce
+#     clears. Without this, the latch's state at resume depended on how long the controller had been up before the first
+#     box: session 1 resumed 001, 003, 004 latched and 002, 005, 006 with a live command already in force, a split that
+#     lines up with CPU against NPU. Read from the stack log's own ROS stamps (wall clock, the same clock as
+#     t_resume_ns): the last "Sim health LOST" before resume, with no "Sim health RECOVERED" between it and resume.
+lost = [int(a) * 10**9 + int(b) for a, b in re.findall(r"\[(\d{10})\.(\d{9})\][^\n]*Sim health LOST", log)]
+recov = [int(a) * 10**9 + int(b) for a, b in re.findall(r"\[(\d{10})\.(\d{9})\][^\n]*Sim health RECOVERED", log)]
+lat_t = max((t for t in lost if tr_ns and t < tr_ns), default=None)
+I["latch_lost_before_resume_s"] = round((tr_ns - lat_t) / 1e9, 3) if lat_t else None
+I["latch_recovered_after_resume_s"] = round((min((t for t in recov if tr_ns and t > tr_ns), default=0) - tr_ns) / 1e9, 3) \
+    if (tr_ns and any(t > tr_ns for t in recov)) else None
+I["latch_n_lost"], I["latch_n_recovered"] = len(lost), len(recov)
+C["latched_at_resume"] = bool(lat_t) and not any(lat_t < t < tr_ns for t in recov)
 
 # 4. our scorer (benchmarks/inloop_accuracy.py at this repo's HEAD). The capture pose needs the recording
 #    host's realtime - monotonic offset, recorded before the run in <label>_clock_offset.json; the

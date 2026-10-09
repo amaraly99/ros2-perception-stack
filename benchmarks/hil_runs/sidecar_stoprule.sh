@@ -33,7 +33,10 @@ if [ ! -e "$O/RUNTIME_UNVERIFIED.txt" ]; then
   say "detection logger started"
 fi
 for _ in $(seq 1 1200); do grep -q 'resume -> ok' "$MLOG" 2>/dev/null && break; sleep 0.25; done
-TR=$(date +%s%N); say "resume seen (t_resume_ns=$TR)"; echo "$TR" > "$O/t_resume_ns.txt"
+# 8J (A): the resume time every check uses is the gate's, written by one_run_hold_gated.sh immediately before it sends
+# `hil resume` (<outdir>/t_resume_ns.txt). This value is derived by polling MLOG every 0.25 s, so it lags by up to that
+# interval; it is kept only for comparison and must not overwrite the gate's. DEVIATIONS 17.67 (d).
+TR=$(date +%s%N); say "resume seen (polled, t_resume_ns_sidecar=$TR)"; echo "$TR" > "$O/t_resume_ns_sidecar.txt"
 sleep 10
 N=$(awk -v a="$TR" -v b="$((TR + 10000000000))" '$1>=a && $1<=b && $3>0 {n++} END {print n+0}' "$DL" 2>/dev/null)
 M=$(awk -v a="$TR" -v b="$((TR + 10000000000))" '$1>=a && $1<=b {n++} END {print n+0}' "$DL" 2>/dev/null)

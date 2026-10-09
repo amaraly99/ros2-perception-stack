@@ -9,7 +9,8 @@
 #   SIM_MODEL_SHA256   the sha256 apply_sim_params.m printed for the running Simulink model
 #   HIL_OURS_PIN       our repo commit this run must come from (default: HEAD, if the repo is clean)
 #   [GATE_CONFIGS]     pre-resume gate set (default: <model>_<backend>, the run's own configuration)   [BATCH_ID]
-# Layout: RUN_DIR/ run.log, pin_record.json, run_result.json, hold gate outputs, approach_bag/, recorder logs, sidecar files;
+# Layout: RUN_DIR/ run.log, pin_record.json, run_result.json, hold gate outputs, approach_bag/, recorder logs, sidecar files
+#         (8I: t_first_det_ns.txt from the resume gate, and NO_DET_ON_HELD_FRAME.txt if that gate timed out);
 #         RUN_DIR/stack/ the stack run (smoke_run_hold.sh); RUN_DIR/check/ check_run.py outputs.
 # Refuses (exit 20) if RUN_DIR exists, if /tmp holds files from an earlier run, or if a runtime file is missing or changed.
 set -u; set -o noclobber
@@ -59,6 +60,36 @@ for f in /tmp/r20_hash.log /tmp/r20_bag_rec.log /tmp/r20_dets.log /tmp/r20_hash.
   [ -e "$f" ] && sudo mv "$f" "$O/"
 done
 sudo chown -R "$(id -u):$(id -g)" "$O"
+# 8J (A): both resume times, for comparison. t_resume_ns.txt is the gate's exact wall ns taken immediately before it
+# sent `hil resume` and is what every check uses; t_resume_ns_sidecar.txt is the sidecar's polled value and lags it.
+echo "resume_times: gate=$(cat "$O/t_resume_ns.txt" 2>/dev/null || echo none) sidecar=$(cat "$O/t_resume_ns_sidecar.txt" 2>/dev/null || echo none) first_det=$(cat "$O/t_first_det_ns.txt" 2>/dev/null || echo none)" | tee -a "$O/run.log"
+python3 - "$O" <<'RT' | tee -a "$O/run.log"
+import os, sys
+O = sys.argv[1]
+def rd(n):
+    try: return int(open(os.path.join(O, n)).read().split()[0])
+    except (OSError, ValueError, IndexError): return None
+g, sc, fd = rd("t_resume_ns.txt"), rd("t_resume_ns_sidecar.txt"), rd("t_first_det_ns.txt")
+print(f"resume_lag: sidecar - gate = {(sc - g) / 1e9:+.3f} s" if g and sc else "resume_lag: not available")
+print(f"resume_gate: resume sent {(g - fd) / 1e9:+.3f} s after the first target box" if g and fd else "resume_gate: not available")
+RT
+# 8I: post-run IC guard (DEVIATIONS 17.14, 17.67). It runs here and not in one_run_hold_gated.sh because it reads
+# the LAST /sim/drone_pose before t_resume_ns from "$O/approach_bag", which exists only once the recorder is stopped
+# and the bag is moved (the two lines above). pose_match keeps the cross-check of that pose against the held
+# supervisor status line, which is an independent source for the same yaw. The batch still stops on a bad initial
+# condition through check_run.py's start_pose_expected, which reads the same pre-resume pose with a tighter tolerance
+# (0.1 m and 0.5 deg, against the IC guard's 5 deg of bearing); ic_guard_rc is recorded here and in ic_guard.log.
+GLINE=$("$HIL_MCAP_PY" "$HIL_RUNS/ic_guard.py" "$S/${L}_run1" --pre-resume-dir "$O" 2>&1); GRC=$?
+GJSON=$("$HIL_MCAP_PY" "$HIL_RUNS/ic_guard.py" --json "$S/${L}_run1" --pre-resume-dir "$O" 2>/dev/null)
+echo "$(date -u +%FT%TZ) $GLINE" >> "$S/ic_guard.log"
+[ -n "$GJSON" ] && echo "$GJSON" >> "$S/ic_guard.jsonl"
+echo "ic_guard_rc=$GRC: $GLINE" | tee -a "$O/run.log"
+PRE_YAW=$(grep -oP '\byaw=\K[0-9.]+' "$S/pre_ic_guard.log" 2>/dev/null | tail -1)
+POSTYAW=$(echo "$GJSON" | python3 -c "import sys,json;print(f\"{json.load(sys.stdin)['yaw_deg']:.2f}\")" 2>/dev/null)
+if [ -n "$POSTYAW" ] && [ -n "$PRE_YAW" ]; then
+  DY=$(python3 -c "print(f'{abs((($POSTYAW)-($PRE_YAW)+180)%360-180):.2f}')" 2>/dev/null)
+  echo "pose_match: pre_yaw=$PRE_YAW post_yaw=$POSTYAW dyaw=${DY}deg" | tee -a "$O/run.log" >> "$S/pose_match.log"
+fi
 "$HIL_MCAP_PY" "$HIL_RUNS/check_run.py" "$S" "$L" --pre-resume-dir "$O" --out-dir "$O/check" > "$O/check/${L}_check.txt" 2>&1; CRC=$?
 echo "check_rc=$CRC" | tee -a "$O/run.log"
 # 5R: Table 14 from the approach bag and from the stack bag over the window both cover; per bin the values must match.
@@ -96,10 +127,12 @@ ts, te = float(E["RUN_T_START"]), float(E["RUN_T_END"])
 lb, la = live(E["RUN_TH_START"]), live(E["RUN_TH_END"])
 during = sum(1 for x in flags if x != 0)
 hd = int(E["RUN_HDISC_END"] or 0) - int(E["RUN_HDISC_START"] or 0); hf = int(E.get("RUN_HFAIL") or 0)   # 8A
+gate_fail = rd(os.path.join(O, "NO_DET_ON_HELD_FRAME.txt"))     # 8I/8J: the resume gate timed out
 why = [w for w, bad in (("live throttle bits before the run", lb != 0), ("live throttle bits after the run", la != 0),
                         (f"throttle during the run ({during} telemetry rows)", during > 0), ("no run telemetry", not rows),
                         (f"NPU failure during the run ({hd} kernel 'Device disconnected', {hf} HailoRT driver/open failures)",
-                         hd > 0 or hf > 0)) if bad]
+                         hd > 0 or hf > 0),
+                        (f"resume gate: {gate_fail}", bool(gate_fail))) if bad]
 thermal = {"soc_temp_start_c": ts, "soc_temp_peak_c": max(temps + [ts, te]), "soc_temp_end_c": te,
            "telemetry_rows": len(rows), "telemetry_source": f"stack/{label}_thermal.csv (1 Hz, smoke_run_hold.sh)",
            "throttled_word_start": E["RUN_TH_START"], "throttled_word_end": E["RUN_TH_END"],
