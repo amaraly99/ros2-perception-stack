@@ -1,0 +1,21 @@
+# 9B gate-fix pilot: validate the resume gate's live latch read (item 6) across CONSECUTIVE runs, and
+# measure CPU s-model first lock-on under the PINNED controller for the first time.
+# The four consolidation session plans are unchanged; this file is additional.
+# Order is deliberate:
+#   1 sentinel, the usual first run of a session, and the A3 band check.
+#   2 yolov8s CPU, the slowest s-model (sweep: 1.296 Hz, min gap 0.619 s), so the strongest test of the
+#     pinned 0.4 to 0.6 s lock-on rule. First CPU s-model run ever done under the pinned controller.
+#   3 yolo26n NPU, the fast path immediately after a CPU run: if anything stale survived from run 2 the
+#     gate would resume before this run's own latch, so this is the stale-line test.
+#   4 yolo26s CPU, the fastest s-model (sweep: 1.567 Hz, min gap 0.576 s, 4 of 332 gaps <= 0.6 s), the
+#     marginal case of the same rule.
+#   5 yolov11n CPU, the positive control: an n-model at 3.8 Hz, whose gaps are mostly under 0.4 s, so it
+#     must lock on and reach. If run 5 fails, the fix is wrong rather than the detector being too slow.
+# NPU opens: 1 session-gate start reference + 2 (run 1) + 2 (run 3) + 1 end reference = 6 of the 40 budget.
+# Windows come from config/protocol_fx554.json: default 60 s for every row here (no CPU m-model in this plan).
+# key	model	backend	role
+g1	yolo26n	npu	sentinel
+g2	yolov8s	cpu	row
+g3	yolo26n	npu	row
+g4	yolo26s	cpu	row
+g5	yolov11n	cpu	row

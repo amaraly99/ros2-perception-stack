@@ -190,7 +190,21 @@ EXPECT
   [ "$SRC" = 0 ] || stop "run $NNN ($KEY) failed: stack run rc $SRC, run_one rc $RRC (see $(basename "$RD")/run.log and ${NNN}_run_one.out)" "$((N + 1))"
   r=$(python3 - "$RD" <<'PLUMB'
 import glob, json, os, sys
-OUTCOME = {"final_dist_in_window_provisional"}            # reported per run, not a stop (5R)
+# Reported per run, never a stop: these describe what the mission DID, not whether the rig was wired right.
+# 5R: final_dist_in_window_provisional (a run that does not reach is data for Reach).
+# 9B (item 8): det_hz_gt_0 and cmd_within_5pct_of_det join it, because a CPU run that never locks on stays
+#   in SEARCHING and fails them structurally, not through any fault of the rig. Oct 8 run 006 is the
+#   precedent: every plumbing check passed (held render, IC guard pose, start pose, fx, transport) while
+#   cmd_within_5pct_of_det read +822 pct, cmd_vel at the watchdog's 4.51 Hz against 0.489 Hz of detections.
+#   det_hz_gt_0 is safe to demote because the resume gate already refuses to start a run with no detection
+#   on the held frame, and first_det_before_resume still marks INVALID and stops, so "the detector is dead"
+#   is caught earlier and harder than here.
+# NOT demoted, on purpose: scorer_runs, geometry_gate_is_protocol and geometry_gate_capture_pass also fail
+#   on a never-locked-on run, and they all chain from one cause, inloop_accuracy.py refusing to score when
+#   the reprojection RMS exceeds the gate (run 006: "328.0 px RMS exceeds the 18.5 px gate"), which leaves
+#   check_run.py with no geometry at all. Those are named plumbing and are left stopping. A non-reaching
+#   CPU run therefore still stops the batch; see DEVIATIONS 17.68.
+OUTCOME = {"final_dist_in_window_provisional", "det_hz_gt_0", "cmd_within_5pct_of_det"}
 try:
     c = json.load(open(glob.glob(os.path.join(sys.argv[1], "check", "*_check.json"))[0]))
 except (IndexError, OSError, ValueError) as e:

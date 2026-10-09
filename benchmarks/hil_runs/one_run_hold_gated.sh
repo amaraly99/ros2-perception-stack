@@ -159,31 +159,75 @@ fi
 # watchdog_tick zeroes that counter whenever a detection is older than 2 x watchdog_period_sec (0.4 s), so a CPU
 # m-model at about 0.5 Hz may never lock on; gating on APPROACHING would time out and stop the batch on its first
 # such run. See DEVIATIONS 17.67 (e).
+# 9B (item 6): the latch line is read from the LIVE launch log, not from the stack log. The stack log gets
+# node output only when run_hil_experiments.sh's save_logs() appends /tmp/hil_launch.log at teardown, so the
+# 8J gate was polling a file that could not hold the line until after the run was over (9A: the gate waited
+# its full 30 s while the latch had engaged 30 s earlier). ros2 launch writes node output to
+# /tmp/hil_launch.log (worktree run_stack_hil.sh:300) and /tmp is bind mounted, so the host reads it live.
+# Only THIS run's line may satisfy the gate, enforced two ways, both needed:
+#   (i)  the file is emptied before the stack starts. The worktree runner already removes it at the top of
+#        every run, which is why no Oct 8 stack log holds a previous run's node lines (9B item 1, VERIFIED:
+#        0 cross-run lines in all six). We empty it here as well, from the host with sudo because container
+#        root owns it through the bind mount, so the gate does not depend on the runner's ordering.
+#   (ii) the latch stamp must be at or after this run's stack start, captured here before the runner is
+#        called. Second granularity is enough and exact: the stack takes 60 to 90 s to boot, so a stale line
+#        is minutes old, while a 19-digit ns value would lose precision in awk's doubles (256 ns at 1.8e18).
+# Not changed: node output may still be block buffered by ros2 launch's Python stdout, which cannot be made
+# line buffered without editing the pinned worktree. Measured bound (9B item 3): in 9A run 001 the latch line
+# sat at byte offset 3672, inside the first 8192-byte block, and 8192 bytes were produced 8.263 s after the
+# latch stamp, so the worst case is well inside L2_DET_WAIT_S. The gate records what it actually cost in
+# t_latch_gate.txt (latch stamp, when the gate saw it, stack start) so the real delay is measured per run.
 DETLOG="${L2_DETLOG:-/tmp/r20_dets.log}"
+LAUNCHLOG="${L2_LAUNCHLOG:-/tmp/hil_launch.log}"
 RUN_ROOT="$(dirname "$OUT")"
 rm -f "$STACK_LOG_PATH"
+sudo rm -f "$LAUNCHLOG" 2>/dev/null || true
+T_STACK_START_NS=$(date +%s%N); T_STACK_START_S=${T_STACK_START_NS:0:10}
+echo "$T_STACK_START_NS" > "$RUN_ROOT/t_stack_start_ns.txt"
+echo "$(date -u +%FT%TZ) resume gate: stack start $T_STACK_START_NS, $LAUNCHLOG emptied; only latch lines stamped >= ${T_STACK_START_S} count" >> "$MLOG"
 (
   for _ in $(seq 1 "${L2_RESUME_WAIT_S:-180}"); do
     if [ -f "$STACK_LOG_PATH" ] && grep -q "HIL stack is running" "$STACK_LOG_PATH" 2>/dev/null; then
-      DT=""; LATCHED=""
+      DT=""; LATCHED=""; LSEEN=""
       for _d in $(seq 1 $(( ${L2_DET_WAIT_S:-30} * 4 ))); do
         [ -z "$DT" ] && DT=$(awk '$3 > 0 { print $1; exit }' "$DETLOG" 2>/dev/null)
-        [ -z "$LATCHED" ] && grep -q "Sim health LOST" "$STACK_LOG_PATH" 2>/dev/null && LATCHED=1
+        if [ -z "$LATCHED" ]; then
+          # this run's latch stamp only: at or after the stack start captured above
+          LATCHED=$(awk -v t0="$T_STACK_START_S" '
+            index($0, "Sim health LOST") > 0 {
+              if (match($0, /\[[0-9]{10}\.[0-9]{9}\]/)) {
+                s = substr($0, RSTART + 1, RLENGTH - 2); split(s, a, ".")
+                if (a[1] + 0 >= t0 + 0) { print s; exit }
+              }
+            }' "$LAUNCHLOG" 2>/dev/null)
+          [ -n "$LATCHED" ] && LSEEN=$(date +%s%N)
+        fi
         [ -n "$DT" ] && [ -n "$LATCHED" ] && break
         sleep 0.25
       done
       if [ -z "$DT" ] || [ -z "$LATCHED" ]; then
         GR="no detection on held frame"
-        [ -n "$DT" ] && GR="sim-health latch not engaged (cmd_vel not held at 0)"
+        if [ -n "$DT" ]; then
+          GR="sim-health latch not engaged (cmd_vel not held at 0)"
+          # distinguish "never engaged" from "only a previous run's line is present", which the stamp
+          # guard rejects on purpose: the two need different fixes, so say which one happened.
+          grep -q "Sim health LOST" "$LAUNCHLOG" 2>/dev/null && \
+            GR="sim-health latch line present but stamped before this run's stack start (stale, rejected)"
+        fi
         [ -z "$DT" ] && [ -z "$LATCHED" ] && GR="no detection on held frame and sim-health latch not engaged"
-        echo "$(date -u +%FT%TZ) resume gate: $GR within ${L2_DET_WAIT_S:-30} s (det=${DT:-none} latched=${LATCHED:-no}) -> not resuming" >> "$MLOG"
+        echo "$(date -u +%FT%TZ) resume gate: $GR within ${L2_DET_WAIT_S:-30} s (det=${DT:-none} latched=${LATCHED:-no}, stack_start=${T_STACK_START_S}) -> not resuming" >> "$MLOG"
         echo "$GR" > "$RUN_ROOT/NO_DET_ON_HELD_FRAME.txt"
         hil stop >> "$MLOG" 2>&1
         (cd "$HIL_WT" && ./run_stack_hil.sh stop) >> "$MLOG" 2>&1
         exit 8
       fi
       echo "$DT" > "$RUN_ROOT/t_first_det_ns.txt"
-      echo "$(date -u +%FT%TZ) resume gate: first target detection on the held frame at t_first_det_ns=$DT, sim-health latch engaged" >> "$MLOG"
+      # 9B: what the latch cost this run. Three fields: the latch's own ROS stamp, the wall ns at which the
+      # gate first saw it, and this run's stack start. seen minus stamp is the gate delay (launch stdout
+      # buffering plus the 0.25 s poll); stamp minus stack start is how long the stack took to latch.
+      printf 'latch_stamp=%s gate_saw_ns=%s stack_start_ns=%s\n' "$LATCHED" "$LSEEN" "$T_STACK_START_NS" \
+        > "$RUN_ROOT/t_latch_gate.txt"
+      echo "$(date -u +%FT%TZ) resume gate: first target detection on the held frame at t_first_det_ns=$DT, sim-health latch engaged, latch_stamp=$LATCHED gate_saw_ns=$LSEEN stack_start_ns=$T_STACK_START_NS" >> "$MLOG"
       for _t in 1 2 3 4 5; do
         # 8J (A): the EXACT resume time. This wall ns is taken immediately before the resume command is sent and is
         # what every check uses (t_resume_ns.txt). The sidecar's value, which it derives by polling the matlab log
