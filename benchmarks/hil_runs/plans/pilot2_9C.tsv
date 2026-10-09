@@ -1,0 +1,16 @@
+# 9C pilot 2: validate the 17.69 fixes end to end before session 1. The four consolidation session plans
+# are unchanged; this file is additional.
+# Order is deliberate:
+#   1 sentinel, the usual first run of a session, and the A3 band check.
+#   2 yolo26s CPU, the other s-model (sweep: 1.567 Hz, min gap 0.576 s): expected never to lock on, and the
+#     batch must record "no lock-on" and CONTINUE, which 9B's pilot never reached.
+#   3 yolo26n NPU, the held start immediately after a spinning run: the IC guard must pass with the
+#     supervisor's accumulated yaw past 360.
+#   4 centernet CPU (1.51 to 1.56 Hz, zero gaps at or below 0.4 s): expected never to lock on, continue.
+#   5 yolov11n CPU, the held start again right after a spinning run, and the CPU n-model control: expected
+#     to lock on (Oct 8 run 002: 22 of 29 gaps at or below 0.4 s) and reach.
+p1	yolo26n	npu	sentinel
+p2	yolo26s	cpu	row
+p3	yolo26n	npu	row
+p4	centernet_resnet_v1_18	cpu	row
+p5	yolov11n	cpu	row

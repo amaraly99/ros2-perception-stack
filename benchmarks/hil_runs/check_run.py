@@ -11,8 +11,10 @@ standoff_expected_m (from the run's own FSM ratios), closest_dist_frozen_sign_m 
 8I: new check first_det_before_resume (the detector's first target box must land before the resume; source r20_dets.log and
 t_resume_ns.txt in --pre-resume-dir). 8J: new check latched_at_resume (the controller's sim-health latch must be engaged at
 resume, from the stack log's "Sim health LOST"/"RECOVERED" stamps), and t_resume_ns.txt now carries the resume gate's exact
-wall ns (the sidecar's polled value moved to t_resume_ns_sidecar.txt). See DEVIATIONS 17.67."""
-import glob, json, math, os, re, subprocess, sys
+wall ns (the sidecar's polled value moved to t_resume_ns_sidecar.txt). See DEVIATIONS 17.67.
+9C: geometry_gate_is_protocol asks a CONFIGURATION question (does this run's scoring use the protocol's gate?) and is computed
+from the run's fx through the scorer's own default_rms_gate, independent of whether the scorer produced output (17.69)."""
+import glob, importlib.util, json, math, os, re, subprocess, sys
 from collections import deque
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import hilpaths
@@ -210,6 +212,15 @@ C["clock_offset_recorded"] = co is not None
 ab_mc = sorted(glob.glob(os.path.join(pre_dir, "approach_bag", "*.mcap"))) if pre_dir else []
 I["t14_source_bag"] = ab_mc[0] if ab_mc else None
 
+# 9C (17.69): geometry_gate_is_protocol is a configuration check. It computes the gate the scorer WILL apply
+# for this run, from the same fx that _score passes it, through the scorer's own default_rms_gate (and _score
+# passes no --rms-gate override), and compares it to the protocol's value. It no longer reads scorer output,
+# so a scorer refusal fails scorer_runs and geometry_gate_capture_pass (measurements) but not this check.
+_spec = importlib.util.spec_from_file_location("_inloop_cfg", os.path.join(OURS, "benchmarks", "inloop_accuracy.py"))
+_ia = importlib.util.module_from_spec(_spec); _spec.loader.exec_module(_ia)
+_fx_used = float(I["param_cam_fx"]) if I["param_cam_fx"] else float(GEOM["fx"])
+_gate_is_protocol = abs(_ia.default_rms_gate(_fx_used) - PROTO["geometry_gate_px"]) <= 0.01
+
 
 def _score(bag, out_json, out_txt):
     cmdl = [sys.executable, f"{OURS}/benchmarks/inloop_accuracy.py", "--bag", bag,
@@ -245,8 +256,7 @@ if ab_mc and co is not None:
         g = {}
     I["geometry_gate"] = {k: g.get(k) for k in ("gate_timing", "rms_gate_px", "frozen_target_reprojection_rms_px",
                                                 "frozen_target_reprojection_rms_delivery_px")}
-    C["geometry_gate_is_protocol"] = (g.get("rms_gate_px") is not None
-                                      and abs(g["rms_gate_px"] - PROTO["geometry_gate_px"]) <= 0.01)
+    C["geometry_gate_is_protocol"] = _gate_is_protocol
     C["geometry_gate_capture_pass"] = (g.get("gate_timing") == "capture"
                                        and g.get("frozen_target_reprojection_rms_px") is not None
                                        and g["frozen_target_reprojection_rms_px"] <= g["rms_gate_px"])
@@ -263,7 +273,7 @@ else:
     if not ab_mc:
         I["t14_source_error"] = "no approach bag (pre-resume recorder) for this run"
     C["scorer_runs"] = False
-    C["geometry_gate_is_protocol"] = False
+    C["geometry_gate_is_protocol"] = _gate_is_protocol
     C["geometry_gate_capture_pass"] = False
     C["approach_bag_has_all_stack_dets"] = False
 

@@ -84,6 +84,23 @@ RMS_GATE_PX_AT_1200 = 40.0
 
 def default_rms_gate(fx):
     return RMS_GATE_PX_AT_1200 * fx / 1200.0
+
+
+# 9C (DEVIATIONS 17.69). The gate's residual is reference minus detection, where the
+# reference is the frozen target projected from the pose at the frame's header stamp
+# (+ clock offset). While the drone yaws, that stamp sits a camera-pipeline latency
+# after the true render, so the REFERENCE itself is wrong by about fx * yaw_rate * dt:
+# on the 9C pilot's CPU run the same run measured 0.67 px at 0 rad/s (held frame and
+# post-resume freeze, one of them 78 px off-centre) and 36 to 43 px at 0.46 to 0.52
+# rad/s, a consistent 143 to 147 ms, while its zero-yaw geometry was sub-pixel. That
+# is a property of the measurement, not of the run's geometry, so frames captured
+# while yawing faster than this bound are counted and excluded, from the gate and
+# from the scored metrics, never used to refuse the run. 0.05 rad/s keeps the
+# worst-case timing artifact under fx*0.05*(0.147+0.031) = 5 px at fx 554 (a quarter
+# of the gate; 0.031 s is the 16 Hz pose-sample spacing), sits two orders above the
+# measured yaw rate of every legitimately scored frame (0.0000 rad/s over the 1369
+# frames of the 9C NPU pilot run), and is 10x below the 0.5 rad/s search spin.
+YAW_RATE_BOUND_RAD_S = 0.05
 TARGET_CLASS = "stop sign"
 
 # ---------------------------------------------------------------------------
@@ -224,6 +241,27 @@ class PoseTrack:
     def speed_at(self, ts):
         i = self._idx(ts)
         return self._speed[i] if i is not None else None
+
+    def yaw_rate_at(self, ts):
+        """Central-difference yaw rate over +/-0.25 s, rad/s (17.69).
+
+        The same window _compute_speed uses, for the same reason: at ~16 Hz
+        delivered a single-sample difference is too noisy to threshold.
+        """
+        i = self._idx(ts)
+        if i is None:
+            return None
+        lo, hi = i, i
+        while lo > 0 and self.p[i][0] - self.p[lo][0] < 0.25e9:
+            lo -= 1
+        while hi < len(self.p) - 1 and self.p[hi][0] - self.p[i][0] < 0.25e9:
+            hi += 1
+        dt = (self.p[hi][0] - self.p[lo][0]) / 1e9
+        if dt <= 0:
+            return 0.0
+        dyaw = self.p[hi][4] - self.p[lo][4]
+        dyaw = (dyaw + math.pi) % (2 * math.pi) - math.pi
+        return dyaw / dt
 
 
 def camera_pose(pose):
@@ -411,6 +449,7 @@ def score(poses, dets, target, capture_pairs=None, clock_offset_ns=None,
 
     rows = []
     fp_class = fp_loc = total_dets = 0
+    n_excl_yaw = 0
 
     for rec in dets:
         pose_del = track.at(rec["log_ns"])
@@ -431,6 +470,13 @@ def score(poses, dets, target, capture_pairs=None, clock_offset_ns=None,
                     cap_ns = capture_pairs[j][1]
             cap_bag_ns = cap_ns + offset
         pose_cap = track.at(cap_bag_ns)
+        if pose_cap is not None:
+            # 17.69: while yawing past the bound the capture-pose reference is
+            # corrupted by the stamp-vs-render latency; count and exclude.
+            yr = track.yaw_rate_at(cap_bag_ns)
+            if yr is not None and abs(yr) > YAW_RATE_BOUND_RAD_S:
+                n_excl_yaw += 1
+                continue
         uv_cap = project(pose_cap, target) if pose_cap else None
         speed = track.speed_at(cap_bag_ns)
 
@@ -491,6 +537,11 @@ def score(poses, dets, target, capture_pairs=None, clock_offset_ns=None,
         "false_positive_localisation_count": fp_loc,
         "segments": {},
     }
+    # 17.69: reported only when it happened, so runs with no excluded frame keep a
+    # byte-identical output.
+    if n_excl_yaw:
+        out["yaw_rate_bound_rad_s"] = YAW_RATE_BOUND_RAD_S
+        out["frames_excluded_yaw_rate"] = n_excl_yaw
 
     for name, sel in (("approach", lambda r: r["speed"] is not None and r["speed"] >= PARKED_SPEED),
                       ("parked", lambda r: r["speed"] is not None and r["speed"] < PARKED_SPEED)):
@@ -637,9 +688,14 @@ def reprojection_rms(poses, dets, target, clock_offset_ns=None):
     17.24), the pose the detector actually saw. Without it the pose is the
     delivery pose (bag log time), which also measures the detector's latency and
     so fails slow detectors for a reason that is not geometry (17.20).
+
+    17.69: frames whose |yaw rate| at the scored pose exceeds YAW_RATE_BOUND_RAD_S
+    are counted and excluded, not measured: while yawing, the stamp-vs-render
+    latency corrupts the REFERENCE projection, not the detection (see the bound's
+    comment). Returns (rms, n_used, n_excluded).
     """
     track = PoseTrack(poses)
-    tot = n = 0
+    tot = n = n_excl = 0
     for rec in dets:
         hits = [d for d in rec["dets"] if d[0] == TARGET_CLASS]
         if len(hits) != 1:
@@ -650,12 +706,16 @@ def reprojection_rms(poses, dets, target, clock_offset_ns=None):
         pose = track.at(t_ns)
         if not pose:
             continue
+        yr = track.yaw_rate_at(t_ns)
+        if yr is not None and abs(yr) > YAW_RATE_BOUND_RAD_S:
+            n_excl += 1
+            continue
         uv = project(pose, target)
         if uv is None or not in_view(uv):
             continue
         tot += (uv[0] - hits[0][2]) ** 2 + (uv[1] - hits[0][3]) ** 2
         n += 1
-    return (math.sqrt(tot / n), n) if n else (None, 0)
+    return (math.sqrt(tot / n) if n else None, n, n_excl)
 
 
 def main():
@@ -757,17 +817,23 @@ def main():
     # detector's latency (17.20), which is the effect this scorer measures, not a
     # geometry error. The delivery RMS is printed as a diagnostic only. The legacy
     # lookup has no clock offset, so it keeps the delivery gate.
-    rms_del, n_del = reprojection_rms(poses, dets, target)
+    rms_del, n_del, nx_del = reprojection_rms(poses, dets, target)
     if args.clock_offset_ns is not None:
-        rms, n_rms = reprojection_rms(poses, dets, target, args.clock_offset_ns)
+        rms, n_rms, nx = reprojection_rms(poses, dets, target, args.clock_offset_ns)
         gate_timing = "capture"
     else:
-        rms, n_rms = rms_del, n_del
+        rms, n_rms, nx = rms_del, n_del, nx_del
         gate_timing = "delivery"
     if rms is None:
+        if nx:
+            sys.exit(f"no single-sign in-view detections within the yaw-rate bound ({nx} excluded at "
+                     f"|yaw rate| > {YAW_RATE_BOUND_RAD_S:g} rad/s): cannot check the geometry")
         sys.exit("no single-sign in-view detections: cannot check the geometry")
     print(f"geometry check: frozen target reprojects at {rms:.1f} px RMS over {n_rms} frames "
           f"at {gate_timing} (gate {rms_gate:.1f} px at fx {FX:g})")
+    if nx or nx_del:
+        print(f"  excluded from the gate (17.69): {nx} frames at capture, {nx_del} at delivery, "
+              f"|yaw rate| > {YAW_RATE_BOUND_RAD_S:g} rad/s (counted, not measured)")
     if rms_del is not None and gate_timing == "capture":
         print(f"  diagnostic: {rms_del:.1f} px RMS over {n_del} frames at delivery (not gated)")
     if rms > rms_gate and not args.force:
@@ -793,6 +859,11 @@ def main():
     res["geometry"]["rms_gate_px"] = rms_gate
     res["geometry"]["gate_timing"] = gate_timing
     res["geometry"]["frozen_target_reprojection_rms_delivery_px"] = rms_del
+    # 17.69: reported only when it happened (byte-identical output otherwise).
+    if nx or nx_del:
+        res["geometry"]["yaw_rate_bound_rad_s"] = YAW_RATE_BOUND_RAD_S
+        res["geometry"]["gate_frames_excluded_yaw_rate"] = nx
+        res["geometry"]["gate_frames_excluded_yaw_rate_delivery"] = nx_del
 
     if args.cam_stamps:
         fr = count_skipped_frames(args.cam_stamps, caps)

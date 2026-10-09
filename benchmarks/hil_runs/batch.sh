@@ -199,11 +199,12 @@ import glob, json, os, sys
 #   det_hz_gt_0 is safe to demote because the resume gate already refuses to start a run with no detection
 #   on the held frame, and first_det_before_resume still marks INVALID and stops, so "the detector is dead"
 #   is caught earlier and harder than here.
-# NOT demoted, on purpose: scorer_runs, geometry_gate_is_protocol and geometry_gate_capture_pass also fail
-#   on a never-locked-on run, and they all chain from one cause, inloop_accuracy.py refusing to score when
-#   the reprojection RMS exceeds the gate (run 006: "328.0 px RMS exceeds the 18.5 px gate"), which leaves
-#   check_run.py with no geometry at all. Those are named plumbing and are left stopping. A non-reaching
-#   CPU run therefore still stops the batch; see DEVIATIONS 17.68.
+# NOT demoted: scorer_runs, geometry_gate_is_protocol and geometry_gate_capture_pass still stop the batch.
+#   9C (17.69): they no longer fail structurally on a run that never locks on. geometry_gate_is_protocol is
+#   configuration-only in check_run.py, and the scorer measures its gate on frames with |yaw rate| at or
+#   below 0.05 rad/s (the held frame always qualifies), so a run that never locks on passes the gate on its
+#   zero-yaw frames and is a result (recorded below with reason "no lock-on"), while a run whose geometry is
+#   wrong on those frames still stops the batch. See DEVIATIONS 17.68 (e) and 17.69.
 OUTCOME = {"final_dist_in_window_provisional", "det_hz_gt_0", "cmd_within_5pct_of_det"}
 try:
     c = json.load(open(glob.glob(os.path.join(sys.argv[1], "check", "*_check.json"))[0]))
@@ -212,8 +213,12 @@ except (IndexError, OSError, ValueError) as e:
 bad = [k for k, v in c["checks"].items() if not v and k not in OUTCOME]
 out = [k for k, v in c["checks"].items() if not v and k in OUTCOME]
 i = c["info"]
+# 9C (item 9, 17.69): a run that never left SEARCHING is recorded with reason "no lock-on"; the batch continues.
+nolock = (i.get("final_state") == "SEARCHING" and not i.get("reached")
+          and not i.get("n_lost") and not i.get("n_reacquire"))
 print(("plumbing FAIL: " + ", ".join(bad)) if bad else
-      f"plumbing ok; outcome: reached {i.get('reached')} final {i.get('final_dist_frozen_sign_m')} m" + (f" (outside window: {out})" if out else ""))
+      "plumbing ok; outcome: " + ("no lock-on; " if nolock else "")
+      + f"reached {i.get('reached')} final {i.get('final_dist_frozen_sign_m')} m" + (f" (outside window: {out})" if out else ""))
 sys.exit(1 if bad else 0)
 PLUMB
 ) || stop "run $NNN ($KEY): check_run $r (see $(basename "$RD")/check/)" "$((N + 1))"
