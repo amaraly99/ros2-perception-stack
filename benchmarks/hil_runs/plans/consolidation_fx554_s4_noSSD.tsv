@@ -1,0 +1,35 @@
+# Session 4 without its two SSD expect_stop lines (PROMPT_14D N = 3, Ahmed 2026-10-15, prepared with s3_noSSD): SSD in-loop
+# runs are dropped from the consolidation pass (WORKING_RULES fixed decision, Oct 14; Table 13 reports SSD from the
+# held-frame gate evidence). The lines would stop the batch at position 7 (DEVIATIONS 17.70). consolidation_fx554_s4.tsv is
+# unchanged; this file is s4 minus its lines 'x1 ssd_mobilenet_v2 npu expect_stop' and 'x2 ssd_mobilenet_v2 cpu
+# expect_stop', byte-identical otherwise (same mechanism as s1_noSSD, 17.70).
+# 29 runs; NPU opens this session: 2 + 2 x 15 = 32 <= 40. Power cycle before the session.
+sen4	yolo26n	npu	sentinel
+c3	yolov11n	cpu	row
+c2	yolo26n	cpu	row
+c1	yolov11m	npu	row
+c5	yolov8s	npu	row
+c6	yolov8n	cpu	row
+c6	yolo26n	npu	row
+c5	yolov11m	cpu	row
+c3	centernet_resnet_v1_18	cpu	row
+c3	yolov11m	npu	row
+c5	yolo26n	cpu	row
+c5	yolov11s	cpu	row
+c5	centernet_resnet_v1_18	cpu	row
+c2	centernet_resnet_v1_18	cpu	row
+c6	yolov8m	cpu	row
+c4	yolov8s	cpu	row
+c6	yolov11n	npu	row
+c3	yolo26s	npu	row
+c4	yolov8n	npu	row
+c3	yolov8s	npu	row
+c6	centernet_resnet_v1_18	npu	row
+c2	yolov11n	npu	row
+c4	centernet_resnet_v1_18	npu	row
+c4	yolo26s	cpu	row
+c1	yolo26m	cpu	row
+c4	yolo26n	npu	row
+c2	yolov8n	npu	row
+c2	yolov11s	cpu	row
+c5	yolov11s	npu	row
