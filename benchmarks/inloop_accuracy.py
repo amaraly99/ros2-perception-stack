@@ -103,6 +103,27 @@ def default_rms_gate(fx):
 YAW_RATE_BOUND_RAD_S = 0.05
 TARGET_CLASS = "stop sign"
 
+
+# 15D (DEVIATIONS 17.71). On the in-loop pixels of the held render, yolo26s CPU's
+# end-to-end head emits two boxes on the sign that differ by under 0.1 px (conf 0.78
+# and 0.60); the SHM writer truncates corners to integers, so the message carries the
+# SAME box twice. The one-sign rule below must not read that as two signs: boxes with
+# identical centre and size count once, keeping the highest confidence. Boxes that
+# differ in position or size still count separately, so a second sign stays ambiguous.
+def target_boxes(rec):
+    """Target-class boxes of one message, exact duplicates counted once.
+    Returns (boxes, n_duplicates_dropped)."""
+    best = {}
+    n = 0
+    for d in rec["dets"]:
+        if d[0] != TARGET_CLASS:
+            continue
+        n += 1
+        k = (d[2], d[3], d[4], d[5])
+        if k not in best or d[1] > best[k][1]:
+            best[k] = d
+    return list(best.values()), n - len(best)
+
 # ---------------------------------------------------------------------------
 # The camera is NOT at the drone origin. Both of these come from the
 # Simulation 3D Camera block in matlab/hil_closed_loop.slx:
@@ -586,8 +607,8 @@ def triangulate(poses, dets, min_conf=0.5):
     for rec in dets:
         # Only frames holding exactly ONE instance of the target class. With two
         # signs in view, "highest confidence" jumps between objects and the fit
-        # degrades badly.
-        hits = [d for d in rec["dets"] if d[0] == TARGET_CLASS]
+        # degrades badly. Exact duplicates are one instance (17.71).
+        hits, _ = target_boxes(rec)
         if len(hits) != 1 or hits[0][1] < min_conf:
             continue
         pose = track.at(rec["log_ns"])
@@ -692,12 +713,15 @@ def reprojection_rms(poses, dets, target, clock_offset_ns=None):
     17.69: frames whose |yaw rate| at the scored pose exceeds YAW_RATE_BOUND_RAD_S
     are counted and excluded, not measured: while yawing, the stamp-vs-render
     latency corrupts the REFERENCE projection, not the detection (see the bound's
-    comment). Returns (rms, n_used, n_excluded).
+    comment). 17.71: exact duplicate boxes count as one sign (target_boxes); the
+    messages that carried one are counted. Returns (rms, n_used, n_excluded,
+    n_dup_msgs).
     """
     track = PoseTrack(poses)
-    tot = n = n_excl = 0
+    tot = n = n_excl = n_dup = 0
     for rec in dets:
-        hits = [d for d in rec["dets"] if d[0] == TARGET_CLASS]
+        hits, dropped = target_boxes(rec)
+        n_dup += 1 if dropped else 0
         if len(hits) != 1:
             continue
         if track.at(rec["log_ns"]) is None:
@@ -715,7 +739,7 @@ def reprojection_rms(poses, dets, target, clock_offset_ns=None):
             continue
         tot += (uv[0] - hits[0][2]) ** 2 + (uv[1] - hits[0][3]) ** 2
         n += 1
-    return (math.sqrt(tot / n) if n else None, n, n_excl)
+    return (math.sqrt(tot / n) if n else None, n, n_excl, n_dup)
 
 
 def main():
@@ -817,9 +841,9 @@ def main():
     # detector's latency (17.20), which is the effect this scorer measures, not a
     # geometry error. The delivery RMS is printed as a diagnostic only. The legacy
     # lookup has no clock offset, so it keeps the delivery gate.
-    rms_del, n_del, nx_del = reprojection_rms(poses, dets, target)
+    rms_del, n_del, nx_del, n_dup = reprojection_rms(poses, dets, target)
     if args.clock_offset_ns is not None:
-        rms, n_rms, nx = reprojection_rms(poses, dets, target, args.clock_offset_ns)
+        rms, n_rms, nx, _ = reprojection_rms(poses, dets, target, args.clock_offset_ns)
         gate_timing = "capture"
     else:
         rms, n_rms, nx = rms_del, n_del, nx_del
@@ -834,6 +858,8 @@ def main():
     if nx or nx_del:
         print(f"  excluded from the gate (17.69): {nx} frames at capture, {nx_del} at delivery, "
               f"|yaw rate| > {YAW_RATE_BOUND_RAD_S:g} rad/s (counted, not measured)")
+    if n_dup:
+        print(f"  exact duplicate boxes counted as one sign (17.71): {n_dup} detection messages")
     if rms_del is not None and gate_timing == "capture":
         print(f"  diagnostic: {rms_del:.1f} px RMS over {n_del} frames at delivery (not gated)")
     if rms > rms_gate and not args.force:
@@ -864,6 +890,9 @@ def main():
         res["geometry"]["yaw_rate_bound_rad_s"] = YAW_RATE_BOUND_RAD_S
         res["geometry"]["gate_frames_excluded_yaw_rate"] = nx
         res["geometry"]["gate_frames_excluded_yaw_rate_delivery"] = nx_del
+    # 17.71: reported only when it happened (byte-identical output otherwise).
+    if n_dup:
+        res["geometry"]["gate_messages_exact_duplicate_boxes"] = n_dup
 
     if args.cam_stamps:
         fr = count_skipped_frames(args.cam_stamps, caps)

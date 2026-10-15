@@ -12,6 +12,6 @@
  "mission_window_s": {"default": 60, "yolo26m_cpu": 90, "yolov8m_cpu": 90, "yolov11m_cpu": 90},
  "between_runs": {"temp_wait_above_c": 70.0, "temp_poll_s": 15, "temp_max_wait_s": 900, "disk_min_gb": 10, "npu_open_budget_per_boot": 40},
  "npu_open_budget_note": "INFERRED: the Hailo-10H returned ENXIO after about 70 VDevice opens per power-on twice (2026-10-04, 2026-10-05) and after 57 in the 5R soft-reboot test (a soft reboot does not reset it); every failure came in a burst of single-image processes. 40 per power-on, no NPU in the session gate (5R). Count = 'Creating vdevice' lines in ~/.hailo/hailort/hailort.log since boot.",
- "sentinel": {"model": "yolo26n", "backend": "npu", "det_hz": 16.261, "cmd_vel_hz": 16.259, "det_latency_ms": 35.839, "tol_frac": 0.05,
-              "note": "first run of every session, not counted in a row; A3 means (DEVIATIONS 17.57), latency rule 17.59 (f)"}
+ "sentinel": {"model": "yolo26n", "backend": "npu", "det_hz": 16.261, "cmd_vel_hz": 16.259, "det_latency_ms": 37.289, "tol_frac": 0.05,
+              "note": "first run of every session, not counted in a row; det_hz and cmd_vel_hz: A3 means (DEVIATIONS 17.57), latency rule 17.59 (f); det_latency_ms: median yolo26n NPU sentinel at fx 554 (9B pilot 37.009, 9C pilot 37.289, session 1 37.304), was the A3 mean 35.839 at fx 1200 (DEVIATIONS 17.72)"}
 }
