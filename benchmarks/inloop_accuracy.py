@@ -124,6 +124,29 @@ def target_boxes(rec):
             best[k] = d
     return list(best.values()), n - len(best)
 
+
+# 15H (DEVIATIONS 17.73). The scene holds other stop signs. A box of a KNOWN
+# non-target sign (position frozen in sim_geometry.json nontarget_signs_xyz, from
+# the data, each box image checked) is not a geometry error and not a detection of
+# the target: it is dropped and counted. A box within assign_px of the target's
+# projection is always kept as the target's; a box that matches neither stays and is
+# measured against the target as before, so an unknown object still fails the gate.
+def drop_known_signs(hits, pose, target, signs, assign_px):
+    """Returns (kept boxes, number dropped as a known non-target sign)."""
+    if not signs or not hits or pose is None:
+        return hits, 0
+    uv_t = project(pose, target)
+    kept = []
+    for h in hits:
+        if uv_t is not None and math.hypot(uv_t[0] - h[2], uv_t[1] - h[3]) <= assign_px:
+            kept.append(h)
+            continue
+        if any((q := project(pose, s)) is not None and math.hypot(q[0] - h[2], q[1] - h[3]) <= assign_px
+               for s in signs):
+            continue
+        kept.append(h)
+    return kept, len(hits) - len(kept)
+
 # ---------------------------------------------------------------------------
 # The camera is NOT at the drone origin. Both of these come from the
 # Simulation 3D Camera block in matlab/hil_closed_loop.slx:
@@ -449,7 +472,7 @@ def _summarise(rows):
 
 
 def score(poses, dets, target, capture_pairs=None, clock_offset_ns=None,
-          legacy_publish_match=False):
+          legacy_publish_match=False, signs=None, assign_px=None):
     if clock_offset_ns is None and not legacy_publish_match:
         raise ValueError("score() needs clock_offset_ns (realtime - monotonic); the legacy "
                          "lookup runs only with legacy_publish_match=True")
@@ -471,6 +494,7 @@ def score(poses, dets, target, capture_pairs=None, clock_offset_ns=None,
     rows = []
     fp_class = fp_loc = total_dets = 0
     n_excl_yaw = 0
+    n_sign_msgs = n_sign_boxes = 0
 
     for rec in dets:
         pose_del = track.at(rec["log_ns"])
@@ -506,6 +530,12 @@ def score(poses, dets, target, capture_pairs=None, clock_offset_ns=None,
 
         visible = in_view(uv_cap)
         tgt_hits = [d for d in rec["dets"] if d[0] == TARGET_CLASS]
+        # 17.73: a known non-target sign is never the best box (same assignment as
+        # the geometry gate, at the capture pose).
+        tgt_hits, k = drop_known_signs(tgt_hits, pose_cap, target, signs, assign_px)
+        if k:
+            n_sign_msgs += 1
+            n_sign_boxes += k
         best = max(tgt_hits, key=lambda d: d[1]) if tgt_hits else None
 
         err_cap = err_del = norm_cap = norm_del = None
@@ -563,6 +593,10 @@ def score(poses, dets, target, capture_pairs=None, clock_offset_ns=None,
     if n_excl_yaw:
         out["yaw_rate_bound_rad_s"] = YAW_RATE_BOUND_RAD_S
         out["frames_excluded_yaw_rate"] = n_excl_yaw
+    # 17.73: reported only when it happened (byte-identical output otherwise).
+    if n_sign_boxes:
+        out["known_nontarget_sign_boxes_removed"] = n_sign_boxes
+        out["known_nontarget_sign_messages"] = n_sign_msgs
 
     for name, sel in (("approach", lambda r: r["speed"] is not None and r["speed"] >= PARKED_SPEED),
                       ("parked", lambda r: r["speed"] is not None and r["speed"] < PARKED_SPEED)):
@@ -697,7 +731,8 @@ def triangulate(poses, dets, min_conf=0.5):
     }
 
 
-def reprojection_rms(poses, dets, target, clock_offset_ns=None):
+def reprojection_rms(poses, dets, target, clock_offset_ns=None, signs=None, assign_px=None,
+                     assign_offset_ns=None):
     """RMS reprojection error of the FROZEN target against single-sign frames.
 
     This is the geometry check that replaces the old refit-and-compare: with a
@@ -714,14 +749,23 @@ def reprojection_rms(poses, dets, target, clock_offset_ns=None):
     are counted and excluded, not measured: while yawing, the stamp-vs-render
     latency corrupts the REFERENCE projection, not the detection (see the bound's
     comment). 17.71: exact duplicate boxes count as one sign (target_boxes); the
-    messages that carried one are counted. Returns (rms, n_used, n_excluded,
-    n_dup_msgs).
+    messages that carried one are counted. 17.73: boxes of a known non-target sign
+    (drop_known_signs) are dropped and counted. Which sign a box shows is a property
+    of the captured image, so the assignment uses the CAPTURE pose whenever the clock
+    offset is known (assign_offset_ns), also for the delivery diagnostic.
+    Returns (rms, n_used, n_excluded, n_dup_msgs, n_sign_boxes).
     """
     track = PoseTrack(poses)
-    tot = n = n_excl = n_dup = 0
+    tot = n = n_excl = n_dup = n_sign = 0
+    if assign_offset_ns is None:
+        assign_offset_ns = clock_offset_ns
     for rec in dets:
         hits, dropped = target_boxes(rec)
         n_dup += 1 if dropped else 0
+        if signs and hits:
+            t_a = rec["stamp_ns"] + assign_offset_ns if assign_offset_ns is not None else rec["log_ns"]
+            hits, k = drop_known_signs(hits, track.at(t_a), target, signs, assign_px)
+            n_sign += k
         if len(hits) != 1:
             continue
         if track.at(rec["log_ns"]) is None:
@@ -739,7 +783,7 @@ def reprojection_rms(poses, dets, target, clock_offset_ns=None):
             continue
         tot += (uv[0] - hits[0][2]) ** 2 + (uv[1] - hits[0][3]) ** 2
         n += 1
-    return (math.sqrt(tot / n) if n else None, n, n_excl, n_dup)
+    return (math.sqrt(tot / n) if n else None, n, n_excl, n_dup, n_sign)
 
 
 def main():
@@ -747,6 +791,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--bag", required=True, help="path to the .mcap file")
     ap.add_argument("--target", help="true target as x,y,z in world coordinates")
+    ap.add_argument("--nontarget-signs", default=None,
+                    help="known non-target stop signs, x,y,z[;x,y,z] (17.73; sim_geometry.json nontarget_signs_xyz)")
     ap.add_argument("--telemetry", help="<run>_telemetry.csv, for capture timestamps")
     ap.add_argument("--cam-stamps", help="<run>_cam_stamps.csv, for the exact skipped-frame count")
     ap.add_argument("--clock-offset-ns", type=int, default=None,
@@ -835,18 +881,23 @@ def main():
     target = [float(v) for v in args.target.split(",")]
     if len(target) != 3:
         sys.exit("--target needs three comma-separated numbers")
+    signs = [[float(v) for v in s.split(",")] for s in args.nontarget_signs.split(";")] \
+        if args.nontarget_signs else []
+    if any(len(s) != 3 for s in signs):
+        sys.exit("--nontarget-signs needs x,y,z triples separated by ';'")
 
     # Gate at the CAPTURE pose (header stamp + clock offset), the pose the detector
     # saw. At the delivery pose the RMS also contains the drone's motion during the
     # detector's latency (17.20), which is the effect this scorer measures, not a
     # geometry error. The delivery RMS is printed as a diagnostic only. The legacy
     # lookup has no clock offset, so it keeps the delivery gate.
-    rms_del, n_del, nx_del, n_dup = reprojection_rms(poses, dets, target)
+    rms_del, n_del, nx_del, n_dup, ns_del = reprojection_rms(poses, dets, target, None, signs, rms_gate,
+                                                             args.clock_offset_ns)
     if args.clock_offset_ns is not None:
-        rms, n_rms, nx, _ = reprojection_rms(poses, dets, target, args.clock_offset_ns)
+        rms, n_rms, nx, _, n_sign = reprojection_rms(poses, dets, target, args.clock_offset_ns, signs, rms_gate)
         gate_timing = "capture"
     else:
-        rms, n_rms, nx = rms_del, n_del, nx_del
+        rms, n_rms, nx, n_sign = rms_del, n_del, nx_del, ns_del
         gate_timing = "delivery"
     if rms is None:
         if nx:
@@ -860,6 +911,9 @@ def main():
               f"|yaw rate| > {YAW_RATE_BOUND_RAD_S:g} rad/s (counted, not measured)")
     if n_dup:
         print(f"  exact duplicate boxes counted as one sign (17.71): {n_dup} detection messages")
+    if n_sign or ns_del:
+        print(f"  boxes of a known non-target sign, not measured (17.73): {n_sign} at {gate_timing}, "
+              f"{ns_del} at delivery")
     if rms_del is not None and gate_timing == "capture":
         print(f"  diagnostic: {rms_del:.1f} px RMS over {n_del} frames at delivery (not gated)")
     if rms > rms_gate and not args.force:
@@ -875,7 +929,7 @@ def main():
     if args.legacy_publish_match:
         print("warning: --legacy-publish-match: at-capture uses the pre-17.24 lookup "
               "(stamp treated as publish time, DEVIATIONS 17.23)", file=sys.stderr)
-    res = score(poses, dets, target, caps, args.clock_offset_ns, args.legacy_publish_match)
+    res = score(poses, dets, target, caps, args.clock_offset_ns, args.legacy_publish_match, signs, rms_gate)
     res["label"] = args.label or os.path.basename(args.bag)
     res["target"] = target
     res["capture_times_from_telemetry"] = bool(caps)
@@ -893,6 +947,11 @@ def main():
     # 17.71: reported only when it happened (byte-identical output otherwise).
     if n_dup:
         res["geometry"]["gate_messages_exact_duplicate_boxes"] = n_dup
+    # 17.73: reported only when it happened (byte-identical output otherwise).
+    if n_sign or ns_del:
+        res["geometry"]["nontarget_signs_xyz"] = signs
+        res["geometry"]["gate_boxes_known_nontarget_sign"] = n_sign
+        res["geometry"]["gate_boxes_known_nontarget_sign_delivery"] = ns_del
 
     if args.cam_stamps:
         fr = count_skipped_frames(args.cam_stamps, caps)

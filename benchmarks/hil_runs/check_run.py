@@ -231,6 +231,8 @@ def _score(bag, out_json, out_txt):
             "--cam-stamps", P + "_cam_stamps.csv", "--label", label,
             "--bins", ",".join(str(v) for v in sorted({e for b in PROTO["t14_bins_m"] for e in b})),
             "--json-out", out_json, "--cache-dir", os.path.join(os.path.dirname(Q), ".inloop_cache")]
+    if GEOM.get("nontarget_signs_xyz"):    # 17.73: known non-target stop signs, never measured as the target
+        cmdl += ["--nontarget-signs", ";".join(",".join(str(v) for v in s) for s in GEOM["nontarget_signs_xyz"])]
     p = subprocess.run(cmdl, capture_output=True, text=True)
     open(out_txt, "x").write(p.stdout + p.stderr)
     return p.returncode, (p.stdout + p.stderr).strip().splitlines()[-3:]

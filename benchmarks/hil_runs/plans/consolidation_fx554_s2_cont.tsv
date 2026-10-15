@@ -1,0 +1,10 @@
+# Session 2 continuation (15H, Ahmed 2026-10-15; DEVIATIONS 17.73): attempt 3 (consolidation_fx554_s2_20261015_b) ran
+# plan rows 001 to 028 and stopped at 028, which passes under 17.73 and stays in session 2. These are rows 029 to 033 of
+# consolidation_fx554_s2.tsv, byte-identical and in order (= that batch's remaining.tsv), after one yolo26n NPU sentinel
+# (a deviation: the new boot gets a rig check; not counted in a row). 6 runs; NPU opens 2 + 2 x 5 = 12 <= 40.
+sen2c	yolo26n	npu	sentinel
+c3	yolov11s	cpu	row
+c5	yolov8n	npu	row
+c2	yolo26s	npu	row
+c3	yolov8m	npu	row
+c4	yolov8m	npu	row

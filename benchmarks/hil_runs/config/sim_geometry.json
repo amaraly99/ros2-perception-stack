@@ -13,6 +13,14 @@
     7.5,
     "2*pi-0.0460"
   ],
+  "nontarget_signs_xyz": [
+    [
+      35.199,
+      -15.914,
+      3.054
+    ]
+  ],
+  "nontarget_signs_note": "15H (DEVIATIONS 17.73): a second stop sign, 18.8 m right of the target. Position INFERRED from data (fitted to 51 boxes in 4 runs at fx 554, residual max 3.3 px, 1-sigma about 3 cm) and confirmed as a stop sign by viewing every box crop; replaced by the scene's true position if that is obtained. The /sim/target_pose constant (35.5, 23.7, 3.2) matched no box and is not used; a third sign near (34.9, -35.7, 3.1), seen in one run only, is recorded but not used.",
   "start_bearing_tol_deg": 5.0,
   "smoke_final_dist_window_m": [
     1.6,
