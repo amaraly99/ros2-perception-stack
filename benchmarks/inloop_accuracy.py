@@ -103,6 +103,26 @@ def default_rms_gate(fx):
 YAW_RATE_BOUND_RAD_S = 0.05
 TARGET_CLASS = "stop sign"
 
+# 16A (DEVIATIONS 17.76, POST-HOC: defined after session 5a run 004). The gate projects the
+# frozen target as ONE POINT and compares it with the detector's box centre. Closer than
+# about 2 m that comparison stops measuring geometry: a 2 to 3 cm position term is already
+# 7 px (every straight-on parked run, 1.5 to 1.9 m from the drone origin: du about -7 px,
+# far frames 0.5 px), the box is a detector convention (face with or without pole, rim)
+# rather than the face centre, the face itself (506 px tall at 1.0 m) overflows the
+# 480 px frame so the box is cut by the border, and from the side (5a run 004: 63 to 75 deg
+# off the sign's normal at 1.0 to 1.4 m) the point model misses the rendered sign by
+# about 100 px while the same run's 27 frames beyond 2 m reproject at 4.6 px and every
+# crop shows the box on the target. So the gate and its delivery diagnostic measure only
+# frames whose horizontal range from the DRONE ORIGIN (/sim/drone_pose x, y: the quantity
+# of check_run's final and closest distance) to the frozen target at CAPTURE is at least
+# GATE_MIN_RANGE_M: 2.0 m, the number of the lower edge of Table 14's lowest bin, applied
+# to the drone-origin range (the bins use the camera range, 0.2 m ahead, so the floor sits
+# 0.2 m inside that bin and keeps the parked NPU frames at 2.06 to 2.16 m in the gate);
+# closer frames are counted and excluded, never used to refuse a run, and the count is
+# written only when non-zero. The held frame (20 m) always qualifies. The 18.4667 px
+# limit, the yaw-rate bound, the duplicate and known-sign rules and score() are unchanged.
+GATE_MIN_RANGE_M = 2.0
+
 
 # 15D (DEVIATIONS 17.71). On the in-loop pixels of the held render, yolo26s CPU's
 # end-to-end head emits two boxes on the sign that differ by under 0.1 px (conf 0.78
@@ -732,7 +752,7 @@ def triangulate(poses, dets, min_conf=0.5):
 
 
 def reprojection_rms(poses, dets, target, clock_offset_ns=None, signs=None, assign_px=None,
-                     assign_offset_ns=None):
+                     assign_offset_ns=None, min_range_m=None):
     """RMS reprojection error of the FROZEN target against single-sign frames.
 
     This is the geometry check that replaces the old refit-and-compare: with a
@@ -752,11 +772,14 @@ def reprojection_rms(poses, dets, target, clock_offset_ns=None, signs=None, assi
     messages that carried one are counted. 17.73: boxes of a known non-target sign
     (drop_known_signs) are dropped and counted. Which sign a box shows is a property
     of the captured image, so the assignment uses the CAPTURE pose whenever the clock
-    offset is known (assign_offset_ns), also for the delivery diagnostic.
-    Returns (rms, n_used, n_excluded, n_dup_msgs, n_sign_boxes).
+    offset is known (assign_offset_ns), also for the delivery diagnostic. 17.76: frames
+    whose horizontal range from the drone origin to the target at CAPTURE (the same pose
+    source, assign_offset_ns) is below min_range_m are counted and excluded, after every
+    other test, so the count is exactly the frames the floor removes from the measurement.
+    Returns (rms, n_used, n_excluded, n_dup_msgs, n_sign_boxes, n_below_min_range).
     """
     track = PoseTrack(poses)
-    tot = n = n_excl = n_dup = n_sign = 0
+    tot = n = n_excl = n_dup = n_sign = n_near = 0
     if assign_offset_ns is None:
         assign_offset_ns = clock_offset_ns
     for rec in dets:
@@ -781,9 +804,15 @@ def reprojection_rms(poses, dets, target, clock_offset_ns=None, signs=None, assi
         uv = project(pose, target)
         if uv is None or not in_view(uv):
             continue
+        if min_range_m is not None:
+            t_c = rec["stamp_ns"] + assign_offset_ns if assign_offset_ns is not None else rec["log_ns"]
+            pc = track.at(t_c)
+            if pc is not None and math.hypot(target[0] - pc[1], target[1] - pc[2]) < min_range_m:
+                n_near += 1
+                continue
         tot += (uv[0] - hits[0][2]) ** 2 + (uv[1] - hits[0][3]) ** 2
         n += 1
-    return (math.sqrt(tot / n) if n else None, n, n_excl, n_dup, n_sign)
+    return (math.sqrt(tot / n) if n else None, n, n_excl, n_dup, n_sign, n_near)
 
 
 def main():
@@ -891,24 +920,31 @@ def main():
     # detector's latency (17.20), which is the effect this scorer measures, not a
     # geometry error. The delivery RMS is printed as a diagnostic only. The legacy
     # lookup has no clock offset, so it keeps the delivery gate.
-    rms_del, n_del, nx_del, n_dup, ns_del = reprojection_rms(poses, dets, target, None, signs, rms_gate,
-                                                             args.clock_offset_ns)
+    rms_del, n_del, nx_del, n_dup, ns_del, nr_del = reprojection_rms(poses, dets, target, None, signs, rms_gate,
+                                                                     args.clock_offset_ns, GATE_MIN_RANGE_M)
     if args.clock_offset_ns is not None:
-        rms, n_rms, nx, _, n_sign = reprojection_rms(poses, dets, target, args.clock_offset_ns, signs, rms_gate)
+        rms, n_rms, nx, _, n_sign, nr = reprojection_rms(poses, dets, target, args.clock_offset_ns, signs, rms_gate,
+                                                         min_range_m=GATE_MIN_RANGE_M)
         gate_timing = "capture"
     else:
-        rms, n_rms, nx, n_sign = rms_del, n_del, nx_del, ns_del
+        rms, n_rms, nx, n_sign, nr = rms_del, n_del, nx_del, ns_del, nr_del
         gate_timing = "delivery"
     if rms is None:
-        if nx:
-            sys.exit(f"no single-sign in-view detections within the yaw-rate bound ({nx} excluded at "
-                     f"|yaw rate| > {YAW_RATE_BOUND_RAD_S:g} rad/s): cannot check the geometry")
+        if nx or nr:
+            # the 17.76 clause is added only when it applies, so the 17.69 message is byte-identical otherwise
+            why = ([f"{nx} excluded at |yaw rate| > {YAW_RATE_BOUND_RAD_S:g} rad/s"] if nx else []) \
+                + ([f"{nr} closer than {GATE_MIN_RANGE_M:g} m"] if nr else [])
+            sys.exit(f"no single-sign in-view detections within the yaw-rate bound ({', '.join(why)}): "
+                     "cannot check the geometry")
         sys.exit("no single-sign in-view detections: cannot check the geometry")
     print(f"geometry check: frozen target reprojects at {rms:.1f} px RMS over {n_rms} frames "
           f"at {gate_timing} (gate {rms_gate:.1f} px at fx {FX:g})")
     if nx or nx_del:
         print(f"  excluded from the gate (17.69): {nx} frames at capture, {nx_del} at delivery, "
               f"|yaw rate| > {YAW_RATE_BOUND_RAD_S:g} rad/s (counted, not measured)")
+    if nr or nr_del:
+        print(f"  below the gate's range floor (17.76): {nr} frames at capture, {nr_del} at delivery, "
+              f"closer than {GATE_MIN_RANGE_M:g} m to the frozen target (counted, not measured)")
     if n_dup:
         print(f"  exact duplicate boxes counted as one sign (17.71): {n_dup} detection messages")
     if n_sign or ns_del:
@@ -944,6 +980,11 @@ def main():
         res["geometry"]["yaw_rate_bound_rad_s"] = YAW_RATE_BOUND_RAD_S
         res["geometry"]["gate_frames_excluded_yaw_rate"] = nx
         res["geometry"]["gate_frames_excluded_yaw_rate_delivery"] = nx_del
+    # 17.76: reported only when it happened (byte-identical output otherwise).
+    if nr or nr_del:
+        res["geometry"]["gate_min_range_m"] = GATE_MIN_RANGE_M
+        res["geometry"]["gate_frames_below_min_range"] = nr
+        res["geometry"]["gate_frames_below_min_range_delivery"] = nr_del
     # 17.71: reported only when it happened (byte-identical output otherwise).
     if n_dup:
         res["geometry"]["gate_messages_exact_duplicate_boxes"] = n_dup
