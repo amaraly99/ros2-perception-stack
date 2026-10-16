@@ -3,6 +3,8 @@
 #   Plan lines (tab separated, '#' comments): key  model  backend  role      (role: row | sentinel | pilot | expect_stop)
 #   14A: an optional 5th column names the stack config (config/hil/stack/<name>.yaml in $HIL_WT) for that run; it must be
 #   ours_fx554_<placement>_ibvs or start with ours_fx554_<placement>_ibvs_ and exist. A 4-column line runs exactly as before.
+#   16A (DEVIATIONS 17.77): on an ablation row (key starting with "lw", session 5a, never pooled) the two geometry-gate checks are
+#   recorded in the log instead of stopping the batch; sentinel and main-table keys (sen*, c*, x*) stay gated.
 #   expect_stop (SSD from 20 m, which sees no sign: 5M): the 10 s stop rule is expected to end the run. Accepted only if
 #   STOP_RULE.txt exists, no guard exit fired (run_one rc not in 4 5 6 7 10-14 20) and the checks that do not need the
 #   approach pass (start pose, interface, RMW, fx, SLAM off, clock offset, held render); rates, scorer and distance are not judged.
@@ -27,7 +29,8 @@
 #      since boot (8A), opens since boot + 2 <= budget). The same check comes before every NPU open of the batch, so after an
 #      NPU failure nothing opens the NPU again until a power-on (and the batch has stopped: the run is INVALID, run_one.sh).
 #   3. the run: run_one.sh into <batch_dir>/<NNN>_<label>/ (fixed hold, own-config gate, stack, resume, teardown, check_run).
-#   4. per run, after it: the stack run rc 0 (smoke_rc), every PLUMBING check of check_run passes (5R, Ahmed: the outcome
+#   4. per run, after it: the stack run rc 0 (smoke_rc), every PLUMBING check of check_run passes (16A: on lw keys the two
+#      geometry-gate checks are recorded instead, DEVIATIONS 17.77) (5R, Ahmed: the outcome
 #      check final_dist_in_window_provisional is reported, never a stop: a run that does not reach is data for Reach),
 #      teardown (no container, supervisor sim=stopped); for a sentinel, Det Hz,
 #      /cmd_vel Hz and Det latency within 5 % of the A3 means.
@@ -195,7 +198,7 @@ EXPECT
   else
   SRC=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['smoke_rc'])" "$RD/run_result.json" 2>/dev/null || echo "$RRC")
   [ "$SRC" = 0 ] || stop "run $NNN ($KEY) failed: stack run rc $SRC, run_one rc $RRC (see $(basename "$RD")/run.log and ${NNN}_run_one.out)" "$((N + 1))"
-  r=$(python3 - "$RD" <<'PLUMB'
+  r=$(python3 - "$RD" "$KEY" <<'PLUMB'
 import glob, json, os, sys
 # Reported per run, never a stop: these describe what the mission DID, not whether the rig was wired right.
 # 5R: final_dist_in_window_provisional (a run that does not reach is data for Reach).
@@ -206,26 +209,40 @@ import glob, json, os, sys
 #   det_hz_gt_0 is safe to demote because the resume gate already refuses to start a run with no detection
 #   on the held frame, and first_det_before_resume still marks INVALID and stops, so "the detector is dead"
 #   is caught earlier and harder than here.
-# NOT demoted: scorer_runs, geometry_gate_is_protocol and geometry_gate_capture_pass still stop the batch.
+# NOT demoted (on every key except lw*, 16A below): scorer_runs, geometry_gate_is_protocol and geometry_gate_capture_pass still stop the batch.
 #   9C (17.69): they no longer fail structurally on a run that never locks on. geometry_gate_is_protocol is
 #   configuration-only in check_run.py, and the scorer measures its gate on frames with |yaw rate| at or
 #   below 0.05 rad/s (the held frame always qualifies), so a run that never locks on passes the gate on its
 #   zero-yaw frames and is a result (recorded below with reason "no lock-on"), while a run whose geometry is
 #   wrong on those frames still stops the batch. See DEVIATIONS 17.68 (e) and 17.69.
 OUTCOME = {"final_dist_in_window_provisional", "det_hz_gt_0", "cmd_within_5pct_of_det"}
+# 16A (DEVIATIONS 17.77, Ahmed): on an ABLATION row (plan key starting with "lw": session 5a, never pooled into Tables 13/14)
+#   scorer_runs and geometry_gate_capture_pass are RECORDED, not stopping. The gate still runs on every row and its value is
+#   logged here; the sentinel (sen*) and every main-table key (c*, x*) stay gated, so a rig-level geometry fault still stops
+#   the batch at its first row. Reason: after an overshoot a slow row can re-find the sign from the side, where the single-point
+#   gate is off by the target's along-axis uncertainty (17.76 d); on an ablation row that is an outcome, not a plumbing fault.
+ABLATION = len(sys.argv) > 2 and sys.argv[2].startswith("lw")
+RECORDED = {"scorer_runs", "geometry_gate_capture_pass"} if ABLATION else set()
 try:
     c = json.load(open(glob.glob(os.path.join(sys.argv[1], "check", "*_check.json"))[0]))
 except (IndexError, OSError, ValueError) as e:
     print(f"no check_run result ({e})"); sys.exit(1)
-bad = [k for k, v in c["checks"].items() if not v and k not in OUTCOME]
+bad = [k for k, v in c["checks"].items() if not v and k not in OUTCOME and k not in RECORDED]
 out = [k for k, v in c["checks"].items() if not v and k in OUTCOME]
+rec = [k for k, v in c["checks"].items() if not v and k in RECORDED]
 i = c["info"]
+# the gate value when the scorer ran; when it refused (the usual way the pair fails) check.json holds null and the RMS sits
+# only in the scorer's refusal line (info.scorer_tail), so that line is printed instead
+_gv = (i.get("geometry_gate") or {}).get("frozen_target_reprojection_rms_px")
+gate_text = (f"gate {_gv:.1f} px" if isinstance(_gv, (int, float)) else
+             next((l.strip() for l in (i.get("scorer_tail") or []) if "refusing to score" in l), "gate value not in check.json"))
 # 9C (item 9, 17.69): a run that never left SEARCHING is recorded with reason "no lock-on"; the batch continues.
 nolock = (i.get("final_state") == "SEARCHING" and not i.get("reached")
           and not i.get("n_lost") and not i.get("n_reacquire"))
 print(("plumbing FAIL: " + ", ".join(bad)) if bad else
       "plumbing ok; outcome: " + ("no lock-on; " if nolock else "")
-      + f"reached {i.get('reached')} final {i.get('final_dist_frozen_sign_m')} m" + (f" (outside window: {out})" if out else ""))
+      + f"reached {i.get('reached')} final {i.get('final_dist_frozen_sign_m')} m" + (f" (outside window: {out})" if out else "")
+      + (f" (ablation row: geometry gate recorded, not stopping: {rec}; {gate_text})" if rec else ""))
 sys.exit(1 if bad else 0)
 PLUMB
 ) || stop "run $NNN ($KEY): check_run $r (see $(basename "$RD")/check/)" "$((N + 1))"
