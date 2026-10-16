@@ -22,8 +22,19 @@ std over reached runs, final distance to the frozen target (mean, std, min, max 
 det_hz, cmd_vel_hz and det latency (det_path mean) mean and std over all runs; SSD rows as the dropped decision of 17.74.
 Every output is labelled DRAFT. Usage:
   ~/venvs/mcap/bin/python benchmarks/hil_tools/pool_tables.py --batches <list.tsv> --rescored <prescore dir> --out <dir>
+      [--outcomes <per_run_outcomes.tsv>] [--sensitivity <sess>:<run prefix> ...] [--axis-uncertainty "+0.1 to +0.3"] [--cache <dir>]
 <list.tsv>: lines "<session> <batch folder>"; <prescore dir>: the re-score tree (made with invariance/rescore.sh) with
 <batch basename>/<run>/<label>_run1_inloop.json and _check.json. <out dir> must not exist (no overwrite).
+16D additions (prompt 16D decisions, all presentation; no number of 16A changes): --outcomes adds the step 3 outcome class of
+run_outcomes.py as a Table 13 column (counts per class) and to per_run.tsv, and supplies the lock-on count; a Table 14 row whose
+runs never locked on and have no approach message prints "no approach frames (0 of n runs locked on, see Table 13)" in place
+of n and the medians (with --outcomes the lock-on count comes from the stack log; messages taken during a no-lock-on run's
+search motion are set aside and reported on stdout; without --outcomes the text needs zero such messages too); --sensitivity
+writes, under every Table 13 and Table 14 row (and bin line) that contains a listed run,
+the same row recomputed without those runs, labelled "(without ...)"; --axis-uncertainty writes that text next to every final
+distance of Table 13 (the frozen target's along-axis uncertainty, REPORT_16A); --cache reuses an existing read_bag cache
+directory instead of <out>/.cache (on a cache miss read_bag writes a new entry into it, so point it at a copy, never at an
+archived output folder).
 """
 import argparse, bisect, csv, glob, importlib.util, json, math, os, statistics, sys
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.path.dirname(HERE))
@@ -183,11 +194,23 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--batches", required=True); ap.add_argument("--rescored", required=True); ap.add_argument("--out", required=True)
     ap.add_argument("--usb", default="/mnt/usb/hil_runs")
+    ap.add_argument("--outcomes", default=None, help="16D: per_run_outcomes.tsv of run_outcomes.py (outcome class and lock-on per run)")
+    ap.add_argument("--sensitivity", nargs="*", default=[], help="16D: <sess>:<run dir prefix> runs; rows containing them are repeated without them")
+    ap.add_argument("--axis-uncertainty", default=None, help="16D: text written next to every final distance, e.g. '+0.1 to +0.3'")
+    ap.add_argument("--cache", default=None, help="16D: an existing read_bag cache directory to reuse (default <out>/.cache)")
     a = ap.parse_args()
     setup_scorer()
     if os.path.exists(a.out):
         sys.exit(f"pool_tables: REFUSE: {a.out} exists (every run writes into a new folder)")
-    os.makedirs(a.out); cache = os.path.join(a.out, ".cache")
+    os.makedirs(a.out); cache = a.cache or os.path.join(a.out, ".cache")
+    outcomes = {}
+    if a.outcomes:
+        for r in csv.DictReader((l for l in open(a.outcomes) if not l.startswith("#")), delimiter="\t"):
+            outcomes[(r["sess"], r["run"])] = {"class": r["outcome_class"], "locked_on": r["locked_on"] == "True"}
+    def sens_hit(p):
+        return any(p["sess"] == e.split(":")[0] and p["run"].startswith(e.split(":")[1]) for e in a.sensitivity)
+    def sens_label(rs):
+        return "without " + ", ".join(f"{p['sess']} {p['run'][:3]}" for p in rs if sens_hit(p))
     runs = []
     for line in open(a.batches):
         if not line.strip() or line.startswith("#"):
@@ -220,20 +243,20 @@ def main():
                         "det_latency_ms": sm["detector_latency_ms"]["det_path"]["mean"], "reached": bool(ms.get("reached")),
                         "t_reach": ms.get("time_to_reached_sim_s"), "final_m": ms.get("final_dist_frozen_sign_m"), "closest_m": cj.get("closest_dist_frozen_sign_m"),
                         "n_lost": ms.get("n_lost"), "n_reacquire": ms.get("n_reacquire"), "final_state": ms.get("final_state"),
-                        "gate_px": (cj.get("geometry_gate") or {}).get("frozen_target_reprojection_rms_px")})
+                        "gate_px": (cj.get("geometry_gate") or {}).get("frozen_target_reprojection_rms_px"),
+                        "outcome": (outcomes.get((sess, r["dir"])) or {}).get("class"), "locked_on": (outcomes.get((sess, r["dir"])) or {}).get("locked_on")})
         print(f"  {sess} {r['dir']}: rows {len(rows)}, self-check {eq1} {eq2}")
     selfcheck.close()
     print(f"self-check: {len(per_run)} runs accepted, {len(refused)} refused: {refused}")
     # ---- Table 14 ----
     cfgs = sorted({(p["model"], p["backend"]) for p in per_run if p["role"] != "sentinel"}, key=lambda c: (ORDER.index(c[0]) if c[0] in ORDER else 99, c[1]))
     t14 = open(os.path.join(a.out, "DRAFT_table14.tsv"), "w"); t14b = open(os.path.join(a.out, "DRAFT_table14_bins.tsv"), "w")
-    t14.write("# DRAFT Table 14 (16A pool_tables.py): n and the medians over the approach phase in the bins " + ",".join(f"{lo}-{hi}" for lo, hi in BINS) + " m pooled; the miss columns over the WHOLE RUN, camera frames with the target in view at capture (denominators in per_run.tsv); row medians print from any pooled count (the 17.66 floor is per bin)\n")
+    t14.write("# DRAFT Table 14 (16A pool_tables.py, 16D rows): n and the medians over the approach phase in the bins " + ",".join(f"{lo}-{hi}" for lo, hi in BINS) + " m pooled; the miss columns over the WHOLE RUN, camera frames with the target in view at capture (denominators in per_run.tsv); row medians print from any pooled count (the 17.66 floor is per bin)\n")
     t14.write("model\tbackend\truns\tn\tcap_med_px\tdel_med_px\tdelta_px\tref_motion_px\tmiss_proc_pct\tmiss_cam_pct\tn_detections_with_box\n")
     t14b.write("# DRAFT Table 14 per bin (16A): pooled messages with the reference in view and runs per bin; below floor printed as text\n")
     t14b.write("model\tbackend\tbin_m\tmessages\truns\tcap_med_px\tdel_med_px\tdelta_px\tref_motion_px\tstatus\n")
     tex = open(os.path.join(a.out, "DRAFT_table14_rows.tex"), "w"); tex.write("% DRAFT rows (16A pool_tables.py); columns: Model & Backend & Runs & n & at capture & at delivery & Delta & Ref. motion & Miss/proc. & Miss/cam.\n")
-    for model, bk in cfgs:
-        rs = [p for p in per_run if (p["model"], p["backend"]) == (model, bk) and p["role"] != "sentinel"]
+    def t14_row(model, bk, rs, name, texname):
         appr = [(p["run"], r) for p in rs for r in p["rows"] if r["speed"] is not None and r["speed"] >= ia.PARKED_SPEED and r["bin"] is not None]
         vis = [(run, r) for run, r in appr if r["visible"]]
         cap = [r["err_cap"] for _, r in vis if r["err_cap"] is not None]; dlv = [r["err_del"] for _, r in vis if r["err_del"] is not None]
@@ -243,45 +266,79 @@ def main():
         miss_cam = 100 * (mc["processed_in_view_missed"] + mc["skipped_in_view"]) / (mc["processed_in_view"] + mc["skipped_in_view"]) if (mc["processed_in_view"] + mc["skipped_in_view"]) else None
         mcap, mdel = med(cap), med(dlv)
         delta = (mdel - mcap) if (mcap is not None and mdel is not None) else None
-        t14.write("\t".join([model, bk, str(len(rs)), str(len(vis)), fmt(mcap), fmt(mdel), fmt(delta), fmt(med(refm)), fmt(miss_proc, 1), fmt(miss_cam, 1), str(len(cap))]) + "\n")
-        tex.write(f"{DISPLAY.get(model, model)} & {bk.upper()} & {len(rs)} & {len(vis)} & {fmt(mcap)} & {fmt(mdel)} & {'' if delta is None else ('$' + ('+' if delta >= 0 else '') + f'{delta:.2f}$')} & {fmt(med(refm))} & {fmt(miss_proc, 1)} & {fmt(miss_cam, 1)} \\\\\n")
+        # 16D: a row whose runs never locked on and have no approach message prints the reason in place of n and the medians
+        if outcomes:
+            n_lock = sum(1 for p in rs if p["locked_on"])
+        else:
+            n_lock = sum(1 for p in rs if not (p["final_state"] == "SEARCHING" and not p["reached"] and not p["n_lost"] and not p["n_reacquire"]))
+        if n_lock == 0 and (outcomes or not vis):
+            # a row that never locked on made no approach; messages taken during the search motion (speed above the parked
+            # threshold while yawing or strafing at the start distance) are set aside and counted in the log line
+            txt = f"no approach frames (0 of {len(rs)} runs locked on, see Table 13)"
+            if vis:
+                print(f"  note: {name} {bk}: {len(vis)} in-view messages from {len({run for run, _ in vis})} run(s) during the search motion set aside (no lock-on)")
+            t14.write("\t".join([name, bk, str(len(rs)), txt, "", "", "", "", fmt(miss_proc, 1), fmt(miss_cam, 1), str(len(cap))]) + "\n")
+            tex.write(f"{texname} & {bk.upper()} & {len(rs)} & \\multicolumn{{5}}{{l}}{{{txt}}} & {fmt(miss_proc, 1)} & {fmt(miss_cam, 1)} \\\\\n")
+        else:
+            t14.write("\t".join([name, bk, str(len(rs)), str(len(vis)), fmt(mcap), fmt(mdel), fmt(delta), fmt(med(refm)), fmt(miss_proc, 1), fmt(miss_cam, 1), str(len(cap))]) + "\n")
+            tex.write(f"{texname} & {bk.upper()} & {len(rs)} & {len(vis)} & {fmt(mcap)} & {fmt(mdel)} & {'' if delta is None else ('$' + ('+' if delta >= 0 else '') + f'{delta:.2f}$')} & {fmt(med(refm))} & {fmt(miss_proc, 1)} & {fmt(miss_cam, 1)} \\\\\n")
         for lo, hi in BINS:
             key = f"{lo}-{hi}m"
             bv = [(run, r) for run, r in vis if r["bin"] == key]
             k = len({run for run, _ in bv})
             if len(bv) < FLOOR:
-                t14b.write("\t".join([model, bk, key, str(len(bv)), str(k), "", "", "", "", f"below floor ({len(bv)} messages, {k} runs)"]) + "\n"); continue
+                t14b.write("\t".join([name, bk, key, str(len(bv)), str(k), "", "", "", "", f"below floor ({len(bv)} messages, {k} runs)"]) + "\n"); continue
             c = [r["err_cap"] for _, r in bv if r["err_cap"] is not None]; d = [r["err_del"] for _, r in bv if r["err_del"] is not None]; m = [r["ref_motion"] for _, r in bv if r["ref_motion"] is not None]
             dd = (med(d) - med(c)) if (c and d) else None
-            t14b.write("\t".join([model, bk, key, str(len(bv)), str(k), fmt(med(c)), fmt(med(d)), fmt(dd), fmt(med(m)), "ok"]) + "\n")
+            t14b.write("\t".join([name, bk, key, str(len(bv)), str(k), fmt(med(c)), fmt(med(d)), fmt(dd), fmt(med(m)), "ok"]) + "\n")
+    for model, bk in cfgs:
+        rs = [p for p in per_run if (p["model"], p["backend"]) == (model, bk) and p["role"] != "sentinel"]
+        t14_row(model, bk, rs, model, DISPLAY.get(model, model))
+        if any(sens_hit(p) for p in rs):   # 16D sensitivity line: the same row without the listed runs
+            lab = sens_label(rs); t14_row(model, bk, [p for p in rs if not sens_hit(p)], f"{model} ({lab})", f"{DISPLAY.get(model, model)} ({lab})")
     t14.close(); t14b.close(); tex.close()
     # ---- Table 13 ----
     t13 = open(os.path.join(a.out, "DRAFT_table13.tsv"), "w")
-    t13.write("# DRAFT Table 13 (16A pool_tables.py): per configuration over the pooled rows (sentinels listed separately); reach = sim time to REACHED over reached runs; final = horizontal distance to the frozen target (drone origin)\n")
-    t13.write("model\tbackend\truns\treached\tno_lockon\treach_s_mean\treach_s_std\tfinal_m_mean\tfinal_m_std\tfinal_m_min\tfinal_m_max\tclosest_m_min\tn_lost_runs\tdet_hz_mean\tdet_hz_std\tcmd_vel_hz_mean\tdet_lat_ms_mean\tdet_lat_ms_std\tgate_px_max\n")
+    t13.write("# DRAFT Table 13 (16A pool_tables.py, 16D columns): per configuration over the pooled rows (sentinels listed separately); reach = sim time to REACHED over reached runs; final = horizontal distance to the frozen target (drone origin)"
+              + (f"; every final distance carries the frozen target's along-axis uncertainty of {a.axis_uncertainty} m (REPORT_16A, DEVIATIONS 17.76 b iv), the same for every row" if a.axis_uncertainty else "")
+              + ("; outcome classes from run_outcomes.py (16D step 3)" if outcomes else "") + (f"; sensitivity lines without {a.sensitivity}" if a.sensitivity else "") + "\n")
+    t13.write("model\tbackend\truns\treached\tno_lockon\treach_s_mean\treach_s_std\tfinal_m_mean\tfinal_m_std\tfinal_m_min\tfinal_m_max\tfinal_axis_uncert_m\tclosest_m_min\tn_lost_runs\tdet_hz_mean\tdet_hz_std\tcmd_vel_hz_mean\tdet_lat_ms_mean\tdet_lat_ms_std\tgate_px_max\toutcome_classes\n")
     def ms_(v):
         return (statistics.fmean(v), statistics.stdev(v) if len(v) > 1 else 0.0) if v else (None, None)
+    def t13_row(name, bk, rs):
+        re_ = [p for p in rs if p["reached"]]
+        nolock_h = sum(1 for p in rs if p["final_state"] == "SEARCHING" and not p["reached"] and not p["n_lost"] and not p["n_reacquire"])
+        nolock = sum(1 for p in rs if not p["locked_on"]) if outcomes else nolock_h
+        if outcomes and nolock != nolock_h:
+            print(f"  note: {name} {bk}: lock-on from the outcomes file ({nolock} never locked on) differs from the mission heuristic ({nolock_h})")
+        tm, ts = ms_([p["t_reach"] for p in re_ if p["t_reach"] is not None]); fm, fs = ms_([p["final_m"] for p in re_ if p["final_m"] is not None])
+        dm, ds = ms_([p["det_hz"] for p in rs]); cm, _ = ms_([p["cmd_vel_hz"] for p in rs]); lm, ls = ms_([p["det_latency_ms"] for p in rs])
+        fin = [p["final_m"] for p in re_ if p["final_m"] is not None]; clo = [p["closest_m"] for p in rs if p["closest_m"] is not None]
+        if outcomes:
+            cls = [p["outcome"] for p in rs if p["outcome"]]
+            oc = "; ".join(f"{cls.count(c)} {c}" for c in ("reached cleanly", "reached after an overshoot", "overshot and lost the sign", "arrived in the window without REACHED", "never locked on", "other") if cls.count(c))
+        else:
+            oc = ""
+        t13.write("\t".join([name, bk, str(len(rs)), f"{len(re_)}/{len(rs)}", str(nolock), fmt(tm), fmt(ts), fmt(fm, 3), fmt(fs, 3), fmt(min(fin), 3) if fin else "", fmt(max(fin), 3) if fin else "",
+                             (a.axis_uncertainty or "") if fin else "",
+                             fmt(min(clo), 3) if clo else "", str(sum(1 for p in rs if p["n_lost"])), fmt(dm, 3), fmt(ds, 3), fmt(cm, 3), fmt(lm, 1), fmt(ls, 1),
+                             fmt(max(p["gate_px"] for p in rs if p["gate_px"] is not None), 1) if any(p["gate_px"] is not None for p in rs) else "", oc]) + "\n")
     for role_sel, tag in ((lambda p: p["role"] != "sentinel", ""), (lambda p: p["role"] == "sentinel", " (sentinels)")):
         for model, bk in sorted({(p["model"], p["backend"]) for p in per_run if role_sel(p)}, key=lambda c: (ORDER.index(c[0]) if c[0] in ORDER else 99, c[1])):
             rs = [p for p in per_run if (p["model"], p["backend"]) == (model, bk) and role_sel(p)]
-            re_ = [p for p in rs if p["reached"]]
-            nolock = sum(1 for p in rs if p["final_state"] == "SEARCHING" and not p["reached"] and not p["n_lost"] and not p["n_reacquire"])
-            tm, ts = ms_([p["t_reach"] for p in re_ if p["t_reach"] is not None]); fm, fs = ms_([p["final_m"] for p in re_ if p["final_m"] is not None])
-            dm, ds = ms_([p["det_hz"] for p in rs]); cm, _ = ms_([p["cmd_vel_hz"] for p in rs]); lm, ls = ms_([p["det_latency_ms"] for p in rs])
-            fin = [p["final_m"] for p in re_ if p["final_m"] is not None]; clo = [p["closest_m"] for p in rs if p["closest_m"] is not None]
-            t13.write("\t".join([model + tag, bk, str(len(rs)), f"{len(re_)}/{len(rs)}", str(nolock), fmt(tm), fmt(ts), fmt(fm, 3), fmt(fs, 3), fmt(min(fin), 3) if fin else "", fmt(max(fin), 3) if fin else "",
-                                 fmt(min(clo), 3) if clo else "", str(sum(1 for p in rs if p["n_lost"])), fmt(dm, 3), fmt(ds, 3), fmt(cm, 3), fmt(lm, 1), fmt(ls, 1),
-                                 fmt(max(p["gate_px"] for p in rs if p["gate_px"] is not None), 1) if any(p["gate_px"] is not None for p in rs) else ""]) + "\n")
-    t13.write("ssd_mobilenet_v2\tcpu/npu\t0\tdropped\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tno box on the byte-identical held render (17.74; session gate evidence)\n")
+            t13_row(model + tag, bk, rs)
+            if any(sens_hit(p) for p in rs):   # 16D sensitivity line
+                t13_row(f"{model}{tag} ({sens_label(rs)})", bk, [p for p in rs if not sens_hit(p)])
+    t13.write("ssd_mobilenet_v2\tcpu/npu\t0\tdropped\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\tno box on the byte-identical held render (17.74; session gate evidence)\t\n")
     t13.close()
     with open(os.path.join(a.out, "per_run.tsv"), "w") as f:
         f.write("# DRAFT per-run inputs of the DRAFT tables (16A pool_tables.py)\n")
-        f.write("sess\tbatch\trun\tkey\tmodel\tbackend\trole\treached\tfinal_state\tt_reach_s\tfinal_m\tclosest_m\tn_lost\tdet_hz\tcmd_vel_hz\tdet_lat_ms\tgate_px\trows\tproc_in_view\tproc_in_view_missed\tskipped_in_view\tskipped_total\tcam_frames_window\n")
+        f.write("sess\tbatch\trun\tkey\tmodel\tbackend\trole\treached\tfinal_state\tt_reach_s\tfinal_m\tclosest_m\tn_lost\tdet_hz\tcmd_vel_hz\tdet_lat_ms\tgate_px\trows\tproc_in_view\tproc_in_view_missed\tskipped_in_view\tskipped_total\tcam_frames_window\toutcome_class\n")
         for p in per_run:
             c = p["cam"]
             f.write("\t".join(str(x) for x in [p["sess"], p["batch"], p["run"], p["key"], p["model"], p["backend"], p["role"], p["reached"], p["final_state"], p["t_reach"], p["final_m"], p["closest_m"], p["n_lost"],
                                              round(p["det_hz"], 3), round(p["cmd_vel_hz"], 3), round(p["det_latency_ms"], 1), None if p["gate_px"] is None else round(p["gate_px"], 2), len(p["rows"]),
-                                             c["processed_in_view"], c["processed_in_view_missed"], c["skipped_in_view"], c["skipped_total"], c["camera_frames_window"]]) + "\n")
+                                             c["processed_in_view"], c["processed_in_view_missed"], c["skipped_in_view"], c["skipped_total"], c["camera_frames_window"], p["outcome"] or ""]) + "\n")
     print("wrote DRAFT_table13.tsv, DRAFT_table14.tsv, DRAFT_table14_bins.tsv, DRAFT_table14_rows.tex, per_run.tsv, selfcheck.tsv in", a.out)
     return 0 if not refused else 2
 

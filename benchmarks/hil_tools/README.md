@@ -9,10 +9,21 @@ stored result; every tool reads run folders and re-score trees and writes only i
 | `pool_tables.py` | DRAFT Tables 13 and 14 pooled per configuration from the run folders and a one-scorer re-score tree; self-checks every run against that tree's `_inloop.json` (the `--rescored` argument, not the run folder's `check/`) (DEVIATIONS 17.66 a; MISS_RATE = in_view) | draft tables only; the scoring prompt makes them final |
 | `invariance/archive_code.sh`, `invariance/rescore.sh`, `invariance/compare.py` | re-run `check_run.py` of any commit over a batch list into a tree, and compare two trees or a tree with the stored outputs (byte comparison with the out-dir path normalised; verdict and score() key summaries) | the same procedure as the ad hoc invariance runs of DEVIATIONS 17.69 f, 17.71 f and 17.73 g; generalised from the 17.76 e scripts |
 | `worktree_inputs.sh` | inventory and comparison of every git-ignored path of two worktrees (count and content hash per path, differing entries) | written after PLAN_S5 A3 missed the `src/ov2slam_ros/Thirdparty` build products (found in 15K with git status --ignored); run on the before-copy manifests it lists those six paths as only in the reference |
+| `run_outcomes.py` (16D) | one row per in-loop run from the run folders: the first-motion audit (did the pose follow the first vx and wz commands after resume), the FSM transitions with reasons from the stack log, the reach rule's conditions as the data met them (replayed smoothed box ratio, ex, ey; close-and-centred streak against reach_consec_ticks; the last box before the final loss and what the camera saw next), closest approach, outcome class, staleness terms; self-check `replay_consistent` (the replayed streak reaches 8 exactly for the runs that logged REACHED) | 16D: 157 of 157 runs consistent; definitions in stage6/analysis_16D/EXPECTED.md |
+| `first_motion_audit.py`, `reach_audit.py`, `outcome_classes.py`, `staleness_fit.py` (16D) | summaries over `per_run_outcomes.tsv`: the audit counts and the failing runs; reach declared against arrived per run and group; outcome classes per configuration and window with the 1.0 m line's band count and the consistency against the stored values and the 16A per_run.tsv; the one-line stale-box fit with residuals by family (exploratory) | 16D results in stage6/analysis_16D/ and REPORT_16D.md |
+| `ablation_table.py` (16D) | DRAFT loss-window ablation table per configuration and window from `per_run_outcomes.tsv` (outcome classes, closest approach, final distance, n; rig faults in a footer, not counted) | never pooled into Tables 13 or 14 |
+| `fig_style.py`, `fig_t14_displacement.py`, `fig_closest_vs_staleness.py`, `fig_outcome_classes.py` (16D) | the three draft figures (PNG and PDF, half page width, system python3 with matplotlib): Table 14 displacement by bin NPU against CPU; closest approach against v x staleness; outcome classes per configuration at 0.4 and 2.5 s | DRAFT; stage6/draft_tables_16D/figs/ |
+
+`pool_tables.py` gained, in 16D, presentation options only (`--outcomes`, `--sensitivity`, `--axis-uncertainty`, `--cache`); with them
+off its output is byte-identical to 16A, and with them on every 16A value is unchanged (checked in 16D: 0 differing rows in
+Tables 13, 14, the bins and per_run.tsv; only the added lines and columns).
 
 ## One command per table (to be completed after the scoring prompt)
 
-    ~/venvs/mcap/bin/python benchmarks/hil_tools/pool_tables.py --batches <batches.tsv> --rescored <re-score tree> --out <dir>
+    ~/venvs/mcap/bin/python benchmarks/hil_tools/pool_tables.py --batches <batches.tsv> --rescored <re-score tree> --out <dir> \
+        [--outcomes <per_run_outcomes.tsv>] [--sensitivity s2:005 s4:024] [--axis-uncertainty "+0.1 to +0.3"] [--cache <dir>]
+    ~/venvs/mcap/bin/python benchmarks/hil_tools/run_outcomes.py --batches <batches.tsv> --out <dir> [--rescored <re-score tree>]
+    python3 benchmarks/hil_tools/ablation_table.py <per_run_outcomes.tsv> --sess s5a --rig-fault <sess>:<run>:<reason> --out <dir>
 
 `<batches.tsv>`: one line per pooled batch, `<session> <folder under /mnt/usb/hil_runs>` (the five of REPORT_SESSIONS_SUMMARY).
 `<re-score tree>`: the one-scorer outputs of every pooled run at the scoring commit (made with `invariance/rescore.sh`).
