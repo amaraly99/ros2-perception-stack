@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # batch.sh <plan.tsv> <batch_dir>: run a list of fixed-hold runs unattended, one after another (5Q).
 #   Plan lines (tab separated, '#' comments): key  model  backend  role      (role: row | sentinel | pilot | expect_stop)
+#   14A: an optional 5th column names the stack config (config/hil/stack/<name>.yaml in $HIL_WT) for that run; it must be
+#   ours_fx554_<placement>_ibvs or start with ours_fx554_<placement>_ibvs_ and exist. A 4-column line runs exactly as before.
 #   expect_stop (SSD from 20 m, which sees no sign: 5M): the 10 s stop rule is expected to end the run. Accepted only if
 #   STOP_RULE.txt exists, no guard exit fired (run_one rc not in 4 5 6 7 10-14 20) and the checks that do not need the
 #   approach pass (start pose, interface, RMW, fx, SLAM off, clock offset, held render); rates, scorer and distance are not judged.
@@ -156,10 +158,15 @@ r=$(ref_check start) || stop "start-of-session $r" 1; log "start-of-session $r";
 
 # ── 2-4. runs ────────────────────────────────────────────────────────────────
 N=0
-while IFS=$'\t' read -r -u 3 KEY MDL BK ROLE; do              # plan on fd 3: nothing in a run can read it
+while IFS=$'\t' read -r -u 3 KEY MDL BK ROLE CFG5; do         # plan on fd 3: nothing in a run can read it
   N=$((N + 1)); NNN=$(printf '%03d' "$N")
   case "$BK" in npu) P=A ;; cpu) P=B ;; *) stop "plan line $N: backend '$BK' is not npu or cpu" "$N" ;; esac
   CFG="ours_fx554_${P}_ibvs"; RD="$BD/${NNN}_${MDL}_${BK}_${P}_r${KEY}"
+  if [ -n "${CFG5:-}" ]; then                                    # 14A: per-run stack config (5th column)
+    case "$CFG5" in "ours_fx554_${P}_ibvs"|"ours_fx554_${P}_ibvs_"*) ;; *) stop "plan line $N: stack config '$CFG5' is not a placement $P config" "$N" ;; esac
+    [ -f "$HIL_WT/config/hil/stack/$CFG5.yaml" ] || stop "plan line $N: no stack config $CFG5.yaml in $HIL_WT" "$N"
+    CFG="$CFG5"
+  fi
   DUR=$(pj "w=j['mission_window_s']; print(w.get('${MDL}_${BK}', w['default']))")
   r=$(pre_run_checks "$BK") || stop "before run $NNN ($KEY $MDL $BK): $r" "$N"; log "pre $NNN: $r"
   OB=$(npu_opens); T0=$(date -u +%FT%TZ); log "run $NNN: key $KEY $MDL $BK role $ROLE $CFG window ${DUR}s -> $(basename "$RD")"

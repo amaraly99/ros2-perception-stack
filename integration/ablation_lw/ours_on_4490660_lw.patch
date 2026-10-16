@@ -1,0 +1,3547 @@
+diff --git a/benchmarks/mission_from_bench_state.py b/benchmarks/mission_from_bench_state.py
+new file mode 100755
+index 0000000000000000000000000000000000000000..ebdcd3ab8265467b9419ccc4c7814ead1ee1bd49
+--- /dev/null
++++ b/benchmarks/mission_from_bench_state.py
+@@ -0,0 +1,178 @@
++#!/usr/bin/env python3
++"""
++mission_from_bench_state.py — mission-state metrics from /bench/state in a run's bag.
++
++The shared ServoFsmNode publishes /bench/state on every /cmd_vel tick and on every
++diag tick as "<STATE>,<sim_time>,<controller>,<dist_to_target>" (servo_fsm_node.cpp,
++publish_bench_state). It is in every recorded bag (run_stack_hil.sh BAG_TOPICS), so
++the mission timeline is read back from the bag after the run, independent of when any
++live monitor attaches. Same metric schema as the visp-CSV path of the detector sweep
++(mission_from_visp_csv.py), plus sim-time metrics taken from the message itself.
++
++The dist field is measured against /sim/target_pose, the hardcoded constant
++(35.5, 23.7), not the sign the drone actually approaches. The final distance to the
++frozen sign (35.1, 2.92) is therefore computed here from the last /sim/drone_pose.
++
++Needs mcap_ros2 (the host scorer's venv: ~/venvs/mcap/bin/python).
++
++CLI:
++  python3 mission_from_bench_state.py --bag <run>/bag/<file>.mcap --output <mission.json>
++"""
++import argparse
++import glob
++import json
++import math
++import os
++import sys
++
++STATES = ("SEARCHING", "APPROACHING", "REACQUIRE", "REACHED")
++DEBOUNCE_S = 1.0
++FROZEN_SIGN = (35.1, 2.92)     # frozen target, /sim/drone_pose frame (DEVIATIONS 17.1)
++
++
++def read_bag(path):
++    from mcap_ros2.reader import read_ros2_messages
++    states, poses = [], []
++    for m in read_ros2_messages(path, topics=["/bench/state", "/sim/drone_pose"]):
++        if m.channel.topic == "/bench/state":
++            f = m.ros_msg.data.split(",")
++            if len(f) < 4:
++                continue
++            try:
++                states.append((m.log_time_ns, f[0].strip(), float(f[1]), f[2].strip(), float(f[3])))
++            except ValueError:
++                continue
++        else:
++            d = list(m.ros_msg.data)
++            if len(d) >= 5:
++                poses.append((m.log_time_ns, d))
++    return states, poses
++
++
++def segments(rows):
++    """rows: [(t_s, state)] -> [[state, t_start, t_end], ...] (maximal equal-state runs)."""
++    segs = []
++    for t, s in rows:
++        if not segs or segs[-1][0] != s:
++            if segs:
++                segs[-1][2] = t
++            segs.append([s, t, t])
++        else:
++            segs[-1][2] = t
++    return segs
++
++
++def metrics(states, poses, debounce_s=DEBOUNCE_S):
++    if not states:
++        return None
++    t0 = states[0][0]
++    rel = [((t - t0) / 1e9, s) for t, s, *_ in states]
++    segs = segments(rel)
++
++    def first(state):
++        for st, ts, _ in segs:
++            if st == state:
++                return ts
++        return None
++
++    t_reach = first("REACHED")
++    t_first_app = first("APPROACHING")
++    t_app = None
++    if t_reach is not None:
++        for st, ts, _ in segs:
++            if ts >= t_reach:
++                break
++            if st == "APPROACHING":
++                t_app = ts
++    approach = round(t_reach - t_app, 3) if (t_reach is not None and t_app is not None) else None
++
++    n_reacq = sum(1 for st, ts, te in segs if st == "REACQUIRE" and (te - ts) >= debounce_s)
++    n_lost, seen_app = 0, False
++    for st, ts, te in segs:
++        if st == "APPROACHING":
++            seen_app = True
++        elif st == "SEARCHING" and seen_app and (te - ts) >= debounce_s:
++            n_lost += 1
++    dwell = {s: 0.0 for s in STATES}
++    for st, ts, te in segs:
++        if st in dwell:
++            dwell[st] += te - ts
++
++    # sim time straight from the message (last_hb_sim_); first-edge values.
++    def first_sim(state):
++        for _, s, sim, *_ in states:
++            if s == state:
++                return sim
++        return None
++    sim_reach = first_sim("REACHED")
++    sim_app = None
++    if sim_reach is not None:
++        for _, s, sim, *_ in states:
++            if sim >= sim_reach:
++                break
++            if s == "APPROACHING" and sim_app is None:
++                sim_app = sim
++            elif s != "APPROACHING":
++                sim_app = None
++    wall = (states[-1][0] - t0) / 1e9
++    sim_span = states[-1][2] - states[0][2]
++    sim_rate = round(sim_span / wall, 3) if wall > 0 and sim_span > 0 else None
++
++    final = {}
++    if poses:
++        _, d = poses[-1]
++        final = {
++            "final_pose_xyz_yaw": [round(d[0], 3), round(d[1], 3), round(d[2], 3), round(d[4], 4)],
++            "final_dist_frozen_sign_m": round(math.dist((d[0], d[1]), FROZEN_SIGN), 3),
++        }
++        if t_reach is not None:
++            t_reach_ns = t0 + int(t_reach * 1e9)
++            at = min(poses, key=lambda p: abs(p[0] - t_reach_ns))[1]
++            final["reached_dist_frozen_sign_m"] = round(math.dist((at[0], at[1]), FROZEN_SIGN), 3)
++
++    return {
++        "reached": t_reach is not None,
++        "time_to_reached_s": round(t_reach, 3) if t_reach is not None else None,
++        "approach_duration_s": approach,
++        "time_to_first_approach_s": round(t_first_app, 3) if t_first_app is not None else None,
++        "time_to_reached_sim_s": round(sim_reach, 3) if sim_reach is not None else None,
++        "approach_duration_sim_s": (round(sim_reach - sim_app, 3)
++                                    if (sim_reach is not None and sim_app is not None) else None),
++        "sim_rate": sim_rate,
++        "n_reacquire": n_reacq,
++        "n_lost": n_lost,
++        "time_in_state_s": {s: round(v, 3) for s, v in dwell.items()},
++        "initial_state": segs[0][0],
++        "final_state": segs[-1][0],
++        "controller": states[0][3],
++        "n_transitions": len(segs) - 1,
++        "transitions": [[round(ts, 3), st] for st, ts, _ in segs[1:]],
++        **final,
++        "source": "bench_state",
++    }
++
++
++def main():
++    ap = argparse.ArgumentParser(description=__doc__.split("\n")[1])
++    ap.add_argument("--bag", required=True, help=".mcap file, or the bag directory")
++    ap.add_argument("--output", required=True)
++    a = ap.parse_args()
++    bag = a.bag
++    if os.path.isdir(bag):
++        found = sorted(glob.glob(os.path.join(bag, "*.mcap")))
++        if not found:
++            sys.exit(f"no .mcap in {bag}")
++        bag = found[0]
++    states, poses = read_bag(bag)
++    m = metrics(states, poses)
++    if m is None:
++        sys.exit(f"no /bench/state messages in {bag}")
++    m["bag"] = os.path.abspath(bag)
++    with open(a.output, "w") as f:
++        json.dump(m, f, indent=2)
++    print(json.dumps({k: m[k] for k in ("reached", "time_to_reached_sim_s", "final_state",
++                                        "final_dist_frozen_sign_m") if k in m}))
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/benchmarks/run_hil_experiments.sh b/benchmarks/run_hil_experiments.sh
+new file mode 100755
+index 0000000000000000000000000000000000000000..c33b6c3a7f9573c31059f8fdd79613cf227d389f
+--- /dev/null
++++ b/benchmarks/run_hil_experiments.sh
+@@ -0,0 +1,369 @@
++#!/bin/bash
++# run_hil_experiments.sh — Ahmed's detector-run loop (exp/detector-accuracy), driving
++# THIS tree's run_stack_hil.sh with a stack config instead of the old flag launcher.
++#
++# Ported from exp/detector-accuracy:benchmarks/run_hil_experiments.sh. What changed:
++#   - the switch: --stack-config <name> launches ./run_stack_hil.sh --config <name>
++#     --mode record (bag on) [--model <id>]; placement, backend, cores, controller,
++#     cam_fx and SLAM all come from config/hil/stack/<name>.yaml;
++#   - mission metrics come from /bench/state in the run's bag
++#     (benchmarks/mission_from_bench_state.py), not from the visp CSV, which the shared
++#     FSM does not write;
++#   - the container-side probe and the stage report are OUR versions, copied from the
++#     pinned exp/detector-accuracy commit to /tmp/hil_tools (the container mounts /tmp),
++#     so this tree's own benchmarks/e2e_latency_probe.py is neither used nor touched;
++#   - the MATLAB supervisor gets pub_start / start / stop / pub_stop, each retried once;
++#     no reply after the retry ends the run with exit 7.
++#
++# Usage:
++#   ./benchmarks/run_hil_experiments.sh --stack-config ours_fx1200_A_ibvs \
++#       [--model yolo26n] --duration 60 --warmup 5 --runs 1 \
++#       --label smoke_yolo26n_npu_A_ibvs --output-dir <dir>
++#
++# Per-run outputs in <dir>: <label>_run<N>{.csv,_camera.csv,_stats.json,_telemetry.csv,
++#   _cam_stamps.csv,_stages.csv,_stack.log,_matlab.log,_params.yaml,_slam_state.txt,
++#   _mission.json,_run_config.yaml}, <label>_run<N>_bag/ (the .mcap), <label>_summary.json.
++# Exit: 0 ok, 1 all runs failed / bad args, 7 supervisor did not answer after one retry.
++
++set -u
++cd "$(dirname "$0")/.."
++WS="$(pwd)"
++
++STACK_CONFIG=""; MODEL=""
++DURATION=60; WARMUP=35; RUNS=1; LABEL=""; OUTPUT_DIR="benchmarks/results/hil"
++MATLAB_CTL=true; PUB_HZ="${PUB_HZ:-20}"
++OURS_REPO="${OURS_REPO:-/home/ahmed/ROS2-PROJECT-SPRING2026}"
++MCAP_PY="${MCAP_PY:-/home/ahmed/venvs/mcap/bin/python}"
++MATLAB_HOST_IP="${MATLAB_HOST_IP:-192.168.56.1}"
++MATLAB_CTL_PORT="${MATLAB_CTL_PORT:-55556}"
++
++while [[ $# -gt 0 ]]; do
++    case "$1" in
++        --stack-config) STACK_CONFIG="$2"; shift 2 ;;
++        --model)        MODEL="$2"; shift 2 ;;
++        --duration)     DURATION="$2"; shift 2 ;;
++        --warmup)       WARMUP="$2"; shift 2 ;;
++        --runs)         RUNS="$2"; shift 2 ;;
++        --label)        LABEL="$2"; shift 2 ;;
++        --output-dir)   OUTPUT_DIR="$2"; shift 2 ;;
++        --no-matlab-ctl) MATLAB_CTL=false; shift ;;
++        *) echo "Unknown arg: $1" >&2; exit 1 ;;
++    esac
++done
++
++log() { echo "[hil-exp] $*"; }
++die() { echo "[hil-exp] ERROR: $*" >&2; exit 1; }
++
++[[ -n "$LABEL" ]]        || die "--label is required"
++[[ -n "$STACK_CONFIG" ]] || die "--stack-config is required (config/hil/stack/<name>.yaml)"
++CFG="${WS}/config/hil/stack/${STACK_CONFIG}.yaml"
++[[ -f "$CFG" ]] || die "stack config not found: $CFG"
++mkdir -p "$OUTPUT_DIR"
++
++cfg_get() { python3 "${WS}/scripts/parse_stack.py" "$CFG" --get "$1"; }
++CONTROLLER=$(cfg_get controller.type)
++DDS=$(cfg_get network.dds); DDS="${DDS:-fastrtps}"
++ROS_DOMAIN_ID=$(cfg_get network.ros_domain_id); ROS_DOMAIN_ID="${ROS_DOMAIN_ID:-0}"
++TELEM_CSV=$(cfg_get detector.yolo.telemetry_csv); TELEM_CSV="${TELEM_CSV:-/tmp/yolo_telemetry.csv}"
++STAMP_CSV=$(cfg_get camera.stamp_log)
++BACKEND=$(cfg_get detector.yolo.backend)
++[[ -n "$MODEL" ]] || MODEL=$(cfg_get detector.yolo.model)
++case "$CONTROLLER" in
++    ibvs)         CTRL_NODE=/visp_servo_node ;;
++    proportional) CTRL_NODE=/hil_servo_node ;;
++    *)            CTRL_NODE="" ;;
++esac
++case "$DDS" in
++    cyclonedds) RMW="rmw_cyclonedds_cpp"; DDS_ENV="CYCLONEDDS_URI=file:///tmp/cyclonedds_hil.resolved.xml" ;;
++    fastrtps)   RMW="rmw_fastrtps_cpp";   DDS_ENV="FASTRTPS_DEFAULT_PROFILES_FILE=/tmp/fastrtps_hil.resolved.xml" ;;
++    *) die "unknown DDS '$DDS'" ;;
++esac
++
++# ── our tools, from the pinned commit of exp/detector-accuracy, to /tmp ─────────
++TOOLS=/tmp/hil_tools
++OURS_HEAD=$(git -C "$OURS_REPO" rev-parse HEAD 2>/dev/null) || die "cannot read $OURS_REPO"
++mkdir -p "$TOOLS"
++for t in e2e_latency_probe.py latency_stage_report.py; do
++    git -C "$OURS_REPO" show "${OURS_HEAD}:benchmarks/${t}" > "${TOOLS}/${t}" \
++        || die "cannot copy benchmarks/${t} from ${OURS_HEAD}"
++done
++log "tools: ${TOOLS} from exp/detector-accuracy ${OURS_HEAD}"
++
++in_container() {  # run a command inside the stack container with ROS2 sourced
++    sudo docker exec ros2_perception_stack bash -lc "
++        source /opt/ros/jazzy/setup.bash
++        source /workspace/install/setup.bash
++        export RMW_IMPLEMENTATION=${RMW}
++        export ROS_DOMAIN_ID=${ROS_DOMAIN_ID}
++        export ${DDS_ENV}
++        $1
++    "
++}
++
++sup() {  # sup <logfile> <words...>: one supervisor command, retried once; echoes the reply
++    local f="$1"; shift
++    [[ "$MATLAB_CTL" == "true" ]] || { echo "skipped"; return 0; }
++    local r try
++    for try in 1 2; do
++        r=$(echo "$*" | timeout 5 nc -w 3 "$MATLAB_HOST_IP" "$MATLAB_CTL_PORT" 2>/dev/null | tr -d '\r')
++        [[ -n "$r" ]] && break
++        sleep 2
++    done
++    echo "$(date -u +%FT%TZ) $* -> ${r:-NO_REPLY}" >> "$f"
++    [[ -n "$r" ]] || { echo "NO_REPLY"; return 1; }
++    echo "$r"
++}
++
++wait_for_frames() {  # poll the camera SHM write_seq until frames flow (or timeout)
++    python3 - "$1" <<'PYEOF'
++import mmap, struct, sys, time
++deadline = time.monotonic() + float(sys.argv[1])
++last = -1
++while time.monotonic() < deadline:
++    try:
++        with open("/dev/shm/ovcam_frames", "rb") as f:
++            mm = mmap.mmap(f.fileno(), 128, mmap.MAP_SHARED, mmap.PROT_READ)
++            seq = struct.unpack_from("<Q", mm, 64)[0]
++            mm.close()
++        if last >= 0 and seq > last:
++            sys.exit(0)
++        last = seq
++    except (FileNotFoundError, ValueError):
++        pass
++    time.sleep(1.0)
++sys.exit(1)
++PYEOF
++}
++
++save_logs() {  # save_logs <stack_log>: append the /tmp launch, producer and SLAM logs; never fails
++    { echo "=== /tmp/hil_launch.log"; cat /tmp/hil_launch.log
++      echo "=== /tmp/yolo_producer.log"; cat /tmp/yolo_producer.log
++      echo "=== /tmp/slam_sidecar_slam_ov2slam.log (tail 200)"; tail -200 /tmp/slam_sidecar_slam_ov2slam.log
++    } >> "$1" 2>/dev/null || true
++}
++
++teardown() {  # teardown <stack_log> <matlab_log>; exit 7 if the supervisor stopped answering
++    local rc=0
++    sup "$2" stop >/dev/null || rc=1
++    ./run_stack_hil.sh stop >> "$1" 2>&1
++    sup "$2" pub_stop >/dev/null || rc=1
++    [[ $rc -eq 0 ]] || { log "SUPERVISOR_NO_REPLY (stop/pub_stop) — stack is down"; exit 7; }
++}
++
++STACK_ARGS=(--config "$STACK_CONFIG" --mode record)
++[[ -n "$MODEL" ]] && STACK_ARGS+=(--model "$MODEL")
++log "config: ${STACK_CONFIG} model=${MODEL:-config} backend=${BACKEND} controller=${CONTROLLER}"
++log "        duration=${DURATION}s warmup=${WARMUP}s runs=${RUNS} label=${LABEL} → ${OUTPUT_DIR}"
++
++OK_RUNS=0
++for N in $(seq 1 "$RUNS"); do
++    log "════ run $N/$RUNS ════"
++    RUN_PREFIX="${OUTPUT_DIR}/${LABEL}_run${N}"
++    STACK_LOG="${RUN_PREFIX}_stack.log"
++    MLOG="${RUN_PREFIX}_matlab.log"
++    PROBE_CSV="/tmp/hil_probe_${LABEL}_run${N}.csv"
++    sudo rm -f "$TELEM_CSV" ${STAMP_CSV:+"$STAMP_CSV"} /tmp/hil_launch.log /tmp/yolo_producer.log \
++        /tmp/slam_sidecar_slam_ov2slam.log "$PROBE_CSV" 2>/dev/null || true
++
++    # 1. simulation first (a restart resets the drone pose), frames on
++    echo "status_before: $(sup "$MLOG" status)" >> "$MLOG"
++    r=$(sup "$MLOG" pub_start "$PUB_HZ") || { log "SUPERVISOR_NO_REPLY (pub_start)"; exit 7; }
++    [[ "$r" == ok || "$r" == skipped ]] || log "WARN pub_start reply '$r'"
++    r=$(sup "$MLOG" start) || { log "SUPERVISOR_NO_REPLY (start)"; sup "$MLOG" pub_stop >/dev/null; exit 7; }
++    [[ "$r" == ok || "$r" == skipped ]] || log "WARN start reply '$r'"
++
++    # 2. stack (container, bridges, producer, SLAM sidecar, bag, detector + controller)
++    ./run_stack_hil.sh "${STACK_ARGS[@]}" --run-tag "${LABEL}_run${N}" > "$STACK_LOG" 2>&1
++    if [[ $? -ne 0 ]]; then
++        log "STARTUP_FAILED run $N (stack launch — see $STACK_LOG)"
++        save_logs "$STACK_LOG"; teardown "$STACK_LOG" "$MLOG"; continue
++    fi
++    RUNREL=$(grep -m1 -oP 'Recording \(mode=\w+\) → \K\S+(?=/bag)' "$STACK_LOG")
++
++    # 3. frames must flow before the clock starts
++    if ! wait_for_frames 45; then
++        log "STARTUP_FAILED run $N (no camera frames within 45 s — is MATLAB publishing?)"
++        save_logs "$STACK_LOG"; teardown "$STACK_LOG" "$MLOG"; continue
++    fi
++
++    # 3b. /cmd_vel liveness probe, in parallel with the measurement window (DDS discovery)
++    CMDVEL_TIMEOUT=$((WARMUP + 45))
++    in_container "timeout ${CMDVEL_TIMEOUT} ros2 topic echo --once /cmd_vel geometry_msgs/msg/Twist > /dev/null" 2>> "$STACK_LOG" &
++    CMDVEL_PID=$!
++
++    # 4. measure (OUR probe, from /tmp/hil_tools)
++    log "camera frames flowing — collecting ${DURATION}s (+${WARMUP}s warmup, overlapped)..."
++    in_container "python3 ${TOOLS}/e2e_latency_probe.py \
++        --duration $((WARMUP + DURATION)) --skip-first-s ${WARMUP} \
++        --output ${PROBE_CSV}" >> "$STACK_LOG" 2>&1
++
++    if ! wait "$CMDVEL_PID"; then
++        log "STARTUP_FAILED run $N (no /cmd_vel within ${CMDVEL_TIMEOUT} s)"
++        save_logs "$STACK_LOG"; teardown "$STACK_LOG" "$MLOG"; continue
++    fi
++
++    # 5. what actually ran: controller parameters, SLAM tracking state, supervisor pose
++    [[ -n "$CTRL_NODE" ]] && in_container "ros2 param dump ${CTRL_NODE}" > "${RUN_PREFIX}_params.yaml" 2>> "$STACK_LOG"
++    in_container "timeout 5 ros2 topic echo --once /slam/tracking_state" > "${RUN_PREFIX}_slam_state.txt" 2>&1 || true
++    echo "status_end: $(sup "$MLOG" status)" >> "$MLOG"
++
++    # 6. tear down (stop sends SIGINT to the bag recorder first, so the .mcap is closed)
++    teardown "$STACK_LOG" "$MLOG"
++    echo "status_after: $(sup "$MLOG" status)" >> "$MLOG"
++    sleep 3
++
++    # 7. collect
++    BASE="${PROBE_CSV%.csv}"
++    cp -f "$PROBE_CSV"         "${RUN_PREFIX}.csv"            2>/dev/null || true
++    cp -f "${BASE}_camera.csv" "${RUN_PREFIX}_camera.csv"     2>/dev/null || true
++    cp -f "${BASE}_stats.json" "${RUN_PREFIX}_stats.json"     2>/dev/null || true
++    cp -f "$TELEM_CSV"         "${RUN_PREFIX}_telemetry.csv"  2>/dev/null || true
++    [[ -n "$STAMP_CSV" ]] && cp -f "$STAMP_CSV" "${RUN_PREFIX}_cam_stamps.csv" 2>/dev/null || true
++    if [[ -n "$RUNREL" && -d "${WS}/${RUNREL}" ]]; then
++        sudo cp -r "${WS}/${RUNREL}/bag" "${RUN_PREFIX}_bag" 2>/dev/null || true
++        sudo cp -f "${WS}/${RUNREL}/run_config.yaml" "${RUN_PREFIX}_run_config.yaml" 2>/dev/null || true
++        sudo chown -R "$(id -u):$(id -g)" "${RUN_PREFIX}_bag" "${RUN_PREFIX}_run_config.yaml" 2>/dev/null || true
++    fi
++    save_logs "$STACK_LOG"
++
++    # 8. mission metrics from /bench/state in the bag
++    MCAP=$(ls "${RUN_PREFIX}_bag"/*.mcap 2>/dev/null | head -1)
++    if [[ -n "$MCAP" ]]; then
++        "$MCAP_PY" benchmarks/mission_from_bench_state.py --bag "$MCAP" \
++            --output "${RUN_PREFIX}_mission.json" >> "$STACK_LOG" 2>&1 \
++            || log "WARN run $N: mission_from_bench_state failed"
++    else
++        log "WARN run $N: no .mcap found (RUNREL='${RUNREL}')"
++    fi
++
++    if [[ ! -s "${RUN_PREFIX}.csv" ]]; then
++        log "RUN_FAILED run $N (probe produced no data)"
++        continue
++    fi
++
++    # 9. per-run stage table (OUR stage report, from /tmp/hil_tools)
++    python3 "${TOOLS}/latency_stage_report.py" \
++        --telemetry "${RUN_PREFIX}_telemetry.csv" \
++        --probe "${RUN_PREFIX}.csv" \
++        --bridge-log "${RUN_PREFIX}_cam_stamps.csv" \
++        --out "${RUN_PREFIX}_stages.csv" || true
++
++    OK_RUNS=$((OK_RUNS + 1))
++    log "run $N complete"
++done
++
++# ── aggregate (same summary schema as the detector sweep) ─────────────────────
++log "aggregating ${OK_RUNS}/${RUNS} successful runs..."
++python3 - "$OUTPUT_DIR" "$LABEL" "$RUNS" "$MODEL" "$BACKEND" "$STACK_CONFIG" "$CONTROLLER" <<'PYEOF'
++import csv, glob, json, math, os, sys
++outdir, label, runs, model, backend, stack_config, controller = sys.argv[1:8]
++runs = int(runs)
++
++stats = []
++for p in sorted(glob.glob(os.path.join(outdir, f"{label}_run*_stats.json"))):
++    with open(p) as f:
++        stats.append(json.load(f))
++
++def ms(vals):
++    vals = [v for v in vals if v is not None]
++    if not vals:
++        return {"mean": None, "std": None, "n": 0}
++    m = sum(vals) / len(vals)
++    sd = math.sqrt(sum((v - m) ** 2 for v in vals) / len(vals)) if len(vals) > 1 else 0.0
++    return {"mean": round(m, 3), "std": round(sd, 3), "n": len(vals)}
++
++def agg(fn):
++    out = []
++    for s in stats:
++        try:
++            out.append(fn(s))
++        except (KeyError, TypeError):
++            pass
++    return ms([v for v in out if v])
++
++def frozen_ratio(p):
++    if not os.path.exists(p):
++        return None
++    with open(p) as f:
++        rows = list(csv.DictReader(f))
++    if not rows or "frame_hash" not in rows[0]:
++        return None
++    h = [r["frame_hash"] for r in rows if r.get("frame_hash")]
++    return len(set(h)) / len(h) if h else None
++
++fr = [r for r in (frozen_ratio(os.path.join(outdir, f"{label}_run{n}_telemetry.csv"))
++                  for n in range(1, runs + 1)) if r is not None]
++fr_mean = round(sum(fr) / len(fr), 4) if fr else None
++
++STAGES = {"S3": "s3_frame_age", "S4": "s4_preprocess", "S5": "s5_inference",
++          "S6": "s6_nms", "S7": "s7_shm_write", "S3-S8": "det_path"}
++st = {k: [] for k in STAGES.values()}; st["detector_compute"] = []
++for n in range(1, runs + 1):
++    sp = os.path.join(outdir, f"{label}_run{n}_stages.csv")
++    if not os.path.exists(sp):
++        continue
++    by = {}
++    with open(sp) as f:
++        for row in csv.DictReader(f):
++            try:
++                by[row["stage"]] = float(row["mean_ms"])
++            except (KeyError, ValueError):
++                pass
++    for c, k in STAGES.items():
++        if c in by:
++            st[k].append(by[c])
++    comp = [by.get(c) for c in ("S4", "S5", "S6", "S7")]
++    if all(c is not None for c in comp):
++        st["detector_compute"].append(sum(comp))
++
++missions = []
++for n in range(1, runs + 1):
++    mp = os.path.join(outdir, f"{label}_run{n}_mission.json")
++    if os.path.exists(mp):
++        try:
++            with open(mp) as f:
++                missions.append(json.load(f))
++        except (ValueError, OSError):
++            pass
++mission = {"runs": len(missions), "reached_success_rate": None}
++if missions:
++    mission = {
++        "runs": len(missions),
++        "reached_success_rate": round(sum(1 for m in missions if m.get("reached")) / len(missions), 3),
++        "time_to_reached_sim_s":   ms([m.get("time_to_reached_sim_s") for m in missions]),
++        "approach_duration_sim_s": ms([m.get("approach_duration_sim_s") for m in missions]),
++        "sim_rate":                ms([m.get("sim_rate") for m in missions]),
++        "time_to_reached_s":       ms([m.get("time_to_reached_s") for m in missions]),
++        "approach_duration_s":     ms([m.get("approach_duration_s") for m in missions]),
++        "time_to_first_approach_s": ms([m.get("time_to_first_approach_s") for m in missions]),
++        "n_reacquire":             ms([m.get("n_reacquire") for m in missions]),
++        "n_lost":                  ms([m.get("n_lost") for m in missions]),
++        "final_dist_frozen_sign_m": ms([m.get("final_dist_frozen_sign_m") for m in missions]),
++    }
++
++summary = {
++    "label": label, "stack_config": stack_config, "controller": controller,
++    "detector": "yolo", "model": model, "backend": backend,
++    "runs_requested": runs, "runs_ok": len(stats),
++    "cmd_vel_hz":  agg(lambda s: s["cmd_vel"]["hz_mean"]),
++    "det_hz":      agg(lambda s: s["det"]["hz_mean"]),
++    "camera_hz":   agg(lambda s: s["sim_camera"]["hz_mean"]),
++    "ovcam_hz":    agg(lambda s: s["ovcam"]["hz_mean"]),
++    "e2e_det_to_cmd_ms_mean": agg(lambda s: s["e2e_det_to_cmd_ms"]["mean"]),
++    "e2e_det_to_cmd_ms_p95":  agg(lambda s: s["e2e_det_to_cmd_ms"]["p95"]),
++    "cam_to_det_ms_mean":     agg(lambda s: s["cam_to_det_ms"]["mean"]),
++    "cam_to_det_ms_p95":      agg(lambda s: s["cam_to_det_ms"]["p95"]),
++    "detector_latency_ms": {k: ms(v) for k, v in st.items()},
++    "mission": mission,
++    "unique_frame_ratio": fr_mean,
++    "frozen_camera_flag": fr_mean is not None and fr_mean < 0.05,
++}
++out = os.path.join(outdir, f"{label}_summary.json")
++with open(out, "w") as f:
++    json.dump(summary, f, indent=2)
++print(json.dumps(summary, indent=2))
++print(f"→ {out}")
++PYEOF
++
++[[ "$OK_RUNS" -gt 0 ]] || die "all $RUNS runs failed"
++log "done: $OK_RUNS/$RUNS runs ok"
+diff --git a/config/hil/stack/ours_fx1200_A_ibvs.yaml b/config/hil/stack/ours_fx1200_A_ibvs.yaml
+new file mode 100644
+index 0000000000000000000000000000000000000000..4af88975267f34f4fcc632ab7aaad5efc4e27ba1
+--- /dev/null
++++ b/config/hil/stack/ours_fx1200_A_ibvs.yaml
+@@ -0,0 +1,56 @@
++# ours_fx1200_A_ibvs.yaml -- Ahmed's detector runs on this launcher (exp/detector-accuracy).
++# Placement A: YOLO on the NPU, producer on core 1; OV2SLAM on cores 2,3 as
++# co-load only (use_slam_pose / use_slam_depth off); controller ibvs.
++# The Simulink camera renders at fx = fy = 1200, so this config sets cam_fx 1200 for the
++# FSM. bench_fsm.yaml keeps its 554 default for every config that does not set it.
++# Bags (mode: record) carry /sim/drone_pose, /sim/target_pose and /yolo/detections for the
++# in-loop scorer, plus /bench/state for the mission metrics.
++mode: record
++
++network:
++  matlab_host_ip: 192.168.56.1
++  interface:      eth0
++  dds:            fastrtps
++  ros_domain_id:  0
++
++camera:
++  stamp_log: /tmp/sim_cam_stamps.csv
++
++detector:
++  type:     yolo
++  cpu:      "0-3"         # yolo_bridge: taskset -c 0-3 = all four Pi 5 cores, the same allowed set as
++                          # unpinned and the same prefix the detector sweep used (node_cores 0-3)
++  host_cpu: "1"
++  yolo:
++    model:         yolo26n            # models/model_registry.json id (run_stack_hil.sh --model overrides)
++    backend:       npu
++    models_dir:    /home/ahmed/ROS2-PROJECT-SPRING2026/models
++    confidence:    0.20
++    telemetry_csv: /tmp/yolo_telemetry.csv
++
++controller:
++  type: ibvs
++  cpu:  "0-3"             # all four cores, equivalent to unpinned (an empty value is rejected by ros2 launch)
++  cam_fx: 1200.0
++  use_slam_depth: false
++  use_slam_pose:  false
++
++slam:
++  enabled:           true
++  type:              ov2slam
++  image:             ros2_perception_stack
++  container_name:    slam_ov2slam
++  cpu:               "2,3"
++  startup_delay_sec: 5
++  restart:           unless-stopped
++  command:           "ros2 run ov2slam ov2slam_node /workspace/camera_calib/hil_sim_ov2slam.yaml"
++  topics:
++    image_in: /ovcam/image_raw
++    pose_out: /slam/pose
++  remap:
++    - "/ovcam/image_raw:=/ovcam/image_raw"
++    - "vo_pose:=/slam/pose"
++    - "slam_tracking_state:=/slam/tracking_state"
++
++init_gate:
++  enabled: false
+diff --git a/config/hil/stack/ours_fx1200_A_proportional.yaml b/config/hil/stack/ours_fx1200_A_proportional.yaml
+new file mode 100644
+index 0000000000000000000000000000000000000000..aac87117a8433f2e5a0e742b25f1395c00026ca0
+--- /dev/null
++++ b/config/hil/stack/ours_fx1200_A_proportional.yaml
+@@ -0,0 +1,56 @@
++# ours_fx1200_A_proportional.yaml -- Ahmed's detector runs on this launcher (exp/detector-accuracy).
++# Placement A: YOLO on the NPU, producer on core 1; OV2SLAM on cores 2,3 as
++# co-load only (use_slam_pose / use_slam_depth off); controller proportional.
++# The Simulink camera renders at fx = fy = 1200, so this config sets cam_fx 1200 for the
++# FSM. bench_fsm.yaml keeps its 554 default for every config that does not set it.
++# Bags (mode: record) carry /sim/drone_pose, /sim/target_pose and /yolo/detections for the
++# in-loop scorer, plus /bench/state for the mission metrics.
++mode: record
++
++network:
++  matlab_host_ip: 192.168.56.1
++  interface:      eth0
++  dds:            fastrtps
++  ros_domain_id:  0
++
++camera:
++  stamp_log: /tmp/sim_cam_stamps.csv
++
++detector:
++  type:     yolo
++  cpu:      "0-3"         # yolo_bridge: taskset -c 0-3 = all four Pi 5 cores, the same allowed set as
++                          # unpinned and the same prefix the detector sweep used (node_cores 0-3)
++  host_cpu: "1"
++  yolo:
++    model:         yolo26n            # models/model_registry.json id (run_stack_hil.sh --model overrides)
++    backend:       npu
++    models_dir:    /home/ahmed/ROS2-PROJECT-SPRING2026/models
++    confidence:    0.20
++    telemetry_csv: /tmp/yolo_telemetry.csv
++
++controller:
++  type: proportional
++  cpu:  "0-3"             # all four cores, equivalent to unpinned (an empty value is rejected by ros2 launch)
++  cam_fx: 1200.0
++  use_slam_depth: false
++  use_slam_pose:  false
++
++slam:
++  enabled:           true
++  type:              ov2slam
++  image:             ros2_perception_stack
++  container_name:    slam_ov2slam
++  cpu:               "2,3"
++  startup_delay_sec: 5
++  restart:           unless-stopped
++  command:           "ros2 run ov2slam ov2slam_node /workspace/camera_calib/hil_sim_ov2slam.yaml"
++  topics:
++    image_in: /ovcam/image_raw
++    pose_out: /slam/pose
++  remap:
++    - "/ovcam/image_raw:=/ovcam/image_raw"
++    - "vo_pose:=/slam/pose"
++    - "slam_tracking_state:=/slam/tracking_state"
++
++init_gate:
++  enabled: false
+diff --git a/config/hil/stack/ours_fx1200_B_ibvs.yaml b/config/hil/stack/ours_fx1200_B_ibvs.yaml
+new file mode 100644
+index 0000000000000000000000000000000000000000..15f0e2146d326c01d2cfcac7230e72735b04c4d5
+--- /dev/null
++++ b/config/hil/stack/ours_fx1200_B_ibvs.yaml
+@@ -0,0 +1,56 @@
++# ours_fx1200_B_ibvs.yaml -- Ahmed's detector runs on this launcher (exp/detector-accuracy).
++# Placement B: YOLO on the CPU (onnxruntime), producer on cores 0,1; OV2SLAM on cores 2,3 as
++# co-load only (use_slam_pose / use_slam_depth off); controller ibvs.
++# The Simulink camera renders at fx = fy = 1200, so this config sets cam_fx 1200 for the
++# FSM. bench_fsm.yaml keeps its 554 default for every config that does not set it.
++# Bags (mode: record) carry /sim/drone_pose, /sim/target_pose and /yolo/detections for the
++# in-loop scorer, plus /bench/state for the mission metrics.
++mode: record
++
++network:
++  matlab_host_ip: 192.168.56.1
++  interface:      eth0
++  dds:            fastrtps
++  ros_domain_id:  0
++
++camera:
++  stamp_log: /tmp/sim_cam_stamps.csv
++
++detector:
++  type:     yolo
++  cpu:      "0-3"         # yolo_bridge: taskset -c 0-3 = all four Pi 5 cores, the same allowed set as
++                          # unpinned and the same prefix the detector sweep used (node_cores 0-3)
++  host_cpu: "0,1"
++  yolo:
++    model:         yolo26n            # models/model_registry.json id (run_stack_hil.sh --model overrides)
++    backend:       cpu
++    models_dir:    /home/ahmed/ROS2-PROJECT-SPRING2026/models
++    confidence:    0.20
++    telemetry_csv: /tmp/yolo_telemetry.csv
++
++controller:
++  type: ibvs
++  cpu:  "0-3"             # all four cores, equivalent to unpinned (an empty value is rejected by ros2 launch)
++  cam_fx: 1200.0
++  use_slam_depth: false
++  use_slam_pose:  false
++
++slam:
++  enabled:           true
++  type:              ov2slam
++  image:             ros2_perception_stack
++  container_name:    slam_ov2slam
++  cpu:               "2,3"
++  startup_delay_sec: 5
++  restart:           unless-stopped
++  command:           "ros2 run ov2slam ov2slam_node /workspace/camera_calib/hil_sim_ov2slam.yaml"
++  topics:
++    image_in: /ovcam/image_raw
++    pose_out: /slam/pose
++  remap:
++    - "/ovcam/image_raw:=/ovcam/image_raw"
++    - "vo_pose:=/slam/pose"
++    - "slam_tracking_state:=/slam/tracking_state"
++
++init_gate:
++  enabled: false
+diff --git a/config/hil/stack/ours_fx1200_B_proportional.yaml b/config/hil/stack/ours_fx1200_B_proportional.yaml
+new file mode 100644
+index 0000000000000000000000000000000000000000..f549aeb62b0821a481a89d33b573b9fa016374e7
+--- /dev/null
++++ b/config/hil/stack/ours_fx1200_B_proportional.yaml
+@@ -0,0 +1,56 @@
++# ours_fx1200_B_proportional.yaml -- Ahmed's detector runs on this launcher (exp/detector-accuracy).
++# Placement B: YOLO on the CPU (onnxruntime), producer on cores 0,1; OV2SLAM on cores 2,3 as
++# co-load only (use_slam_pose / use_slam_depth off); controller proportional.
++# The Simulink camera renders at fx = fy = 1200, so this config sets cam_fx 1200 for the
++# FSM. bench_fsm.yaml keeps its 554 default for every config that does not set it.
++# Bags (mode: record) carry /sim/drone_pose, /sim/target_pose and /yolo/detections for the
++# in-loop scorer, plus /bench/state for the mission metrics.
++mode: record
++
++network:
++  matlab_host_ip: 192.168.56.1
++  interface:      eth0
++  dds:            fastrtps
++  ros_domain_id:  0
++
++camera:
++  stamp_log: /tmp/sim_cam_stamps.csv
++
++detector:
++  type:     yolo
++  cpu:      "0-3"         # yolo_bridge: taskset -c 0-3 = all four Pi 5 cores, the same allowed set as
++                          # unpinned and the same prefix the detector sweep used (node_cores 0-3)
++  host_cpu: "0,1"
++  yolo:
++    model:         yolo26n            # models/model_registry.json id (run_stack_hil.sh --model overrides)
++    backend:       cpu
++    models_dir:    /home/ahmed/ROS2-PROJECT-SPRING2026/models
++    confidence:    0.20
++    telemetry_csv: /tmp/yolo_telemetry.csv
++
++controller:
++  type: proportional
++  cpu:  "0-3"             # all four cores, equivalent to unpinned (an empty value is rejected by ros2 launch)
++  cam_fx: 1200.0
++  use_slam_depth: false
++  use_slam_pose:  false
++
++slam:
++  enabled:           true
++  type:              ov2slam
++  image:             ros2_perception_stack
++  container_name:    slam_ov2slam
++  cpu:               "2,3"
++  startup_delay_sec: 5
++  restart:           unless-stopped
++  command:           "ros2 run ov2slam ov2slam_node /workspace/camera_calib/hil_sim_ov2slam.yaml"
++  topics:
++    image_in: /ovcam/image_raw
++    pose_out: /slam/pose
++  remap:
++    - "/ovcam/image_raw:=/ovcam/image_raw"
++    - "vo_pose:=/slam/pose"
++    - "slam_tracking_state:=/slam/tracking_state"
++
++init_gate:
++  enabled: false
+diff --git a/config/hil/stack/ours_fx554_A_ibvs.yaml b/config/hil/stack/ours_fx554_A_ibvs.yaml
+new file mode 100644
+index 0000000000000000000000000000000000000000..eb021a6cd9deb4ee7916b6f3c66087b6fa9724db
+--- /dev/null
++++ b/config/hil/stack/ours_fx554_A_ibvs.yaml
+@@ -0,0 +1,57 @@
++# ours_fx554_A_ibvs.yaml -- Ahmed's detector runs on this launcher (exp/detector-accuracy).
++# Placement A: YOLO on the NPU, producer on core 1; OV2SLAM on cores 2,3 as
++# co-load only (use_slam_pose / use_slam_depth off); controller ibvs.
++# Shared Simulink model from 2026-10-04 (sha256 b8ec8250...): the camera renders at fx = fy = 554,
++# start (5.13, 4.30, 10, 2*pi-0.0460). cam_fx 554 is set explicitly (same as bench_fsm.yaml) so the
++# run record shows it. Same as ours_fx1200_A_ibvs.yaml in every other line.
++# Bags (mode: record) carry /sim/drone_pose, /sim/target_pose and /yolo/detections for the
++# in-loop scorer, plus /bench/state for the mission metrics.
++mode: record
++
++network:
++  matlab_host_ip: 192.168.56.1
++  interface:      eth0
++  dds:            fastrtps
++  ros_domain_id:  0
++
++camera:
++  stamp_log: /tmp/sim_cam_stamps.csv
++
++detector:
++  type:     yolo
++  cpu:      "0-3"         # yolo_bridge: taskset -c 0-3 = all four Pi 5 cores, the same allowed set as
++                          # unpinned and the same prefix the detector sweep used (node_cores 0-3)
++  host_cpu: "1"
++  yolo:
++    model:         yolo26n            # models/model_registry.json id (run_stack_hil.sh --model overrides)
++    backend:       npu
++    models_dir:    /home/ahmed/ROS2-PROJECT-SPRING2026/models
++    confidence:    0.20
++    telemetry_csv: /tmp/yolo_telemetry.csv
++
++controller:
++  type: ibvs
++  cpu:  "0-3"             # all four cores, equivalent to unpinned (an empty value is rejected by ros2 launch)
++  cam_fx: 554.0
++  use_slam_depth: false
++  use_slam_pose:  false
++
++slam:
++  enabled:           true
++  type:              ov2slam
++  image:             ros2_perception_stack
++  container_name:    slam_ov2slam
++  cpu:               "2,3"
++  startup_delay_sec: 5
++  restart:           unless-stopped
++  command:           "ros2 run ov2slam ov2slam_node /workspace/camera_calib/hil_sim_ov2slam.yaml"
++  topics:
++    image_in: /ovcam/image_raw
++    pose_out: /slam/pose
++  remap:
++    - "/ovcam/image_raw:=/ovcam/image_raw"
++    - "vo_pose:=/slam/pose"
++    - "slam_tracking_state:=/slam/tracking_state"
++
++init_gate:
++  enabled: false
+diff --git a/config/hil/stack/ours_fx554_A_ibvs_lw2p5.yaml b/config/hil/stack/ours_fx554_A_ibvs_lw2p5.yaml
+new file mode 100644
+index 0000000000000000000000000000000000000000..82a06e5f6914c54ced6a2df247508a9011d15f45
+--- /dev/null
++++ b/config/hil/stack/ours_fx554_A_ibvs_lw2p5.yaml
+@@ -0,0 +1,61 @@
++# ours_fx554_A_ibvs_lw2p5.yaml -- 14A loss-window ABLATION only (never a main-table run).
++# Byte-identical to ours_fx554_A_ibvs.yaml below this header except controller.detection_lost_sec: 2.5
++# (the pinned rule is 2 x watchdog_period_sec = 0.4 s; the watchdog period stays 0.20 s).
++# ours_fx554_A_ibvs.yaml -- Ahmed's detector runs on this launcher (exp/detector-accuracy).
++# Placement A: YOLO on the NPU, producer on core 1; OV2SLAM on cores 2,3 as
++# co-load only (use_slam_pose / use_slam_depth off); controller ibvs.
++# Shared Simulink model from 2026-10-04 (sha256 b8ec8250...): the camera renders at fx = fy = 554,
++# start (5.13, 4.30, 10, 2*pi-0.0460). cam_fx 554 is set explicitly (same as bench_fsm.yaml) so the
++# run record shows it. Same as ours_fx1200_A_ibvs.yaml in every other line.
++# Bags (mode: record) carry /sim/drone_pose, /sim/target_pose and /yolo/detections for the
++# in-loop scorer, plus /bench/state for the mission metrics.
++mode: record
++
++network:
++  matlab_host_ip: 192.168.56.1
++  interface:      eth0
++  dds:            fastrtps
++  ros_domain_id:  0
++
++camera:
++  stamp_log: /tmp/sim_cam_stamps.csv
++
++detector:
++  type:     yolo
++  cpu:      "0-3"         # yolo_bridge: taskset -c 0-3 = all four Pi 5 cores, the same allowed set as
++                          # unpinned and the same prefix the detector sweep used (node_cores 0-3)
++  host_cpu: "1"
++  yolo:
++    model:         yolo26n            # models/model_registry.json id (run_stack_hil.sh --model overrides)
++    backend:       npu
++    models_dir:    /home/ahmed/ROS2-PROJECT-SPRING2026/models
++    confidence:    0.20
++    telemetry_csv: /tmp/yolo_telemetry.csv
++
++controller:
++  type: ibvs
++  cpu:  "0-3"             # all four cores, equivalent to unpinned (an empty value is rejected by ros2 launch)
++  cam_fx: 554.0
++  detection_lost_sec: 2.5   # 14A ablation
++  use_slam_depth: false
++  use_slam_pose:  false
++
++slam:
++  enabled:           true
++  type:              ov2slam
++  image:             ros2_perception_stack
++  container_name:    slam_ov2slam
++  cpu:               "2,3"
++  startup_delay_sec: 5
++  restart:           unless-stopped
++  command:           "ros2 run ov2slam ov2slam_node /workspace/camera_calib/hil_sim_ov2slam.yaml"
++  topics:
++    image_in: /ovcam/image_raw
++    pose_out: /slam/pose
++  remap:
++    - "/ovcam/image_raw:=/ovcam/image_raw"
++    - "vo_pose:=/slam/pose"
++    - "slam_tracking_state:=/slam/tracking_state"
++
++init_gate:
++  enabled: false
+diff --git a/config/hil/stack/ours_fx554_B_ibvs.yaml b/config/hil/stack/ours_fx554_B_ibvs.yaml
+new file mode 100644
+index 0000000000000000000000000000000000000000..f52d65fe6e402ad141472dac532d8ff35460cb30
+--- /dev/null
++++ b/config/hil/stack/ours_fx554_B_ibvs.yaml
+@@ -0,0 +1,57 @@
++# ours_fx554_B_ibvs.yaml -- Ahmed's detector runs on this launcher (exp/detector-accuracy).
++# Placement B: YOLO on the CPU (onnxruntime), producer on cores 0,1; OV2SLAM on cores 2,3 as
++# co-load only (use_slam_pose / use_slam_depth off); controller ibvs.
++# Shared Simulink model from 2026-10-04 (sha256 b8ec8250...): the camera renders at fx = fy = 554,
++# start (5.13, 4.30, 10, 2*pi-0.0460). cam_fx 554 is set explicitly (same as bench_fsm.yaml) so the
++# run record shows it. Same as ours_fx1200_A_ibvs.yaml in every other line.
++# Bags (mode: record) carry /sim/drone_pose, /sim/target_pose and /yolo/detections for the
++# in-loop scorer, plus /bench/state for the mission metrics.
++mode: record
++
++network:
++  matlab_host_ip: 192.168.56.1
++  interface:      eth0
++  dds:            fastrtps
++  ros_domain_id:  0
++
++camera:
++  stamp_log: /tmp/sim_cam_stamps.csv
++
++detector:
++  type:     yolo
++  cpu:      "0-3"         # yolo_bridge: taskset -c 0-3 = all four Pi 5 cores, the same allowed set as
++                          # unpinned and the same prefix the detector sweep used (node_cores 0-3)
++  host_cpu: "0,1"
++  yolo:
++    model:         yolo26n            # models/model_registry.json id (run_stack_hil.sh --model overrides)
++    backend:       cpu
++    models_dir:    /home/ahmed/ROS2-PROJECT-SPRING2026/models
++    confidence:    0.20
++    telemetry_csv: /tmp/yolo_telemetry.csv
++
++controller:
++  type: ibvs
++  cpu:  "0-3"             # all four cores, equivalent to unpinned (an empty value is rejected by ros2 launch)
++  cam_fx: 554.0
++  use_slam_depth: false
++  use_slam_pose:  false
++
++slam:
++  enabled:           true
++  type:              ov2slam
++  image:             ros2_perception_stack
++  container_name:    slam_ov2slam
++  cpu:               "2,3"
++  startup_delay_sec: 5
++  restart:           unless-stopped
++  command:           "ros2 run ov2slam ov2slam_node /workspace/camera_calib/hil_sim_ov2slam.yaml"
++  topics:
++    image_in: /ovcam/image_raw
++    pose_out: /slam/pose
++  remap:
++    - "/ovcam/image_raw:=/ovcam/image_raw"
++    - "vo_pose:=/slam/pose"
++    - "slam_tracking_state:=/slam/tracking_state"
++
++init_gate:
++  enabled: false
+diff --git a/config/hil/stack/ours_fx554_B_ibvs_lw1p0.yaml b/config/hil/stack/ours_fx554_B_ibvs_lw1p0.yaml
+new file mode 100644
+index 0000000000000000000000000000000000000000..32146a4fac5e62ee476b7a40d77cd132f662a2da
+--- /dev/null
++++ b/config/hil/stack/ours_fx554_B_ibvs_lw1p0.yaml
+@@ -0,0 +1,61 @@
++# ours_fx554_B_ibvs_lw1p0.yaml -- 14A loss-window ABLATION only (never a main-table run).
++# Byte-identical to ours_fx554_B_ibvs.yaml below this header except controller.detection_lost_sec: 1.0
++# (the pinned rule is 2 x watchdog_period_sec = 0.4 s; the watchdog period stays 0.20 s).
++# ours_fx554_B_ibvs.yaml -- Ahmed's detector runs on this launcher (exp/detector-accuracy).
++# Placement B: YOLO on the CPU (onnxruntime), producer on cores 0,1; OV2SLAM on cores 2,3 as
++# co-load only (use_slam_pose / use_slam_depth off); controller ibvs.
++# Shared Simulink model from 2026-10-04 (sha256 b8ec8250...): the camera renders at fx = fy = 554,
++# start (5.13, 4.30, 10, 2*pi-0.0460). cam_fx 554 is set explicitly (same as bench_fsm.yaml) so the
++# run record shows it. Same as ours_fx1200_A_ibvs.yaml in every other line.
++# Bags (mode: record) carry /sim/drone_pose, /sim/target_pose and /yolo/detections for the
++# in-loop scorer, plus /bench/state for the mission metrics.
++mode: record
++
++network:
++  matlab_host_ip: 192.168.56.1
++  interface:      eth0
++  dds:            fastrtps
++  ros_domain_id:  0
++
++camera:
++  stamp_log: /tmp/sim_cam_stamps.csv
++
++detector:
++  type:     yolo
++  cpu:      "0-3"         # yolo_bridge: taskset -c 0-3 = all four Pi 5 cores, the same allowed set as
++                          # unpinned and the same prefix the detector sweep used (node_cores 0-3)
++  host_cpu: "0,1"
++  yolo:
++    model:         yolo26n            # models/model_registry.json id (run_stack_hil.sh --model overrides)
++    backend:       cpu
++    models_dir:    /home/ahmed/ROS2-PROJECT-SPRING2026/models
++    confidence:    0.20
++    telemetry_csv: /tmp/yolo_telemetry.csv
++
++controller:
++  type: ibvs
++  cpu:  "0-3"             # all four cores, equivalent to unpinned (an empty value is rejected by ros2 launch)
++  cam_fx: 554.0
++  detection_lost_sec: 1.0   # 14A ablation
++  use_slam_depth: false
++  use_slam_pose:  false
++
++slam:
++  enabled:           true
++  type:              ov2slam
++  image:             ros2_perception_stack
++  container_name:    slam_ov2slam
++  cpu:               "2,3"
++  startup_delay_sec: 5
++  restart:           unless-stopped
++  command:           "ros2 run ov2slam ov2slam_node /workspace/camera_calib/hil_sim_ov2slam.yaml"
++  topics:
++    image_in: /ovcam/image_raw
++    pose_out: /slam/pose
++  remap:
++    - "/ovcam/image_raw:=/ovcam/image_raw"
++    - "vo_pose:=/slam/pose"
++    - "slam_tracking_state:=/slam/tracking_state"
++
++init_gate:
++  enabled: false
+diff --git a/config/hil/stack/ours_fx554_B_ibvs_lw2p5.yaml b/config/hil/stack/ours_fx554_B_ibvs_lw2p5.yaml
+new file mode 100644
+index 0000000000000000000000000000000000000000..6307de0804846eceaa3c0b560451a4076f252aff
+--- /dev/null
++++ b/config/hil/stack/ours_fx554_B_ibvs_lw2p5.yaml
+@@ -0,0 +1,61 @@
++# ours_fx554_B_ibvs_lw2p5.yaml -- 14A loss-window ABLATION only (never a main-table run).
++# Byte-identical to ours_fx554_B_ibvs.yaml below this header except controller.detection_lost_sec: 2.5
++# (the pinned rule is 2 x watchdog_period_sec = 0.4 s; the watchdog period stays 0.20 s).
++# ours_fx554_B_ibvs.yaml -- Ahmed's detector runs on this launcher (exp/detector-accuracy).
++# Placement B: YOLO on the CPU (onnxruntime), producer on cores 0,1; OV2SLAM on cores 2,3 as
++# co-load only (use_slam_pose / use_slam_depth off); controller ibvs.
++# Shared Simulink model from 2026-10-04 (sha256 b8ec8250...): the camera renders at fx = fy = 554,
++# start (5.13, 4.30, 10, 2*pi-0.0460). cam_fx 554 is set explicitly (same as bench_fsm.yaml) so the
++# run record shows it. Same as ours_fx1200_A_ibvs.yaml in every other line.
++# Bags (mode: record) carry /sim/drone_pose, /sim/target_pose and /yolo/detections for the
++# in-loop scorer, plus /bench/state for the mission metrics.
++mode: record
++
++network:
++  matlab_host_ip: 192.168.56.1
++  interface:      eth0
++  dds:            fastrtps
++  ros_domain_id:  0
++
++camera:
++  stamp_log: /tmp/sim_cam_stamps.csv
++
++detector:
++  type:     yolo
++  cpu:      "0-3"         # yolo_bridge: taskset -c 0-3 = all four Pi 5 cores, the same allowed set as
++                          # unpinned and the same prefix the detector sweep used (node_cores 0-3)
++  host_cpu: "0,1"
++  yolo:
++    model:         yolo26n            # models/model_registry.json id (run_stack_hil.sh --model overrides)
++    backend:       cpu
++    models_dir:    /home/ahmed/ROS2-PROJECT-SPRING2026/models
++    confidence:    0.20
++    telemetry_csv: /tmp/yolo_telemetry.csv
++
++controller:
++  type: ibvs
++  cpu:  "0-3"             # all four cores, equivalent to unpinned (an empty value is rejected by ros2 launch)
++  cam_fx: 554.0
++  detection_lost_sec: 2.5   # 14A ablation
++  use_slam_depth: false
++  use_slam_pose:  false
++
++slam:
++  enabled:           true
++  type:              ov2slam
++  image:             ros2_perception_stack
++  container_name:    slam_ov2slam
++  cpu:               "2,3"
++  startup_delay_sec: 5
++  restart:           unless-stopped
++  command:           "ros2 run ov2slam ov2slam_node /workspace/camera_calib/hil_sim_ov2slam.yaml"
++  topics:
++    image_in: /ovcam/image_raw
++    pose_out: /slam/pose
++  remap:
++    - "/ovcam/image_raw:=/ovcam/image_raw"
++    - "vo_pose:=/slam/pose"
++    - "slam_tracking_state:=/slam/tracking_state"
++
++init_gate:
++  enabled: false
+diff --git a/models/model_registry.json b/models/model_registry.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..e95a4168ff165fd86cdc7f64c3cb0ee3bf43d87e
+--- /dev/null
++++ b/models/model_registry.json
+@@ -0,0 +1,145 @@
++{
++  "schema_version": 1,
++  "_comment": [
++    "Single source of truth for the plug-and-play YOLO framework.",
++    "On-disk filenames are INCONSISTENT across families (yolov11n.hef vs yolo11n.onnx,",
++    "*_nms_config.json only ships for v8), so generic indexers cannot glob reliably.",
++    "This registry maps each logical id -> concrete artifact paths + metadata.",
++    "Paths are RELATIVE to this file's directory (the models/ root).",
++    "layout/postproc hints are advisory: the predictors still auto-detect from the",
++    "actual tensor shapes/names at load time and use these values only as a fallback."
++  ],
++  "defaults": {
++    "input_size": 640,
++    "classes": 80,
++    "reg_max": 16,
++    "conf": 0.20,
++    "iou": 0.45
++  },
++  "models": {
++    "centernet_resnet_v1_18": {
++      "_comment": "Non-YOLO: Hailo Model Zoo centernet_resnet_v1_18_postprocess (CenterNet, GluonCV ResNet-18, COCO), one set of weights on both backends. onnx: models/export_centernet_resnet_v1_18.py from the zoo's pretrained file (end-to-end [1,100,6], COCO-80 ids). hef: zoo v5.1.0 build for Hailo-10H (peak finder on device), run by npu_producer.",
++      "family": "centernet", "variant": "resnet_v1_18",
++      "input_size": 512, "classes": 80,
++      "hef": "hef/centernet_resnet_v1_18_postprocess.hef",
++      "onnx": "onnx/centernet_resnet_v1_18/centernet_resnet_v1_18_e2e.onnx",
++      "onnx_layout": "yolo26_e2e",
++      "hef_postproc": "raw_tensor",
++      "npu_producer": "centernet_hailo_producer.py",
++      "conf": 0.20, "iou": 0.45
++    },
++    "ssd_mobilenet_v2": {
++      "_comment": "Non-YOLO: Hailo Model Zoo ssd_mobilenet_v2 (TF OD API, COCO), one set of weights on both backends. onnx: models/export_ssd_mobilenet_v2.py from the zoo's pretrained file (end-to-end [1,100,6], COCO-80 ids). hef: zoo v5.1.0 build for Hailo-10H, run by npu_producer.",
++      "family": "ssd", "variant": "mobilenet_v2",
++      "input_size": 640, "classes": 80,
++      "hef": "hef/ssd_mobilenet_v2.hef",
++      "onnx": "onnx/ssd_mobilenet_v2/ssd_mobilenet_v2_e2e.onnx",
++      "onnx_layout": "yolo26_e2e",
++      "hef_postproc": "ondevice_nms",
++      "npu_producer": "ssd_hailo_producer.py",
++      "conf": 0.20, "iou": 0.60
++    },
++    "yolov8n": {
++      "family": "v8", "variant": "n",
++      "input_size": 640, "classes": 80,
++      "hef": "hef/yolov8n.hef",
++      "onnx": "onnx/yolov8n/yolov8n.onnx",
++      "nms_config": "onnx/yolov8n/yolov8n_nms_config.json",
++      "onnx_layout": "v8_anchors",
++      "hef_postproc": "ondevice_nms",
++      "conf": 0.20, "iou": 0.45
++    },
++    "yolov8s": {
++      "family": "v8", "variant": "s",
++      "input_size": 640, "classes": 80,
++      "hef": "hef/yolov8s.hef",
++      "onnx": "onnx/yolov8s/yolov8s.onnx",
++      "nms_config": "onnx/yolov8s/yolov8s_nms_config.json",
++      "onnx_layout": "v8_anchors",
++      "hef_postproc": "ondevice_nms",
++      "conf": 0.20, "iou": 0.45
++    },
++    "yolov8m": {
++      "family": "v8", "variant": "m",
++      "input_size": 640, "classes": 80,
++      "hef": "hef/yolov8m.hef",
++      "onnx": "onnx/yolov8m/yolov8m.onnx",
++      "nms_config": "onnx/yolov8m/yolov8m_nms_config.json",
++      "onnx_layout": "v8_anchors",
++      "hef_postproc": "ondevice_nms",
++      "conf": 0.20, "iou": 0.45
++    },
++    "yolov11n": {
++      "family": "v11", "variant": "n",
++      "input_size": 640, "classes": 80,
++      "hef": "hef/yolov11n.hef",
++      "onnx": "onnx/yolo11n/yolo11n.onnx",
++      "nms_config": "onnx/yolo11n/yolo11n_nms_config.json",
++      "onnx_layout": "v8_anchors",
++      "hef_postproc": "ondevice_nms",
++      "conf": 0.20, "iou": 0.45
++    },
++    "yolov11s": {
++      "family": "v11", "variant": "s",
++      "input_size": 640, "classes": 80,
++      "hef": "hef/yolov11s.hef",
++      "onnx": "onnx/yolo11s/yolo11s.onnx",
++      "nms_config": "onnx/yolo11s/yolo11s_nms_config.json",
++      "onnx_layout": "v8_anchors",
++      "hef_postproc": "ondevice_nms",
++      "conf": 0.20, "iou": 0.45
++    },
++    "yolov11m": {
++      "family": "v11", "variant": "m",
++      "input_size": 640, "classes": 80,
++      "hef": "hef/yolov11m.hef",
++      "onnx": "onnx/yolo11m/yolo11m.onnx",
++      "nms_config": "onnx/yolo11m/yolo11m_nms_config.json",
++      "onnx_layout": "v8_anchors",
++      "hef_postproc": "ondevice_nms",
++      "conf": 0.20, "iou": 0.45
++    },
++    "yolo26n": {
++      "family": "yolo26", "variant": "n",
++      "input_size": 640, "classes": 80,
++      "hef": "hef/yolo26n.hef",
++      "onnx": "onnx/yolo26n/yolo26n.onnx",
++      "nms_config": "onnx/yolo26n/yolo26n_nms_config.json",
++      "onnx_layout": "yolo26_e2e",
++      "hef_postproc": "raw_tensor",
++      "conf": 0.20, "iou": 0.45
++    },
++    "yolo26s": {
++      "family": "yolo26", "variant": "s",
++      "input_size": 640, "classes": 80,
++      "hef": "hef/yolo26s.hef",
++      "onnx": "onnx/yolo26s/yolo26s.onnx",
++      "nms_config": "onnx/yolo26s/yolo26s_nms_config.json",
++      "onnx_layout": "yolo26_e2e",
++      "hef_postproc": "raw_tensor",
++      "conf": 0.20, "iou": 0.45
++    },
++    "yolo26m": {
++      "family": "yolo26", "variant": "m",
++      "input_size": 640, "classes": 80,
++      "hef": "hef/yolo26m.hef",
++      "onnx": "onnx/yolo26m/yolo26m.onnx",
++      "nms_config": "onnx/yolo26m/yolo26m_nms_config.json",
++      "onnx_layout": "yolo26_e2e",
++      "hef_postproc": "raw_tensor",
++      "conf": 0.20, "iou": 0.45
++    }
++  },
++  "reference_models": {
++    "_comment": "Production HIL model — not part of the 9-variant sweep matrix.",
++    "yolo26n_10h": {
++      "family": "yolo26", "variant": "n",
++      "input_size": 640, "classes": 80,
++      "hef": "yolo26n_10h.hef",
++      "onnx": null,
++      "onnx_layout": null,
++      "hef_postproc": "raw_tensor",
++      "conf": 0.20, "iou": 0.45
++    }
++  }
++}
+diff --git a/run_stack_hil.sh b/run_stack_hil.sh
+index 9cb9badaafe3a230342c56b531368cfad2ac44ce..8c9c21e86773955cd9535bfddafbe6bc58c3a0f2 100755
+--- a/run_stack_hil.sh
++++ b/run_stack_hil.sh
+@@ -35,6 +35,8 @@
+ #   --build           colcon build all HIL stack packages first, then launch
+ #   --no-slam         override: skip the SLAM sidecar even if config enables it
+ #   --debug-image     override: publish /visp/debug_image (921 KB/frame extra)
++#   --model <id>      override detector.yolo.model (a models/model_registry.json id);
++#                      only used when the config selects the registry producer
+ #
+ # Config is the NESTED schema (config/hil/stack/full_ov2slam.yaml is the reference):
+ #   mode (benchmark|scout), network{matlab_host_ip,interface,dds,ros_domain_id},
+@@ -83,6 +85,13 @@ sep()  { echo "━━━━━━━━━━━━━━━━━━━━━
+ # it standalone dies with "Unknown CMake command ocv_define_module". We restrict
+ # discovery to src/ (--base-paths src) and select only these leaves.
+ STACK_PKGS="sim_camera_bridge ovcam_bridge yolo_bridge oracle_detector hil_servo visp_servo h_vs_servo ov2slam visp_pbvs_servo init_gate"
++# ov2slam is built in its own pass with OpenCV_DIR preset. Its CMakeLists forces the vendored
++# OpenCV (src/ov2slam_ros/CMakeLists.txt:94) only AFTER find_package(cv_bridge) (:63), whose
++# exported find_package(OpenCV) has already imported the system 4.6 targets by then; the result
++# compiles against 4.10 headers but links 4.6 core/imgproc/features2d (mixed ABI). Presetting
++# the cache makes both lookups resolve the vendored 4.10. Only ov2slam gets it, so every other
++# package links exactly as before.
++OV2SLAM_PASS="colcon build --symlink-install --base-paths src --packages-select ov2slam --cmake-args -DOpenCV_DIR=/workspace/opencv/build"
+ 
+ # ── start_slam_sidecar — separate docker-run container, config-driven ────────
+ # Defined as a function (not inline) so it can be called either early, right
+@@ -124,9 +133,16 @@ mode: ${MODE}
+ detector:
+   type: ${DETECTOR}
+   cpu: "${DETECTOR_CPU:-}"
++  host_cpu: "${DETECTOR_HOST_CPU:-}"
++  model: "${YOLO_MODEL:-}"
++  backend: "${YOLO_MODEL:+${YOLO_BACKEND:-npu}}"
++  artifact: "${YOLO_ARTIFACT:-}"
++  producer: "${YOLO_PRODUCER:-}"
+ controller:
+   type: ${CONTROLLER}
+   cpu: "${CONTROLLER_CPU:-}"
++  cam_fx: "${CONTROLLER_CAM_FX:-}"
++  detection_lost_sec: "${CONTROLLER_DETECTION_LOST_SEC:-}"
+   use_slam_depth: ${CONTROLLER_USE_SLAM_DEPTH:-false}
+   use_slam_pose: ${CONTROLLER_USE_SLAM_POSE:-false}
+ slam:
+@@ -340,6 +356,7 @@ _NO_SLAM_FLAG=false
+ _DEBUG_FLAG=false
+ _MODE_OVERRIDE=""
+ RUN_TAG=""
++_MODEL_OVERRIDE=""
+ 
+ _BUILD_FIRST=false
+ HOLD_FSM=false
+@@ -361,6 +378,10 @@ while [[ $_i -le $# ]]; do
+             _i=$((_i + 1))
+             [[ $_i -le $# ]] || die "--config requires a name argument"
+             CONFIG_NAME="${!_i}" ;;
++        --model)
++            _i=$((_i + 1))
++            [[ $_i -le $# ]] || die "--model requires a registry id"
++            _MODEL_OVERRIDE="${!_i}" ;;
+         --run-tag)
+             _i=$((_i + 1))
+             [[ $_i -le $# ]] || die "--run-tag requires a name argument (e.g. run3, ab_baseline)"
+@@ -377,6 +398,7 @@ done
+ [[ "$_NO_SLAM_FLAG"    == "true" ]] && SLAM_ENABLED=false
+ [[ "$_DEBUG_FLAG"      == "true" ]] && DEBUG_IMAGE_ON=true
+ [[ -n "$_MODE_OVERRIDE"          ]] && MODE="$_MODE_OVERRIDE"
++[[ -n "$_MODEL_OVERRIDE"         ]] && YOLO_MODEL="$_MODEL_OVERRIDE"
+ 
+ # Env-var defaults for anything not set by config or caller
+ MODE="${MODE:-scout}"                      # benchmark | scout
+@@ -420,10 +442,11 @@ fi
+ if [[ "$OPT" == "build" ]]; then
+     PKG="${2:-}"
+     if [[ -n "$PKG" ]]; then
+-        BUILD_SEL="--packages-select ${PKG}"
++        BUILD_CMD="colcon build --symlink-install --base-paths src --packages-select ${PKG}"
++        [[ "$PKG" == "ov2slam" ]] && BUILD_CMD="${OV2SLAM_PASS}"
+         log "Building '${PKG}' in Docker..."
+     else
+-        BUILD_SEL="--packages-up-to ${STACK_PKGS}"
++        BUILD_CMD="colcon build --symlink-install --base-paths src --packages-up-to ${STACK_PKGS} --packages-skip ov2slam && ${OV2SLAM_PASS}"
+         log "Building HIL stack packages in Docker (${STACK_PKGS})..."
+     fi
+     sudo docker run --rm \
+@@ -432,7 +455,7 @@ if [[ "$OPT" == "build" ]]; then
+         ros2_perception_stack bash -lc "
+             source /opt/ros/jazzy/setup.bash
+             cd /workspace
+-            colcon build --symlink-install --base-paths src ${BUILD_SEL} 2>&1
++            ${BUILD_CMD} 2>&1
+         " || die "colcon build failed — fix errors above"
+     log "Build done. install/ updated on host disk — run the stack normally now."
+     exit 0
+@@ -665,7 +688,8 @@ if [[ "$_BUILD_FIRST" == "true" ]]; then
+         ros2_perception_stack bash -lc "
+             source /opt/ros/jazzy/setup.bash
+             cd /workspace
+-            colcon build --symlink-install --base-paths src --packages-up-to ${STACK_PKGS} 2>&1
++            colcon build --symlink-install --base-paths src --packages-up-to ${STACK_PKGS} --packages-skip ov2slam 2>&1 \
++                && ${OV2SLAM_PASS} 2>&1
+         " || die "colcon build failed — fix errors above before launching"
+     log "Build complete."
+     sep
+@@ -735,6 +759,14 @@ LAUNCH_ARGS+=" controller_cpu:=${CONTROLLER_CPU:-} detector_cpu:=${DETECTOR_CPU:
+ LAUNCH_ARGS+=" use_slam_depth:=${CONTROLLER_USE_SLAM_DEPTH:-false}"
+ LAUNCH_ARGS+=" use_slam_pose:=${CONTROLLER_USE_SLAM_POSE:-false}"
+ LAUNCH_ARGS+=" stereo:=${STEREO_ON:-false}"
++# Optional overrides (each empty = launch-file default = previous behaviour).
++[[ -n "${CAM_STAMP_LOG:-}"     ]] && LAUNCH_ARGS+=" cam_stamp_log:=${CAM_STAMP_LOG}" \
++    && log "Camera stamp log → ${CAM_STAMP_LOG}"
++[[ -n "${CLASS_NAME_MAP:-}"    ]] && LAUNCH_ARGS+=" class_name_map:='${CLASS_NAME_MAP}'"
++[[ -n "${CONTROLLER_CAM_FX:-}" ]] && LAUNCH_ARGS+=" cam_fx:=${CONTROLLER_CAM_FX}" \
++    && log "Controller cam_fx = cam_fy = ${CONTROLLER_CAM_FX} (overrides bench_fsm.yaml)"
++[[ -n "${CONTROLLER_DETECTION_LOST_SEC:-}" ]] && LAUNCH_ARGS+=" detection_lost_sec:=${CONTROLLER_DETECTION_LOST_SEC}" \
++    && log "Controller detection_lost_sec = ${CONTROLLER_DETECTION_LOST_SEC} (14A ablation)"
+ if [[ "$DETECTOR" == "oracle" ]]; then
+     log "Detector: oracle (yolo_bridge skipped, oracle_detector_node starts in Docker)"
+ else
+@@ -790,15 +822,54 @@ if [[ "$HOLD_FSM" == "true" ]]; then
+     log "3/5  Detector deferred — FSM held (--hold-fsm); starts on --resume-fsm"
+ elif [[ "$DETECTOR" == "yolo" ]]; then
+     DETECTOR_HOST_CPU="${DETECTOR_HOST_CPU:-1}"
+-    log "3/4  yolo_producer  →  core ${DETECTOR_HOST_CPU} (host, native)"
+     # Ensure log file is writable (may have been left root-owned by a prior sudo run)
+     sudo chmod 666 /tmp/yolo_producer.log 2>/dev/null || true
++    if [[ -z "${YOLO_MODEL:-}" ]]; then
++    log "3/4  yolo_producer  →  core ${DETECTOR_HOST_CPU} (host, native)"
+     # --conf 0.20: publish detections down to 0.20 so the controller (min_confidence=0.20)
+     #   can act on low-confidence stop signs.
+     # python3 -u: unbuffered stdout so per-stage timing/fps log is readable live.
+     taskset -c "${DETECTOR_HOST_CPU}" /usr/bin/python3 -u "${WS}/src/yolo_producer/yolo_producer.py" \
+         --hef "${WS}/models/yolo26n_10h.hef" --no-image --conf 0.20 \
+         > /tmp/yolo_producer.log 2>&1 &
++    else
++    # Registry-selected producer: detector.yolo.{model,backend,models_dir,confidence,
++    # telemetry_csv}. The artifact path comes from models/model_registry.json, resolved
++    # against models_dir (default ${WS}/models). A registry entry may name its own NPU
++    # producer (npu_producer) for a non-YOLO HEF the YOLO parser cannot read.
++    YOLO_BACKEND="${YOLO_BACKEND:-npu}"
++    YOLO_MODELS_DIR="${YOLO_MODELS_DIR:-${WS}/models}"
++    YOLO_TELEMETRY_CSV="${YOLO_TELEMETRY_CSV:-/tmp/yolo_telemetry.csv}"
++    case "$YOLO_BACKEND" in npu|cpu) ;; *) die "detector.yolo.backend must be npu|cpu (got '${YOLO_BACKEND}')" ;; esac
++    _REG=$(python3 - "${WS}/models/model_registry.json" "$YOLO_MODEL" "$YOLO_BACKEND" <<'PYEOF'
++import json, sys
++m = json.load(open(sys.argv[1]))["models"].get(sys.argv[2])
++if m is None:
++    sys.exit(1)
++npu = sys.argv[3] == "npu"
++print(m.get("hef" if npu else "onnx") or "-", (m.get("npu_producer") or "-") if npu else "-")
++PYEOF
++    ) || die "model '${YOLO_MODEL}' not in models/model_registry.json"
++    read -r _ART _NPU_PRODUCER <<< "$_REG"
++    [[ "$_ART" != "-" ]] || die "registry entry '${YOLO_MODEL}' has no ${YOLO_BACKEND} artifact"
++    YOLO_ARTIFACT="${YOLO_MODELS_DIR}/${_ART}"
++    [[ -f "$YOLO_ARTIFACT" ]] || die "model artifact not found: ${YOLO_ARTIFACT}"
++    if [[ "$_NPU_PRODUCER" != "-" ]]; then
++        YOLO_PRODUCER="${_NPU_PRODUCER}"
++        PRODUCER_CMD=(python3 -u "${WS}/src/yolo_producer/${_NPU_PRODUCER}"
++                      --model_id "$YOLO_MODEL" --hef "$YOLO_ARTIFACT"
++                      --conf "${YOLO_CONF:-0.20}" --telemetry_csv "$YOLO_TELEMETRY_CSV")
++    else
++        YOLO_PRODUCER="yolo_shm_producer.py"
++        PRODUCER_CMD=(python3 -u "${WS}/src/yolo_producer/yolo_shm_producer.py"
++                      --model_id "$YOLO_MODEL" --model_path "$YOLO_ARTIFACT"
++                      --backend "$YOLO_BACKEND" --conf "${YOLO_CONF:-0.20}" --no-image
++                      --telemetry_csv "$YOLO_TELEMETRY_CSV")
++    fi
++    log "3/4  ${YOLO_PRODUCER} model=${YOLO_MODEL} backend=${YOLO_BACKEND} conf=${YOLO_CONF:-0.20}  →  core(s) ${DETECTOR_HOST_CPU} (host, native)"
++    log "     artifact: ${YOLO_ARTIFACT}"
++    taskset -c "${DETECTOR_HOST_CPU}" "${PRODUCER_CMD[@]}" > /tmp/yolo_producer.log 2>&1 &
++    fi
+     YOLO_PID=$!
+     for i in $(seq 1 20); do
+         [[ -e /dev/shm/yolo_shm ]] && break
+diff --git a/scripts/parse_stack.py b/scripts/parse_stack.py
+index 4b8300f1ddc66020b056a397d172f2021e2bd598..245f3216d31466a706bab66f502fa0fc0e092618 100644
+--- a/scripts/parse_stack.py
++++ b/scripts/parse_stack.py
+@@ -89,6 +89,8 @@ def emit_env(cfg):
+         # ── camera (stereo toggle — default false so all existing mono configs
+         # keep working unmodified; see docs/STEREO_INTERFACE_CONTRACT.md) ──
+         ("STEREO_ON", as_bool(get(cfg, "camera.stereo"), False)),
++        # per-frame stamp CSV from sim_camera_bridge (left eye); "" = off
++        ("CAM_STAMP_LOG", get(cfg, "camera.stamp_log", "")),
+ 
+         # ── detector (runs in main container; host_cpu is for yolo_producer) ──
+         ("DETECTOR",          get(cfg, "detector.type", "yolo")),
+@@ -98,6 +100,13 @@ def emit_env(cfg):
+         ("DETECTOR_OUT",      get(cfg, "detector.topics.out", "/yolo/detections")),
+         ("YOLO_HEF",          get(cfg, "detector.yolo.hef", "")),
+         ("YOLO_CONF",         get(cfg, "detector.yolo.confidence", "")),
++        # Registry-selected producer (models/model_registry.json). Empty YOLO_MODEL =
++        # the original fixed-HEF yolo_producer command, unchanged.
++        ("YOLO_MODEL",        get(cfg, "detector.yolo.model", "")),
++        ("YOLO_BACKEND",      get(cfg, "detector.yolo.backend", "npu")),
++        ("YOLO_MODELS_DIR",   get(cfg, "detector.yolo.models_dir", "")),
++        ("YOLO_TELEMETRY_CSV", get(cfg, "detector.yolo.telemetry_csv", "")),
++        ("CLASS_NAME_MAP",    get(cfg, "detector.class_name_map", "")),
+ 
+         # ── controller (runs in main container) ──
+         ("CONTROLLER",            get(cfg, "controller.type", "proportional")),
+@@ -107,6 +116,10 @@ def emit_env(cfg):
+         ("CONTROLLER_CMD_OUT",    get(cfg, "controller.topics.cmd_out", "/cmd_vel")),
+         ("CONTROLLER_USE_SLAM_DEPTH", as_bool(get(cfg, "controller.use_slam_depth"), False)),
+         ("CONTROLLER_USE_SLAM_POSE",  as_bool(get(cfg, "controller.use_slam_pose"),  False)),
++        # cam_fx = cam_fy override for the FSM; "" = bench_fsm.yaml's value (554)
++        ("CONTROLLER_CAM_FX", get_num(cfg, "controller.cam_fx", float)),
++        # 14A ablation: detection-loss window (s); "" = the node default, 2 x watchdog_period_sec
++        ("CONTROLLER_DETECTION_LOST_SEC", get_num(cfg, "controller.detection_lost_sec", float)),
+ 
+         # ── slam (separate sidecar container) ──
+         ("SLAM_ENABLED",   as_bool(get(cfg, "slam.enabled"), False)),
+diff --git a/src/servo_core/include/servo_core/servo_fsm_node.hpp b/src/servo_core/include/servo_core/servo_fsm_node.hpp
+index 37a2370cbee3609d4ba43fe388ebf06df02512db..9d4808f60864164144cadd278f3dc1ad322a04b0 100644
+--- a/src/servo_core/include/servo_core/servo_fsm_node.hpp
++++ b/src/servo_core/include/servo_core/servo_fsm_node.hpp
+@@ -166,6 +166,7 @@ private:
+     double safety_pose_max_age_;
+ 
+     double watchdog_period_sec_;
++    double detection_lost_sec_;   // 14A ablation: loss window, default 2 x watchdog_period_sec_
+     double diag_period_sec_;
+     int    smoothing_window_;
+ 
+diff --git a/src/servo_core/src/servo_fsm_node.cpp b/src/servo_core/src/servo_fsm_node.cpp
+index b46235e386954f08afa61b017438c4d7becf1258..71c2182ab76203c3e29418951101f5df002a1bcb 100644
+--- a/src/servo_core/src/servo_fsm_node.cpp
++++ b/src/servo_core/src/servo_fsm_node.cpp
+@@ -130,6 +130,9 @@ void ServoFsmNode::declare_parameters() {
+     declare_parameter("safety_pose_max_age",  2.0);
+ 
+     declare_parameter("watchdog_period_sec",  0.20);
++    // 14A ablation: the detection-loss window as its own parameter. <= 0 (the default) keeps the
++    // pinned rule, 2 x watchdog_period_sec; the watchdog timer period is unchanged either way.
++    declare_parameter("detection_lost_sec",  -1.0);
+     declare_parameter("diag_period_sec",      2.0);
+     declare_parameter("smoothing_window",     5);
+ }
+@@ -217,6 +220,13 @@ void ServoFsmNode::load_parameters() {
+     safety_pose_max_age_ = get_parameter("safety_pose_max_age").as_double();
+ 
+     watchdog_period_sec_ = get_parameter("watchdog_period_sec").as_double();
++    {
++        double dl = get_parameter("detection_lost_sec").as_double();
++        detection_lost_sec_ = dl > 0.0 ? dl : 2.0 * watchdog_period_sec_;
++        RCLCPP_INFO(get_logger(), "Detection-loss window: %.3f s (%s), watchdog period %.3f s",
++            detection_lost_sec_, dl > 0.0 ? "detection_lost_sec" : "2 x watchdog_period_sec",
++            watchdog_period_sec_);
++    }
+     diag_period_sec_     = get_parameter("diag_period_sec").as_double();
+     smoothing_window_    = get_parameter("smoothing_window").as_int();
+ }
+@@ -489,9 +499,9 @@ void ServoFsmNode::on_detections(const DetectionArray::SharedPtr msg) {
+     // The pre-fix code omitted this factor entirely and yawed AWAY from the target;
+     // image_x_yaw_sign=+1.0 reproduces that legacy behaviour exactly for A/B runs.
+     //
+-    // 30 deg is the half-FOV implied by cam_fx=554 / image_width=640
+-    // (atan(320/554) = 30.01 deg), i.e. ex_norm=1 at the image edge maps to the edge
+-    // of the frustum. It is hardcoded, NOT derived — it goes stale if either changes.
++    // Derived, not hardcoded: bearing_from_ex() returns atan(ex_norm*(image_width/2)/cam_fx),
++    // so ex_norm=1 at the image edge maps to the half-FOV of the run's own cam_fx
++    // (30.0 deg at 554, 14.9 deg at 1200, image_width 640).
+     //
+     // Reaches further than these two lines: this writes last_bearing_to_sign_rad_,
+     // which seed_search_from_last_bearing() (~line 749) uses as the SEARCH yaw target,
+@@ -805,7 +815,7 @@ void ServoFsmNode::ramp_velocity(Twist& cmd) {
+ // ─────────────────────────────────────────────────────────────────
+ void ServoFsmNode::watchdog_tick() {
+     double det_age = (now() - last_det_callback_time_).seconds();
+-    if (det_age > 2.0 * watchdog_period_sec_) {
++    if (det_age > detection_lost_sec_) {
+         consecutive_dets_ = 0;
+         handle_no_detection();
+     }
+diff --git a/src/sim_camera_bridge/launch/hil_simulation.launch.py b/src/sim_camera_bridge/launch/hil_simulation.launch.py
+index 5882a09f475740d5f5d8c982384ec74ce49c74ff..e6174b180dbb3be01a4e5f21818255b2a3b8039b 100644
+--- a/src/sim_camera_bridge/launch/hil_simulation.launch.py
++++ b/src/sim_camera_bridge/launch/hil_simulation.launch.py
+@@ -73,6 +73,11 @@ def launch_setup(context, *args, **kwargs):
+     detector_cpu   = s('detector_cpu').strip()
+     use_slam_depth = s('use_slam_depth').lower() in ('true', '1', 'yes')
+     use_slam_pose  = s('use_slam_pose').lower()  in ('true', '1', 'yes')
++    # Optional per-run overrides; each empty by default = node defaults / config files.
++    cam_stamp_log  = s('cam_stamp_log').strip()
++    class_name_map = s('class_name_map').strip()
++    cam_fx         = s('cam_fx').strip()
++    detection_lost_sec = s('detection_lost_sec').strip()   # 14A ablation; empty = node default
+ 
+     # Stereo (optional right eye). Kept as an unresolved LaunchConfiguration
+     # (not run through s()) so IfCondition/ParameterValue can defer evaluation
+@@ -109,6 +114,7 @@ def launch_setup(context, *args, **kwargs):
+                 'shm_name': '/ovcam_frames',
+                 'sem_name': '/ovcam_ready',
+                 'use_source_stamp': use_source_stamp,
++                'stamp_log': cam_stamp_log,
+             }],
+         ))
+ 
+@@ -177,6 +183,8 @@ def launch_setup(context, *args, **kwargs):
+         dparams = [cfg(p) for p in dparam_files]
+         if dwants_class:
+             dparams.append({'target_class': target_class})
++        if detector == 'yolo' and class_name_map:
++            dparams.append({'class_name_map': class_name_map})
+         nodes.append(Node(
+             package=dpkg,
+             executable=dexe,
+@@ -205,17 +213,24 @@ def launch_setup(context, *args, **kwargs):
+             raise RuntimeError(
+                 f"Unknown controller='{controller}'. Valid: {list(CTRL_MAP)}")
+         pkg, exe, ctrl_cfg = CTRL_MAP[controller]
++        # cam_fx override goes last so it wins over bench_fsm.yaml (whose 554 stays
++        # the default for every run that does not pass it). fy follows fx.
++        ctrl_params = [cfg('bench_fsm.yaml'), cfg(ctrl_cfg),
++                       {'target_class': target_class,
++                        'benchmark_mode': benchmark_mode,
++                        'use_slam_depth': use_slam_depth,
++                        'use_slam_pose':  use_slam_pose}]
++        if cam_fx:
++            ctrl_params.append({'cam_fx': float(cam_fx), 'cam_fy': float(cam_fx)})
++        if detection_lost_sec:
++            ctrl_params.append({'detection_lost_sec': float(detection_lost_sec)})
+         nodes.append(Node(
+             package=pkg,
+             executable=exe,
+             name=exe,
+             output='screen',
+             prefix=pfx(controller_cpu),
+-            parameters=[cfg('bench_fsm.yaml'), cfg(ctrl_cfg),
+-                        {'target_class': target_class,
+-                         'benchmark_mode': benchmark_mode,
+-                         'use_slam_depth': use_slam_depth,
+-                         'use_slam_pose':  use_slam_pose}],
++            parameters=ctrl_params,
+         ))
+ 
+     return nodes
+@@ -263,6 +278,14 @@ def generate_launch_description():
+                         'one simulation timestamp. Default false = mono, byte-identical to '
+                         'every published mono result. NOTE: stereo doubles the inbound stream '
+                         'to ~295 Mbit/s and requires wired Ethernet.'),
++        DeclareLaunchArgument('cam_stamp_log', default_value='',
++            description='sim_camera_bridge per-frame stamp CSV path; empty = off'),
++        DeclareLaunchArgument('class_name_map', default_value='',
++            description='yolo_bridge "id:name,..." class overrides; empty = COCO only'),
++        DeclareLaunchArgument('cam_fx', default_value='',
++            description='controller cam_fx = cam_fy override; empty = bench_fsm.yaml value'),
++        DeclareLaunchArgument('detection_lost_sec', default_value='',
++            description='14A ablation: controller detection-loss window (s); empty = 2 x watchdog_period_sec'),
+         DeclareLaunchArgument('calib_yaml',
+             default_value=PathJoinSubstitution(
+                 [EnvironmentVariable('WORKSPACE_DIR', default_value='/workspace'),
+diff --git a/src/sim_camera_bridge/src/sim_camera_bridge_node.cpp b/src/sim_camera_bridge/src/sim_camera_bridge_node.cpp
+index 2396819636e73d1158463e9617a39650d7ceca8b..a8069f74e0ac2be2e95eb59282098a5ef400b39e 100644
+--- a/src/sim_camera_bridge/src/sim_camera_bridge_node.cpp
++++ b/src/sim_camera_bridge/src/sim_camera_bridge_node.cpp
+@@ -24,6 +24,7 @@
+ #include <unistd.h>
+ #include <cstring>
+ #include <ctime>
++#include <fstream>
+ #include <stdexcept>
+ 
+ using sensor_msgs::msg::Image;
+@@ -46,6 +47,21 @@ public:
+         // exactly as before and every published mono result stays valid.
+         use_source_stamp_ = declare_parameter("use_source_stamp", false);
+ 
++        // stamp_log: per-frame CSV for latency stages S1 (MATLAB→Pi delivery,
++        // cross-clock — header.stamp is MATLAB's epoch) and S2 (recv→SHM write,
++        // both CLOCK_MONOTONIC). Empty = off (default; zero overhead).
++        auto stamp_log = declare_parameter("stamp_log", std::string(""));
++        if (!stamp_log.empty()) {
++            stamp_log_.open(stamp_log, std::ios::out | std::ios::trunc);
++            if (stamp_log_.is_open()) {
++                stamp_log_ << "frame,t_sim_stamp_ns,t_recv_mono_ns,t_shm_write_mono_ns\n";
++                RCLCPP_INFO(get_logger(), "stamp log → %s", stamp_log.c_str());
++            } else {
++                RCLCPP_WARN(get_logger(), "cannot open stamp_log '%s' — disabled",
++                            stamp_log.c_str());
++            }
++        }
++
+         // Stride padding: producer.cpp uses (W + 31) & ~31u. At 640 / 480 / 1280
+         // these values are already 32-aligned, so stride == W and we can write
+         // tightly-packed rows. Refuse anything else loudly rather than silently
+@@ -121,6 +137,8 @@ private:
+     }
+ 
+     void on_image(const Image::ConstSharedPtr msg) {
++        struct timespec ts_recv{};
++        clock_gettime(CLOCK_MONOTONIC, &ts_recv);
+         if (static_cast<int>(msg->width)  != width_ ||
+             static_cast<int>(msg->height) != height_) {
+             RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+@@ -197,6 +215,16 @@ private:
+         ws_store(g_, fn);
+         sem_post(sem_);
+ 
++        if (stamp_log_.is_open()) {
++            const uint64_t t_sim = static_cast<uint64_t>(msg->header.stamp.sec)
++                                   * 1000000000ULL + msg->header.stamp.nanosec;
++            const uint64_t t_recv = static_cast<uint64_t>(ts_recv.tv_sec)
++                                    * 1000000000ULL + ts_recv.tv_nsec;
++            stamp_log_ << fn << ',' << t_sim << ',' << t_recv << ','
++                       << slot->t_ns << '\n';
++            if (fn % 100 == 0) stamp_log_.flush();
++        }
++
+         RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 1000,
+             "sim_camera_bridge: frame %lu  %ux%u %s  stamp=%u.%09u",
+             static_cast<unsigned long>(fn),
+@@ -216,6 +244,7 @@ private:
+     ShmGlobal*  g_{nullptr};
+     sem_t*      sem_{SEM_FAILED};
+     uint64_t    fn_{0};
++    std::ofstream stamp_log_;
+ 
+     rclcpp::Subscription<Image>::SharedPtr sub_;
+ };
+diff --git a/src/yolo_bridge/src/yolo_bridge_node.cpp b/src/yolo_bridge/src/yolo_bridge_node.cpp
+index efce662cc46c1afc406420cb4a54b9c86a89ec63..e8c90a1110a4938ea8fe9ec3422253e1a8928be4 100644
+--- a/src/yolo_bridge/src/yolo_bridge_node.cpp
++++ b/src/yolo_bridge/src/yolo_bridge_node.cpp
+@@ -23,6 +23,7 @@
+ #include <atomic>
+ #include <stdexcept>
+ #include <string>
++#include <unordered_map>
+ #include <vector>
+ 
+ using Image          = sensor_msgs::msg::Image;
+@@ -52,6 +53,33 @@ public:
+         sem_name_ = declare_parameter("sem_name", std::string("/yolo_ready"));
+         frame_id_ = declare_parameter("frame_id", std::string("camera"));
+ 
++        // class_name_map: "id:name,id:name" — overrides for non-YOLO producers
++        // whose class_ids are not COCO (e.g. "0:object" for the OpenCV detector,
++        // "100:vlm_detection" for the VLM detector). Checked before the COCO
++        // table so an override of an id < 80 also works. Empty = COCO only.
++        auto map_str = declare_parameter("class_name_map", std::string(""));
++        size_t start = 0;
++        while (start < map_str.size()) {
++            size_t comma = map_str.find(',', start);
++            if (comma == std::string::npos) comma = map_str.size();
++            std::string tok = map_str.substr(start, comma - start);
++            size_t colon = tok.find(':');
++            if (colon != std::string::npos) {
++                try {
++                    int id = std::stoi(tok.substr(0, colon));
++                    class_name_map_[id] = tok.substr(colon + 1);
++                } catch (const std::exception&) {
++                    RCLCPP_WARN(get_logger(), "class_name_map: bad entry '%s'",
++                                tok.c_str());
++                }
++            }
++            start = comma + 1;
++        }
++        if (!class_name_map_.empty())
++            RCLCPP_INFO(get_logger(), "class_name_map: %zu custom entr%s",
++                        class_name_map_.size(),
++                        class_name_map_.size() == 1 ? "y" : "ies");
++
+         // Best-effort QoS: YOLO data is ephemeral — always use freshest
+         auto qos = rclcpp::QoS(1).best_effort();
+         pub_dets_ = create_publisher<DetectionArray>("/yolo/detections", qos);
+@@ -166,8 +194,10 @@ private:
+             for (uint32_t i = 0; i < det_count; ++i) {
+                 const auto& d = dets_src[i];
+                 Detection det;
+-                det.class_name  = (d.class_id < 80)
+-                    ? COCO_NAMES[d.class_id] : std::to_string(d.class_id);
++                auto it = class_name_map_.find(d.class_id);
++                det.class_name  = (it != class_name_map_.end()) ? it->second
++                    : (d.class_id < 80) ? COCO_NAMES[d.class_id]
++                    : std::to_string(d.class_id);
+                 det.confidence  = d.confidence;
+                 det.center_x    = (d.x1 + d.x2) / 2.0;
+                 det.center_y    = (d.y1 + d.y2) / 2.0;
+@@ -205,6 +235,7 @@ private:
+     }
+ 
+     std::string shm_name_, sem_name_, frame_id_;
++    std::unordered_map<int, std::string> class_name_map_;
+ 
+     void*                 base_      = MAP_FAILED;
+     size_t                shm_total_ = 0;
+diff --git a/src/yolo_producer/centernet_hailo_producer.py b/src/yolo_producer/centernet_hailo_producer.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..74c681f915ca89b338201578d604d340dddc6d42
+--- /dev/null
++++ b/src/yolo_producer/centernet_hailo_producer.py
+@@ -0,0 +1,156 @@
++#!/usr/bin/env python3
++"""
++centernet_hailo_producer — CenterNet (Hailo Model Zoo centernet_resnet_v1_18_postprocess)
++on the Hailo-10H NPU.
++
++The NPU half of the CenterNet row. The CPU half needs no node code: its
++end-to-end ONNX (models/export_centernet_resnet_v1_18.py) runs through the
++existing yolo_shm_producer ONNX path. The NPU half needs this adapter because
++the zoo's CenterNet HEF has three outputs the YOLO parser does not read: box
++size and centre offset maps (128x128x2 each) and a heatmap already reduced to
++its 3x3 peaks on the device (128x128x80). Decoding follows the zoo's
++CenternetPostProc: top 100 peaks, output stride 4, no NMS. Input is the zoo's
++resize-with-pad to 512x512 (zero padding); normalisation is inside the HEF.
++
++Selected by run_stack_hil.sh when the registry entry sets "npu_producer"; the
++command is the YOLO NPU rows' own form: --model centernet_resnet_v1_18 --backend npu.
++
++CLI:
++    python3 centernet_hailo_producer.py --model_id centernet_resnet_v1_18 [--hef PATH]
++            [--conf 0.20] [--telemetry_csv PATH]
++"""
++
++import argparse
++import os
++import sys
++import time
++
++import cv2
++import numpy as np
++
++_THIS_DIR = os.path.dirname(os.path.abspath(__file__))
++if _THIS_DIR not in sys.path:
++    sys.path.insert(0, _THIS_DIR)
++
++from detector_producer_base import run_producer  # noqa: E402
++
++TOP_K = 100
++STRIDE = 4
++
++
++def _now_ns() -> int:
++    return time.clock_gettime_ns(time.CLOCK_MONOTONIC)
++
++
++def decode(heat, size, offset, conf, scale, pad_left, pad_top, src_w, src_h):
++    """Zoo CenternetPostProc on NHWC maps: heat (H,W,80, peaks only), size/offset (H,W,2).
++    Returns [(x1,y1,x2,y2,class_id,conf)] in source pixels, class ids COCO-80."""
++    flat = heat.reshape(-1)
++    k = min(TOP_K, flat.size)
++    idx = np.argpartition(flat, -k)[-k:]
++    idx = idx[flat[idx] >= conf]
++    idx = idx[np.argsort(-flat[idx])]
++    H, W, C = heat.shape
++    ys, rem = np.divmod(idx, W * C)
++    xs, cls = np.divmod(rem, C)
++    w, h = size[ys, xs, 0] * STRIDE, size[ys, xs, 1] * STRIDE
++    cx, cy = (xs + offset[ys, xs, 0]) * STRIDE, (ys + offset[ys, xs, 1]) * STRIDE
++    x1 = np.clip((cx - w / 2 - pad_left) / scale, 0, src_w - 1)
++    y1 = np.clip((cy - h / 2 - pad_top) / scale, 0, src_h - 1)
++    x2 = np.clip((cx + w / 2 - pad_left) / scale, 0, src_w - 1)
++    y2 = np.clip((cy + h / 2 - pad_top) / scale, 0, src_h - 1)
++    return [(float(x1[i]), float(y1[i]), float(x2[i]), float(y2[i]), int(cls[i]), float(flat[idx[i]]))
++            for i in range(len(idx))]
++
++
++class CenterNetHailoPredictor:
++    """Predictor contract of detector_producer_base, on pyHailoRT. The HailoRT calls mirror
++    yolo_runtime_engine.HailoNPUYoloPredictor, which the YOLO NPU rows run."""
++
++    def __init__(self, hef_path: str, conf: float):
++        from hailo_platform import VDevice, FormatType      # lazy: CPU-only hosts lack it
++        self.conf = float(conf)
++        self._vdevice = VDevice()
++        infer_model = self._vdevice.create_infer_model(hef_path)
++        in_info = infer_model.input()
++        self.in_h, self.in_w = in_info.shape[0], in_info.shape[1]
++        outs = infer_model.outputs
++        for o in outs:
++            o.set_format_type(FormatType.FLOAT32)
++        # Output order of the zoo's HEF = its host decode's endnode order: size, offset, heatmap.
++        heat = [o for o in outs if o.shape[-1] == 80]
++        two = [o for o in outs if o.shape[-1] == 2]
++        if len(heat) != 1 or len(two) != 2:
++            raise RuntimeError(f"unexpected outputs {[(o.name, o.shape) for o in outs]}")
++        self._names = {"heat": heat[0].name, "size": two[0].name, "offset": two[1].name}
++        self._configured = infer_model.configure()
++        self._bindings = self._configured.create_bindings()
++        self._input = np.empty((self.in_h, self.in_w, 3), dtype=np.uint8)
++        self._bindings.input().set_buffer(self._input)
++        self._buf = {}
++        for o in outs:
++            self._buf[o.name] = np.empty(o.shape, dtype=np.float32)
++            self._bindings.output(o.name).set_buffer(self._buf[o.name])
++        self._first = True
++        print(f"[centernet_hailo] {os.path.basename(hef_path)} in={self.in_w}x{self.in_h} "
++              f"outputs={[(o.name, tuple(o.shape)) for o in outs]} roles={self._names}", flush=True)
++
++    def infer(self, rgb, timing=None):
++        t = timing if timing is not None else {}
++        src_h, src_w = rgb.shape[:2]
++        scale = min(self.in_w / src_w, self.in_h / src_h)
++        nw, nh = int(round(src_w * scale)), int(round(src_h * scale))
++        pad_left, pad_top = (self.in_w - nw) // 2, (self.in_h - nh) // 2
++        self._input[:] = 0                                        # zoo: resize_with_pad, zero padding
++        self._input[pad_top:pad_top + nh, pad_left:pad_left + nw] = cv2.resize(rgb, (nw, nh))
++        t["pre_done"] = _now_ns()
++        t["inf_start"] = _now_ns()
++        self._configured.run([self._bindings], timeout=2000)
++        t["inf_done"] = _now_ns()
++        heat = self._buf[self._names["heat"]].reshape(-1, self.in_w // STRIDE, 80)
++        size = self._buf[self._names["size"]].reshape(-1, self.in_w // STRIDE, 2)
++        offset = self._buf[self._names["offset"]].reshape(-1, self.in_w // STRIDE, 2)
++        if self._first:      # role check for the first NPU run: offsets lie in [0,1), sizes are tens of px
++            self._first = False
++            print(f"[centernet_hailo] first frame: |size| max {np.abs(size).max():.2f}, "
++                  f"|offset| max {np.abs(offset).max():.2f}, heat max {heat.max():.3f}", flush=True)
++        dets = decode(heat, size, offset, self.conf, scale, pad_left, pad_top, src_w, src_h)
++        t["nms_done"] = _now_ns()
++        return dets
++
++    def close(self):
++        """Clean release (a leaked VDevice wedges the Hailo SoC off PCIe)."""
++        try:
++            self._configured.shutdown()
++        except Exception:                                       # noqa: BLE001
++            pass
++        try:
++            self._vdevice.release()
++        except Exception:                                       # noqa: BLE001
++            pass
++
++
++def main():
++    ap = argparse.ArgumentParser(description="CenterNet (Hailo zoo) NPU producer -> /yolo_shm")
++    ap.add_argument("--model_id", default="centernet_resnet_v1_18", help="registry id (for the hef path)")
++    ap.add_argument("--hef", default=None, help="explicit .hef (bypasses the registry)")
++    ap.add_argument("--conf", type=float, default=0.20)
++    ap.add_argument("--telemetry_csv", default=None)
++    ap.add_argument("--frames", dest="max_frames", type=int, default=0,
++                    help="stop after N frames (0 = unlimited)")
++    cfg = ap.parse_args()
++    cfg.no_image = True
++
++    hef = cfg.hef
++    if hef is None:
++        from yolo_runtime_engine import ModelRegistry
++        hef = ModelRegistry().resolve(cfg.model_id)["hef"]
++    if not hef or not os.path.exists(hef):
++        sys.exit(f"[centernet_hailo] HEF not found: {hef}")
++    pred = CenterNetHailoPredictor(hef, cfg.conf)
++    run_producer(cfg, pred, cfg.model_id,
++                 f"[centernet_hailo] {cfg.model_id} NPU conf={cfg.conf} frame={{w}}x{{h}} -> /yolo_shm")
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/src/yolo_producer/detector_producer_base.py b/src/yolo_producer/detector_producer_base.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..c376651a45a5dea9f7c043d5a3c05be3f6a56ca4
+--- /dev/null
++++ b/src/yolo_producer/detector_producer_base.py
+@@ -0,0 +1,105 @@
++#!/usr/bin/env python3
++"""
++detector_producer_base — shared plumbing for non-YOLO SHM detector producers.
++
++GenericShmDetectorProducer is YoloShmProducer with the predictor injected
++instead of built from the model registry. Everything else — OvcamReader,
++TelemetryYoloShmWriter (7-stamp telemetry inside the seqlock), per-frame CSV
++mirror, run loop, shutdown — is inherited unchanged, so opencv/vlm producers
++write the exact same /yolo_shm schema and telemetry format as the YOLO path.
++
++A predictor must provide:
++    infer(rgb, timing: dict) -> list[(x1, y1, x2, y2, class_id, conf)]
++        filling timing with absolute CLOCK_MONOTONIC ns at keys
++        pre_done / inf_start / inf_done / nms_done (same contract as
++        yolo_runtime_engine.BaseYoloPredictor)
++    close()
++"""
++
++import argparse
++import csv
++import os
++import sys
++import threading
++import time
++
++_THIS_DIR = os.path.dirname(os.path.abspath(__file__))
++if _THIS_DIR not in sys.path:
++    sys.path.insert(0, _THIS_DIR)
++
++from yolo_producer import OvcamReader  # noqa: E402
++from yolo_shm_producer import (  # noqa: E402
++    YoloShmProducer, TelemetryYoloShmWriter, TELEM_FIELDS,
++)
++
++
++def _now_ns() -> int:
++    return time.clock_gettime_ns(time.CLOCK_MONOTONIC)
++
++
++class GenericShmDetectorProducer(YoloShmProducer):
++    """YoloShmProducer with an externally-supplied predictor."""
++
++    def __init__(self, cfg: argparse.Namespace, predictor, label: str):
++        # Mirrors YoloShmProducer.__init__ minus the registry/build_predictor
++        # step (our predictor is handed in). Inherits step()/_log_frame()/
++        # run_forever()/close() so the SHM write path and telemetry CSV stay
++        # byte-identical with the YOLO producer.
++        self.cfg = cfg
++        self.model_id = label
++        self.predictor = predictor
++
++        self.reader = OvcamReader()
++        self.writer = TelemetryYoloShmWriter(
++            self.reader.w, self.reader.h,
++            include_image=not getattr(cfg, "no_image", True))
++
++        self.csv_file = None
++        self.csv_writer = None
++        if cfg.telemetry_csv:
++            os.makedirs(os.path.dirname(os.path.abspath(cfg.telemetry_csv)),
++                        exist_ok=True)
++            self.csv_file = open(cfg.telemetry_csv, "w", newline="")
++            self.csv_writer = csv.writer(self.csv_file)
++            self.csv_writer.writerow(
++                ["frame", *TELEM_FIELDS,
++                 "capture_read_ms", "preprocess_ms", "inference_ms",
++                 "nms_ms", "shmwrite_ms", "e2e_capture_to_commit_ms", "n_dets"])
++
++        self.frame_count = 0
++
++
++def wait_for_camera_shm(timeout_s: float = 60.0):
++    """Block until the camera bridge has created /ovcam_frames + its semaphore
++    (the bridge may still be starting). Mirrors yolo_bridge's shm_open retry."""
++    deadline = time.monotonic() + timeout_s
++    while not (os.path.exists("/dev/shm/ovcam_frames")
++               and os.path.exists("/dev/shm/sem.ovcam_ready")):
++        if time.monotonic() >= deadline:
++            raise RuntimeError("/ovcam_frames did not appear — camera bridge down?")
++        print("[detector_producer] waiting for /ovcam_frames...", file=sys.stderr)
++        time.sleep(1.0)
++
++
++def run_producer(cfg: argparse.Namespace, predictor, label: str,
++                 startup_line: str):
++    """Common main(): SIGINT-clean run loop with startup summary.
++
++    startup_line may contain {w}/{h} placeholders — filled in from the camera
++    SHM dimensions once the reader is attached."""
++    import signal
++
++    stop = threading.Event()
++    signal.signal(signal.SIGINT, lambda *_: stop.set())
++    signal.signal(signal.SIGTERM, lambda *_: stop.set())
++
++    # Make sure the camera SHM is up before constructing the producer
++    # (GenericShmDetectorProducer builds its own reader; this is the gate).
++    wait_for_camera_shm()
++
++    prod = GenericShmDetectorProducer(cfg, predictor, label)
++    print(startup_line.format(w=prod.reader.w, h=prod.reader.h), flush=True)
++    try:
++        prod.run_forever(stop)
++    finally:
++        prod.close()
+diff --git a/src/yolo_producer/ssd_hailo_producer.py b/src/yolo_producer/ssd_hailo_producer.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..34a09183d73462dfd24969181463c5ef4503258d
+--- /dev/null
++++ b/src/yolo_producer/ssd_hailo_producer.py
+@@ -0,0 +1,170 @@
++#!/usr/bin/env python3
++"""
++ssd_hailo_producer — SSD (Hailo Model Zoo ssd_mobilenet_v2) on the Hailo-10H NPU.
++
++The NPU half of the non-YOLO row. The CPU half needs no node code: the model's
++end-to-end ONNX (models/export_ssd_mobilenet_v2.py) runs through the existing
++yolo_shm_producer ONNX path. The NPU half needs this adapter because the zoo's
++SSD HEF differs from the YOLO HEFs in two ways the YOLO parser does not handle:
++
++  * input: a plain resize of the whole frame to 300x300 (as the model was
++    trained), not a letterbox; normalisation is inside the HEF;
++  * output: NMS by class over the 90 TF/COCO labels (background removed), not
++    the 80 COCO-80 ids. Labels are mapped to COCO-80 (stop sign 13 -> 11), so
++    yolo_bridge names them exactly as it names YOLO detections.
++
++Selected by run_stack_hil.sh when the registry entry sets "npu_producer"; the
++command is the YOLO NPU rows' own form: --model ssd_mobilenet_v2 --backend npu.
++SHM plumbing, telemetry and the /yolo_shm schema come from detector_producer_base.
++
++CLI:
++    python3 ssd_hailo_producer.py --model_id ssd_mobilenet_v2 [--hef PATH]
++            [--conf 0.20] [--telemetry_csv PATH]
++"""
++
++import argparse
++import os
++import sys
++import time
++
++import cv2
++import numpy as np
++
++_THIS_DIR = os.path.dirname(os.path.abspath(__file__))
++if _THIS_DIR not in sys.path:
++    sys.path.insert(0, _THIS_DIR)
++
++from detector_producer_base import run_producer  # noqa: E402
++
++# TF/COCO 91-slot label ids of the 80 COCO classes, in COCO-80 order (as the ONNX export).
++COCO80_TO_91 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21,
++                22, 23, 24, 25, 27, 28, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43,
++                44, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
++                64, 65, 67, 70, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 84, 85, 86, 87,
++                88, 89, 90]
++TF91_TO_COCO80 = {tf: c for c, tf in enumerate(COCO80_TO_91)}
++
++
++def _now_ns() -> int:
++    return time.clock_gettime_ns(time.CLOCK_MONOTONIC)
++
++
++def parse_nms_by_class(flat, n_classes, label_offset, src_w, src_h, conf, max_per_class):
++    """HAILO NMS BY CLASS, FLOAT32: per class [count][count x (y1, x1, y2, x2, score)],
++    boxes normalised to the (plain-resized) network input, i.e. to the whole frame."""
++    dets, off = [], 0
++    for c in range(n_classes):
++        if off >= flat.shape[0]:
++            break
++        count = min(int(flat[off]), max_per_class)
++        off += 1
++        coco = TF91_TO_COCO80.get(c + label_offset)
++        for j in range(count):
++            y1, x1, y2, x2, score = flat[off + 5 * j:off + 5 * j + 5]
++            if coco is None or score < conf:
++                continue
++            dets.append((float(np.clip(x1 * src_w, 0, src_w - 1)), float(np.clip(y1 * src_h, 0, src_h - 1)),
++                         float(np.clip(x2 * src_w, 0, src_w - 1)), float(np.clip(y2 * src_h, 0, src_h - 1)),
++                         coco, float(score)))
++        off += count * 5
++    dets.sort(key=lambda d: -d[5])
++    return dets
++
++
++class SSDHailoPredictor:
++    """Predictor contract of detector_producer_base, on pyHailoRT. The HailoRT calls mirror
++    yolo_runtime_engine.HailoNPUYoloPredictor, which the YOLO NPU rows run."""
++
++    def __init__(self, hef_path: str, conf: float, max_per_class: int = 20):
++        from hailo_platform import VDevice, FormatType      # lazy: CPU-only hosts lack it
++        self.conf = float(conf)
++        self.max_per_class = int(max_per_class)
++        self._vdevice = VDevice()
++        infer_model = self._vdevice.create_infer_model(hef_path)
++        in_info = infer_model.input()
++        self.in_h, self.in_w = in_info.shape[0], in_info.shape[1]
++        outs = infer_model.outputs
++        if len(outs) != 1:
++            raise RuntimeError(f"expected one NMS output, got {[o.name for o in outs]}")
++        out = outs[0]
++        out.set_format_type(FormatType.FLOAT32)
++        # The zoo compiled this HEF's NMS with a 0.30 score threshold. Lower it to the
++        # pipeline's confidence gate where HailoRT allows it (host-side NMS); otherwise
++        # the row keeps the HEF's 0.30 and says so at startup.
++        self.nms_threshold_note = "HEF default (0.30)"
++        try:
++            out.set_nms_score_threshold(self.conf)
++            self.nms_threshold_note = f"set to {self.conf:.2f}"
++        except Exception as e:                                  # noqa: BLE001
++            self.nms_threshold_note = f"HEF default (0.30); lowering failed: {e}"
++        self._configured = infer_model.configure()
++        self._bindings = self._configured.create_bindings()
++        self._input = np.empty((self.in_h, self.in_w, 3), dtype=np.uint8)
++        self._bindings.input().set_buffer(self._input)
++        self._out = np.empty(out.shape, dtype=np.float32)
++        self._bindings.output(out.name).set_buffer(self._out)
++        # 90 classes = background removed (index 0 = TF label 1); 91 = background kept.
++        self.n_classes = self._n_classes(out)
++        self.label_offset = 1 if self.n_classes == 90 else 0
++        print(f"[ssd_hailo] {os.path.basename(hef_path)} in={self.in_w}x{self.in_h} out={out.name} "
++              f"shape={tuple(out.shape)} classes={self.n_classes} label_offset={self.label_offset} "
++              f"nms_score_threshold={self.nms_threshold_note}", flush=True)
++
++    @staticmethod
++    def _n_classes(out):
++        for attr in ("nms_shape",):
++            shp = getattr(out, attr, None)
++            n = getattr(shp, "number_of_classes", None) if shp is not None else None
++            if n:
++                return int(n)
++        return 90          # zoo config: 91 classes with background removal
++
++    def infer(self, rgb, timing=None):
++        t = timing if timing is not None else {}
++        src_h, src_w = rgb.shape[:2]
++        self._input[:] = cv2.resize(rgb, (self.in_w, self.in_h), interpolation=cv2.INTER_LINEAR)
++        t["pre_done"] = _now_ns()
++        t["inf_start"] = _now_ns()
++        self._configured.run([self._bindings], timeout=2000)
++        t["inf_done"] = _now_ns()
++        dets = parse_nms_by_class(self._out.reshape(-1), self.n_classes, self.label_offset,
++                                  src_w, src_h, self.conf, self.max_per_class)
++        t["nms_done"] = _now_ns()
++        return dets
++
++    def close(self):
++        """Clean release (a leaked VDevice wedges the Hailo SoC off PCIe)."""
++        try:
++            self._configured.shutdown()
++        except Exception:                                       # noqa: BLE001
++            pass
++        try:
++            self._vdevice.release()
++        except Exception:                                       # noqa: BLE001
++            pass
++
++
++def main():
++    ap = argparse.ArgumentParser(description="SSD (Hailo zoo) NPU producer -> /yolo_shm")
++    ap.add_argument("--model_id", default="ssd_mobilenet_v2", help="registry id (for the hef path)")
++    ap.add_argument("--hef", default=None, help="explicit .hef (bypasses the registry)")
++    ap.add_argument("--conf", type=float, default=0.20)
++    ap.add_argument("--telemetry_csv", default=None)
++    ap.add_argument("--frames", dest="max_frames", type=int, default=0,
++                    help="stop after N frames (0 = unlimited)")
++    cfg = ap.parse_args()
++    cfg.no_image = True
++
++    hef = cfg.hef
++    if hef is None:
++        from yolo_runtime_engine import ModelRegistry
++        hef = ModelRegistry().resolve(cfg.model_id)["hef"]
++    if not hef or not os.path.exists(hef):
++        sys.exit(f"[ssd_hailo] HEF not found: {hef}")
++    pred = SSDHailoPredictor(hef, cfg.conf)
++    run_producer(cfg, pred, cfg.model_id,
++                 f"[ssd_hailo] {cfg.model_id} NPU conf={cfg.conf} frame={{w}}x{{h}} -> /yolo_shm")
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/src/yolo_producer/yolo_producer.py b/src/yolo_producer/yolo_producer.py
+index 55ce77a0ae695186d9ffa485646b7b13b150061e..8779f61d23ae98222b925083773d07a43cebecd4 100644
+--- a/src/yolo_producer/yolo_producer.py
++++ b/src/yolo_producer/yolo_producer.py
+@@ -24,8 +24,12 @@ from typing import List, Tuple
+ import cv2
+ import numpy as np
+ 
+-# ─── Hailo imports ────────────────────────────────────────────────
+-from hailo_platform import VDevice, FormatType, HailoSchedulingAlgorithm
++# ─── Hailo imports (optional: only needed for --backend npu; this module is
++#     also imported for its SHM classes on CPU-only hosts without hailo_platform)
++try:
++    from hailo_platform import VDevice, FormatType, HailoSchedulingAlgorithm
++except ModuleNotFoundError:
++    VDevice = FormatType = HailoSchedulingAlgorithm = None
+ 
+ # ─── POSIX shm / sem via ctypes ──────────────────────────────────
+ _rt = ctypes.CDLL("librt.so.1", use_errno=True)
+@@ -335,10 +339,25 @@ def postprocess(outputs: dict, img_h: int, img_w: int,
+                 conf_thresh: float = 0.25,
+                 iou_thresh: float = 0.45,
+                 grids: dict = None,
+-                timing: dict = None) -> list:
++                timing: dict = None,
++                max_dets: int = YOLO_MAX_DETS,
++                float_coords: bool = False) -> list:
+     """
+     Post-process YOLO outputs from 6 tensors (3 scales × bbox+classes).
+     Returns list of dicts with keys: class_id, confidence, x1, y1, x2, y2.
++
++    max_dets / float_coords exist for OFFLINE ACCURACY MEASUREMENT ONLY and
++    default to the deployed behaviour, so the live pipeline is unaffected:
++
++      max_dets     the robot keeps 64 (YOLO_MAX_DETS is an SHM ABI constant --
++                   YOLO_DETS_PAD = 64*16, mirrored in include/yolo_shm.hpp).
++                   COCO evaluates at maxDets=100, so a benchmark must be able
++                   to ask for more or it silently truncates the tail of the
++                   precision/recall curve.
++      float_coords the robot wants integer pixels. int() TRUNCATES, biasing
++                   every box inward by ~0.5 px, which depresses mAP75/mAP50-95
++                   and confounds NPU-vs-CPU comparisons because only the NPU
++                   paths do it. Pass True to keep sub-pixel boxes.
+     If timing dict is provided, records per-stage durations (ms).
+     """
+     names = sorted(outputs.keys())
+@@ -475,14 +494,15 @@ def postprocess(outputs: dict, img_h: int, img_w: int,
+         if len(indices) > 0:
+             # indices may be [[i]] or [i] depending on OpenCV version
+             keep = indices.flatten()
++            _c = float if float_coords else int
+             for k in keep:
+                 dets.append({
+                     "class_id": int(cls_id),
+                     "confidence": float(cls_scores[k]),
+-                    "x1": int(cls_boxes[k, 0]),
+-                    "y1": int(cls_boxes[k, 1]),
+-                    "x2": int(cls_boxes[k, 2]),
+-                    "y2": int(cls_boxes[k, 3]),
++                    "x1": _c(cls_boxes[k, 0]),
++                    "y1": _c(cls_boxes[k, 1]),
++                    "x2": _c(cls_boxes[k, 2]),
++                    "y2": _c(cls_boxes[k, 3]),
+                 })
+ 
+     t_nms_end = time.monotonic()
+@@ -498,7 +518,7 @@ def postprocess(outputs: dict, img_h: int, img_w: int,
+         timing["coord_rescale_ms"] = t_coord_rescale / 1e6
+ 
+     dets.sort(key=lambda d: -d["confidence"])
+-    return dets[:YOLO_MAX_DETS]
++    return dets[:max_dets]
+ 
+ 
+ def postprocess_ondevice_nms(output_flat: np.ndarray,
+@@ -509,27 +529,38 @@ def postprocess_ondevice_nms(output_flat: np.ndarray,
+                              num_classes: int = 80,
+                              max_per_class: int = 100,
+                              conf_thresh: float = 0.25,
+-                             timing: dict = None) -> list:
++                             timing: dict = None,
++                             max_dets: int = YOLO_MAX_DETS,
++                             float_coords: bool = False) -> list:
+     """
+-    Parse on-device NMS output from Hailo (yolov8m/yolov11m).
++    Parse on-device NMS output from Hailo (yolov8/yolov11, HAILO NMS BY CLASS).
++
++    The output is VARIABLE-LENGTH, packed back-to-back per class:
++      [count_c][count_c × {y_min, x_min, y_max, x_max, score}] for c = 0..79,
++    boxes normalized to [0, 1] relative to the 640×640 input (incl. letterbox).
++    The buffer is only zero-padded up to num_classes*(1+max_per_class*5) floats.
+ 
+-    Output tensor is flat: num_classes * (1 + max_per_class * 5) floats.
+-    Per class: float32 count, then count × {y_min, x_min, y_max, x_max, score}
+-    all normalized to [0, 1] relative to the 640×640 input (including letterbox).
++    NOTE: this parser previously assumed FIXED 501-float strides per class,
++    which coincides with the real layout only for class 0 (person) — every
++    other class read a padding zero as its count and was silently dropped.
++    That bug masqueraded as "v8/v11 HEFs only detect persons" (old Finding 9).
+     """
+     t0 = time.perf_counter_ns()
+-    stride = 1 + max_per_class * 5  # 501 floats per class
+     dets = []
+ 
++    off = 0
++    total = output_flat.shape[0]
+     for cls_id in range(num_classes):
+-        base = cls_id * stride
+-        count = int(output_flat[base])
++        if off >= total:
++            break
++        count = int(output_flat[off])
++        off += 1
+         if count == 0:
+             continue
+         count = min(count, max_per_class)
+         for j in range(count):
+-            off = base + 1 + j * 5
+-            y_min, x_min, y_max, x_max, score = output_flat[off:off + 5]
++            y_min, x_min, y_max, x_max, score = output_flat[off + j * 5:
++                                                            off + j * 5 + 5]
+             if score < conf_thresh:
+                 continue
+             # Convert from normalized [0,1] in 640×640 space → source image pixels
+@@ -537,14 +568,25 @@ def postprocess_ondevice_nms(output_flat: np.ndarray,
+             py1 = (y_min * input_size - pad_top) / scale
+             px2 = (x_max * input_size - pad_left) / scale
+             py2 = (y_max * input_size - pad_top) / scale
+-            dets.append({
+-                "class_id": cls_id,
+-                "confidence": float(score),
+-                "x1": max(0, min(int(px1), img_w - 1)),
+-                "y1": max(0, min(int(py1), img_h - 1)),
+-                "x2": max(0, min(int(px2), img_w - 1)),
+-                "y2": max(0, min(int(py2), img_h - 1)),
+-            })
++            if float_coords:
++                dets.append({
++                    "class_id": cls_id,
++                    "confidence": float(score),
++                    "x1": max(0.0, min(float(px1), float(img_w - 1))),
++                    "y1": max(0.0, min(float(py1), float(img_h - 1))),
++                    "x2": max(0.0, min(float(px2), float(img_w - 1))),
++                    "y2": max(0.0, min(float(py2), float(img_h - 1))),
++                })
++            else:
++                dets.append({
++                    "class_id": cls_id,
++                    "confidence": float(score),
++                    "x1": max(0, min(int(px1), img_w - 1)),
++                    "y1": max(0, min(int(py1), img_h - 1)),
++                    "x2": max(0, min(int(px2), img_w - 1)),
++                    "y2": max(0, min(int(py2), img_h - 1)),
++                })
++        off += count * 5
+ 
+     t1 = time.perf_counter_ns()
+     if timing is not None:
+@@ -558,7 +600,7 @@ def postprocess_ondevice_nms(output_flat: np.ndarray,
+         timing["coord_rescale_ms"] = (t1 - t0) / 1e6  # all time is parse+rescale
+ 
+     dets.sort(key=lambda d: -d["confidence"])
+-    return dets[:YOLO_MAX_DETS]
++    return dets[:max_dets]
+ 
+ 
+ def _nms(boxes: np.ndarray, scores: np.ndarray,
+diff --git a/src/yolo_producer/yolo_runtime_engine.py b/src/yolo_producer/yolo_runtime_engine.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..f68fa1aa1937d127adc7d6389d83599a1510716e
+--- /dev/null
++++ b/src/yolo_producer/yolo_runtime_engine.py
+@@ -0,0 +1,742 @@
++#!/usr/bin/env python3
++"""
++yolo_runtime_engine — Plug-and-play YOLO predictor core (OOP).
++
++A single, backend-agnostic interface (`BaseYoloPredictor`) with two concrete
++implementations:
++
++    ONNXYoloPredictor       — ARM CPU via onnxruntime (bounded threads, vectorized NMS)
++    HailoNPUYoloPredictor   — Hailo-10H NPU via pyHailoRT (reuses the proven
++                              yolo_producer.postprocess / postprocess_ondevice_nms)
++
++The caller is completely oblivious to which backend runs underneath:
++
++    from yolo_runtime_engine import build_predictor
++    pred = build_predictor("cpu", model_id="yolov8n", threads=2)   # or "npu"
++    dets = pred.infer(rgb_image)          # -> [(x1,y1,x2,y2,class_id,conf), ...]
++
++Every model selection, backend toggle and thread count is a runtime parameter,
++so a single shell script can sweep the whole experimental matrix on one branch.
++
++`infer(image, timing=dict)` optionally fills `timing` with absolute CLOCK_MONOTONIC
++nanosecond stamps ('pre_done','inf_start','inf_done','nms_done'), which the SHM
++producer turns into the paper's per-stage latency breakdown.
++"""
++
++from __future__ import annotations
++
++import json
++import os
++import sys
++import time
++from abc import ABC, abstractmethod
++from typing import Dict, List, Optional, Tuple
++
++import cv2
++import numpy as np
++
++# Canonical detection: bbox corners (source pixels) + class id + confidence.
++Detection = Tuple[float, float, float, float, int, float]
++
++# Deployed per-frame detection cap. Mirrors yolo_producer.YOLO_MAX_DETS and
++# include/yolo_shm.hpp's YOLO_MAX_DETS -- an SHM ABI constant (the detection
++# array is YOLO_MAX_DETS * 16 bytes), not a tuning knob. Duplicated rather than
++# imported so the CPU path carries no dependency on the ROS-side module.
++_YOLO_MAX_DETS = 64
++
++_THIS_DIR = os.path.dirname(os.path.abspath(__file__))
++# repo/models/model_registry.json  (this file lives in repo/src/yolo_producer/)
++_DEFAULT_REGISTRY = os.path.normpath(
++    os.path.join(_THIS_DIR, "..", "..", "models", "model_registry.json"))
++
++# COCO-80 labels. Kept local so importing the CPU engine never pulls in
++# hailo_platform (which yolo_producer.py imports at module scope). Mirrors the
++# list in yolo_producer.py.
++COCO_NAMES = [
++    "person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck",
++    "boat", "traffic light", "fire hydrant", "stop sign", "parking meter", "bench",
++    "bird", "cat", "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe",
++    "backpack", "umbrella", "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard",
++    "sports ball", "kite", "baseball bat", "baseball glove", "skateboard", "surfboard",
++    "tennis racket", "bottle", "wine glass", "cup", "fork", "knife", "spoon", "bowl",
++    "banana", "apple", "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza",
++    "donut", "cake", "chair", "couch", "potted plant", "bed", "dining table", "toilet",
++    "tv", "laptop", "mouse", "remote", "keyboard", "cell phone", "microwave", "oven",
++    "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors", "teddy bear",
++    "hair drier", "toothbrush",
++]
++
++
++def _now_ns() -> int:
++    """Monotonic nanosecond clock.
++
++    Deliberately CLOCK_MONOTONIC (not perf_counter): the C++ camera driver stamps
++    frames with clock_gettime(CLOCK_MONOTONIC), so sharing the same epoch makes the
++    cross-process ts_capture -> ts_yolo_shm_read interval physically meaningful.
++    """
++    return time.clock_gettime_ns(time.CLOCK_MONOTONIC)
++
++
++def _sigmoid(x: np.ndarray) -> np.ndarray:
++    return 1.0 / (1.0 + np.exp(-np.clip(x, -88.0, 88.0)))
++
++
++# ═════════════════════════════════════════════════════════════════════════════
++# Model registry — the ONLY place that knows the on-disk naming quirks
++# ═════════════════════════════════════════════════════════════════════════════
++class ModelRegistry:
++    """Resolves a logical model id (e.g. 'yolov8n') to absolute artifact paths
++    plus metadata. Absorbs the cross-family filename inconsistencies
++    (yolov11n.hef vs yolo11n.onnx, missing nms_config files, ...)."""
++
++    # Aliases accepted from CLI/launch params -> canonical family token.
++    _FAMILY_ALIASES = {
++        "v8": "v8", "yolov8": "v8", "8": "v8",
++        "v11": "v11", "yolov11": "v11", "yolo11": "v11", "11": "v11",
++        "yolo26": "yolo26", "v26": "yolo26", "26": "yolo26",
++    }
++
++    def __init__(self, path: Optional[str] = None):
++        self.path = path or _DEFAULT_REGISTRY
++        with open(self.path, "r") as f:
++            self._doc = json.load(f)
++        self.root = os.path.dirname(os.path.abspath(self.path))
++        self._defaults = self._doc.get("defaults", {})
++        self._models = self._doc.get("models", {})
++
++    # -- id helpers --------------------------------------------------------
++    @classmethod
++    def id_from(cls, family: str, variant: str) -> str:
++        """('v8','n') / ('yolo11','s') / ('26','m') -> canonical id."""
++        fam = cls._FAMILY_ALIASES.get(str(family).lower())
++        if fam is None:
++            raise ValueError(f"unknown model_family '{family}' "
++                             f"(expected one of {sorted(set(cls._FAMILY_ALIASES))})")
++        var = str(variant).lower()
++        if var not in ("n", "s", "m", "l", "x"):
++            raise ValueError(f"unknown variant '{variant}' (expected n/s/m)")
++        # canonical ids: yolov8{v} / yolov11{v} / yolo26{v}
++        return {"v8": "yolov8", "v11": "yolov11", "yolo26": "yolo26"}[fam] + var
++
++    def list_ids(self) -> List[str]:
++        return list(self._models.keys())
++
++    # -- resolution --------------------------------------------------------
++    def _abs(self, rel: Optional[str]) -> Optional[str]:
++        return os.path.normpath(os.path.join(self.root, rel)) if rel else None
++
++    def resolve(self, model_id: str) -> Dict:
++        """Return a meta dict with absolute paths + merged defaults."""
++        if model_id not in self._models:
++            raise KeyError(
++                f"model id '{model_id}' not in registry. "
++                f"Available: {', '.join(self.list_ids())}")
++        m = dict(self._models[model_id])           # shallow copy
++        meta = dict(self._defaults)                # start from defaults
++        meta.update(m)                             # per-model overrides win
++        meta["id"] = model_id
++        meta["hef"] = self._abs(m.get("hef"))
++        meta["onnx"] = self._abs(m.get("onnx"))
++        meta["nms_config"] = self._abs(m.get("nms_config"))
++        return meta
++
++    def load_nms_config(self, meta: Dict) -> Dict:
++        """Load the optional per-model *_nms_config.json sidecar (if present)."""
++        p = meta.get("nms_config")
++        if p and os.path.exists(p):
++            try:
++                with open(p, "r") as f:
++                    return json.load(f)
++            except Exception:
++                pass
++        return {}
++
++
++# ═════════════════════════════════════════════════════════════════════════════
++# Shared preprocessing — one letterbox path for every backend / layout
++# ═════════════════════════════════════════════════════════════════════════════
++def letterbox(img_rgb: np.ndarray, size: int,
++              pad_value: int = 114) -> Tuple[np.ndarray, float, int, int]:
++    """Aspect-preserving resize + center pad to (size, size).
++
++    Returns (canvas_uint8_RGB, scale, pad_left, pad_top). Identical math to the
++    live producer so CPU/NPU detections land in the same coordinate frame.
++    """
++    src_h, src_w = img_rgb.shape[:2]
++    scale = min(size / src_w, size / src_h)
++    new_w, new_h = int(round(src_w * scale)), int(round(src_h * scale))
++    resized = cv2.resize(img_rgb, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
++    canvas = np.full((size, size, 3), pad_value, dtype=np.uint8)
++    pad_left = (size - new_w) // 2
++    pad_top = (size - new_h) // 2
++    canvas[pad_top:pad_top + new_h, pad_left:pad_left + new_w] = resized
++    return canvas, scale, pad_left, pad_top
++
++
++# ═════════════════════════════════════════════════════════════════════════════
++# Abstract base — uniform interface; callers never branch on backend
++# ═════════════════════════════════════════════════════════════════════════════
++class BaseYoloPredictor(ABC):
++    """Uniform predictor interface.
++
++    Subclasses isolate ALL backend-specific behaviour (tensor shapes, output
++    indexing, runtime init, threading) behind two methods so the caller node /
++    benchmarker stays completely backend-agnostic.
++    """
++
++    def __init__(self, model_path: str,
++                 input_size: int = 640,
++                 num_classes: int = 80,
++                 conf: float = 0.25,
++                 iou: float = 0.45,
++                 class_names: Optional[List[str]] = None,
++                 max_dets: Optional[int] = None,
++                 float_coords: bool = False,
++                 **_opts):
++        self.model_path = model_path
++        self.input_size = int(input_size)
++        self.num_classes = int(num_classes)
++        self.conf = float(conf)
++        self.iou = float(iou)
++        # Offline-accuracy knobs. max_dets=None means "leave each path as it
++        # is": the NPU paths keep yolo_producer's 64-detection cap, the CPU
++        # paths stay uncapped. That asymmetry is wrong for a controlled
++        # benchmark but is exactly what the deployed pipeline does, so it is
++        # the default and only the bench overrides it.
++        self.max_dets = None if max_dets is None else int(max_dets)
++        self.float_coords = bool(float_coords)
++        self.class_names = class_names or COCO_NAMES
++        self.load_model(model_path)
++
++    # -- interface ---------------------------------------------------------
++    @abstractmethod
++    def load_model(self, path: str) -> None:
++        """Initialize the backend runtime and bind I/O for `path`."""
++
++    @abstractmethod
++    def infer(self, image_mat: np.ndarray,
++              timing: Optional[Dict] = None) -> List[Detection]:
++        """RGB HxWx3 uint8 -> [(x1,y1,x2,y2,class_id,conf), ...] in source pixels."""
++
++    # -- shared helpers ----------------------------------------------------
++    def class_name(self, class_id: int) -> str:
++        return (self.class_names[class_id]
++                if 0 <= class_id < len(self.class_names) else str(class_id))
++
++    def _rescale_xyxy(self, x1, y1, x2, y2,
++                      scale: float, pad_left: int, pad_top: int,
++                      src_w: int, src_h: int):
++        """Map boxes from letterboxed input space back to source pixels (vectorized)."""
++        x1 = (x1 - pad_left) / scale
++        y1 = (y1 - pad_top) / scale
++        x2 = (x2 - pad_left) / scale
++        y2 = (y2 - pad_top) / scale
++        np.clip(x1, 0, src_w - 1, out=x1)
++        np.clip(x2, 0, src_w - 1, out=x2)
++        np.clip(y1, 0, src_h - 1, out=y1)
++        np.clip(y2, 0, src_h - 1, out=y2)
++        return x1, y1, x2, y2
++
++    def close(self) -> None:
++        """Release backend resources (override where needed)."""
++        return None
++
++    # context-manager sugar so callers can `with build_predictor(...) as p:`
++    def __enter__(self):
++        return self
++
++    def __exit__(self, *exc):
++        self.close()
++
++
++# ═════════════════════════════════════════════════════════════════════════════
++# ONNX Runtime backend (ARM CPU)
++# ═════════════════════════════════════════════════════════════════════════════
++class ONNXYoloPredictor(BaseYoloPredictor):
++    """CPU inference via onnxruntime with EXPLICIT thread bounding.
++
++    Threading management (critical for the contention experiments):
++      onnxruntime defaults to an intra-op pool spanning ALL cores and a spin-wait
++      that busy-burns idle threads. On a 4-core Pi5 that tramples the OV2SLAM
++      pinned to cores 2-3. We therefore set intra/inter op thread counts from
++      explicit params (never the defaults) and disable thread spinning, so that
++      `taskset`-pinning YOLO to N cores actually means it uses N cores.
++    """
++
++    def __init__(self, model_path: str,
++                 intra_threads: int = 2,
++                 inter_threads: int = 1,
++                 onnx_layout: Optional[str] = None,
++                 **kw):
++        self.intra_threads = int(intra_threads)
++        self.inter_threads = int(inter_threads)
++        self.layout_hint = onnx_layout       # 'v8_anchors' | 'yolo26_e2e' | None
++        super().__init__(model_path, **kw)
++
++    def load_model(self, path: str) -> None:
++        import onnxruntime as ort            # lazy: CPU-only hosts may lack hailo, and vice-versa
++
++        so = ort.SessionOptions()
++        so.intra_op_num_threads = self.intra_threads      # within-op (conv/GEMM) parallelism
++        so.inter_op_num_threads = self.inter_threads      # across-node; keep 1 for serial graphs
++        so.execution_mode = ort.ExecutionMode.ORT_SEQUENTIAL
++        so.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
++        # Stop ORT worker threads from busy-spinning between inferences (frees the
++        # cores for SLAM instead of pinning them at 100%). Guarded: older ORT may
++        # not know the key.
++        try:
++            so.add_session_config_entry("session.intra_op.allow_spinning", "0")
++        except Exception:
++            pass
++
++        self.sess = ort.InferenceSession(
++            path, sess_options=so, providers=["CPUExecutionProvider"])
++        self.input_name = self.sess.get_inputs()[0].name
++        self.output_names = [o.name for o in self.sess.get_outputs()]
++
++        # Prefer the model's own static input H/W when available, else registry size.
++        ishape = self.sess.get_inputs()[0].shape       # e.g. [1, 3, 640, 640]
++        try:
++            h, w = int(ishape[2]), int(ishape[3])
++            if h > 0 and w > 0:
++                self.input_size = max(h, w)
++        except (TypeError, ValueError, IndexError):
++            pass
++
++        out_shapes = [o.shape for o in self.sess.get_outputs()]
++        print(f"[onnx] {os.path.basename(path)} in='{self.input_name}'{ishape} "
++              f"outputs={self.output_names} shapes={out_shapes} "
++              f"threads(intra={self.intra_threads},inter={self.inter_threads})")
++
++    # -- preprocessing -----------------------------------------------------
++    def _blob(self, image_rgb: np.ndarray):
++        """RGB HxWx3 uint8 -> (NCHW float32 0..1, scale, pad_left, pad_top)."""
++        canvas, scale, pad_left, pad_top = letterbox(image_rgb, self.input_size)
++        blob = canvas.astype(np.float32, copy=False) * (1.0 / 255.0)
++        blob = np.transpose(blob, (2, 0, 1))[None]          # HWC -> NCHW, add batch
++        return np.ascontiguousarray(blob), scale, pad_left, pad_top
++
++    # -- output-layout decision (tensor indexing) --------------------------
++    def _decide_layout(self, arr: np.ndarray) -> str:
++        """Identify the output tensor layout from its shape.
++
++        v8/v11 export a single decoded tensor [1, 4+nc, A] (or transposed) where
++        A (~8400) >> channels. YOLO26 is end-to-end and emits [1, N, 6]
++        (x1,y1,x2,y2,conf,cls). We key off the channel dim, falling back to the
++        registry hint when ambiguous.
++        """
++        a = arr[0] if arr.ndim == 3 else arr
++        ch = 4 + self.num_classes                # 84 for COCO
++        if ch in a.shape:
++            return "anchors"
++        if 6 in a.shape and ch not in a.shape:
++            return "e2e"
++        if self.layout_hint == "yolo26_e2e":
++            return "e2e"
++        return "anchors"
++
++    def infer(self, image_mat: np.ndarray,
++              timing: Optional[Dict] = None) -> List[Detection]:
++        t = timing if timing is not None else {}
++        src_h, src_w = image_mat.shape[:2]
++
++        blob, scale, pad_left, pad_top = self._blob(image_mat)
++        t["pre_done"] = _now_ns()
++
++        t["inf_start"] = _now_ns()
++        outputs = self.sess.run(self.output_names, {self.input_name: blob})
++        t["inf_done"] = _now_ns()
++
++        if self.layout_hint == "raw_tensor":
++            dets = self._postprocess_raw_tensor(outputs, scale, pad_left, pad_top, src_w, src_h)
++            t["nms_done"] = _now_ns()
++            return dets
++
++        arr = np.asarray(outputs[0])
++        if self._decide_layout(arr) == "e2e":
++            dets = self._postprocess_e2e(arr, scale, pad_left, pad_top, src_w, src_h)
++        else:
++            dets = self._postprocess_anchors(arr, scale, pad_left, pad_top, src_w, src_h)
++        t["nms_done"] = _now_ns()
++        return dets
++
++    # -- Layer 4: unified vectorized post-processing -----------------------
++    def _postprocess_anchors(self, raw, scale, pad_left, pad_top,
++                             src_w, src_h) -> List[Detection]:
++        """v8/v11 decoded-anchor head. Fully vectorized NumPy slicing + the
++        C++-backed cv2.dnn.NMSBoxes — no per-box Python loops on the hot path."""
++        pred = raw[0] if raw.ndim == 3 else raw
++        ch = 4 + self.num_classes
++        # Normalize to shape (A, 4+nc): channels must be the LAST axis.
++        if pred.shape[0] == ch and pred.shape[1] != ch:
++            pred = pred.T
++        elif ch not in pred.shape and pred.shape[0] < pred.shape[1]:
++            pred = pred.T                                   # ambiguous: smaller dim = channels
++
++        boxes = pred[:, :4]                                 # cx, cy, w, h (input px)
++        scores = pred[:, 4:4 + self.num_classes]
++        # Ultralytics already applies sigmoid in-graph (scores in [0,1]); guard
++        # the rare case of raw logits being exported.
++        if scores.size and float(scores.max()) > 1.0 + 1e-3:
++            scores = _sigmoid(scores)
++
++        class_ids = scores.argmax(axis=1)
++        confs = scores.max(axis=1)
++        keep = confs >= self.conf                           # vectorized confidence gate
++        if not np.any(keep):
++            return []
++        boxes = boxes[keep]
++        class_ids = class_ids[keep]
++        confs = confs[keep]
++
++        # cx,cy,w,h -> x1,y1,x2,y2 in input space (vectorized)
++        cx, cy, w, h = boxes[:, 0], boxes[:, 1], boxes[:, 2], boxes[:, 3]
++        x1 = cx - w * 0.5
++        y1 = cy - h * 0.5
++        x2 = cx + w * 0.5
++        y2 = cy + h * 0.5
++        x1, y1, x2, y2 = self._rescale_xyxy(x1, y1, x2, y2, scale,
++                                            pad_left, pad_top, src_w, src_h)
++
++        # xywh in SOURCE space for cv2.dnn.NMSBoxes (expects [x, y, w, h]).
++        xywh = np.stack([x1, y1, x2 - x1, y2 - y1], axis=1)
++
++        # Class-aware NMS: loop only over the (few) classes actually present;
++        # each call is a single C++-backed NMSBoxes over a vectorized batch.
++        dets: List[Detection] = []
++        for c in np.unique(class_ids):
++            m = class_ids == c
++            idx = cv2.dnn.NMSBoxes(xywh[m].tolist(), confs[m].tolist(),
++                                   self.conf, self.iou)
++            if len(idx) == 0:
++                continue
++            cls_boxes = xywh[m]
++            cls_conf = confs[m]
++            for k in np.asarray(idx).flatten():
++                bx, by, bw, bh = cls_boxes[k]
++                dets.append((float(bx), float(by), float(bx + bw), float(by + bh),
++                             int(c), float(cls_conf[k])))
++        dets.sort(key=lambda d: -d[5])
++        return dets if self.max_dets is None else dets[:self.max_dets]
++
++    def _postprocess_raw_tensor(self, outputs, scale, pad_left, pad_top,
++                                src_w, src_h) -> List[Detection]:
++        """6-tensor raw-conv head (bbox + cls per scale), CPU-side.
++
++        Routes through yolo_producer.postprocess -- the SAME function the NPU
++        raw-tensor path calls -- so a model exported this way (see
++        benchmarks/yolo26_cpu_fastmode_ab.py:export_one2many, which produces
++        exactly this 6-tensor layout to match the deployed HEF) gets a CPU
++        comparison with an identical postprocess, not just an identical
++        conf/iou/max_dets. Without this, "CPU FP32 vs NPU INT8" for a model
++        whose HEF uses this head (YOLO26) would silently also be comparing an
++        NMS-free end-to-end graph against a conventional dense one -- two
++        variables, not one.
++        """
++        from yolo_producer import postprocess as _pp_raw
++
++        if not hasattr(self, "_grids"):
++            self._grids = {}
++            for H, W, s in [(80, 80, 8), (40, 40, 16), (20, 20, 32)]:
++                gy, gx = np.meshgrid(np.arange(H), np.arange(W), indexing="ij")
++                self._grids[(H, W)] = ((gx.flatten() + 0.5) * s,
++                                       (gy.flatten() + 0.5) * s)
++
++        # ONNX gives NCHW; postprocess() expects NHWC (matching the HEF's native
++        # layout), keyed by output name so it can sort bbox (C<=4 or C==64) from
++        # cls (C==80) tensors itself.
++        out_dict = {}
++        for name, arr in zip(self.output_names, outputs):
++            a = np.asarray(arr)
++            if a.ndim == 4:
++                a = np.transpose(a[0], (1, 2, 0))   # CHW -> HWC
++            out_dict[name] = a
++
++        pp_kw = {"float_coords": self.float_coords}
++        if self.max_dets is not None:
++            pp_kw["max_dets"] = self.max_dets
++        dd = _pp_raw(out_dict, src_h, src_w, input_size=self.input_size,
++                     conf_thresh=self.conf, iou_thresh=self.iou,
++                     grids=self._grids, **pp_kw)
++        for d in dd:
++            if self.float_coords:
++                d["x1"] = max(0.0, min((d["x1"] - pad_left) / scale, float(src_w - 1)))
++                d["y1"] = max(0.0, min((d["y1"] - pad_top) / scale, float(src_h - 1)))
++                d["x2"] = max(0.0, min((d["x2"] - pad_left) / scale, float(src_w - 1)))
++                d["y2"] = max(0.0, min((d["y2"] - pad_top) / scale, float(src_h - 1)))
++            else:
++                d["x1"] = max(0, min(int((d["x1"] - pad_left) / scale), src_w - 1))
++                d["y1"] = max(0, min(int((d["y1"] - pad_top) / scale), src_h - 1))
++                d["x2"] = max(0, min(int((d["x2"] - pad_left) / scale), src_w - 1))
++                d["y2"] = max(0, min(int((d["y2"] - pad_top) / scale), src_h - 1))
++        return [(float(d["x1"]), float(d["y1"]), float(d["x2"]), float(d["y2"]),
++                 int(d["class_id"]), float(d["confidence"])) for d in dd]
++
++    def _postprocess_e2e(self, raw, scale, pad_left, pad_top,
++                         src_w, src_h) -> List[Detection]:
++        """YOLO26 NMS-free head: output already top-k [N,6] = x1,y1,x2,y2,conf,cls.
++        Only confidence-threshold + rescale — NMS already done in-graph."""
++        pred = raw[0] if raw.ndim == 3 else raw
++        if pred.ndim != 2:
++            return []
++        if pred.shape[0] == 6 and pred.shape[1] != 6:
++            pred = pred.T                                   # -> (N, 6)
++        if pred.shape[1] < 6 or pred.size == 0:
++            return []
++
++        coords = pred[:, :4].astype(np.float32)
++        confs = pred[:, 4].astype(np.float32)
++        class_ids = pred[:, 5].astype(np.int32)
++        # Some exports emit normalized [0,1] coords; scale up to input pixels.
++        if coords.size and float(coords.max()) <= 1.5:
++            coords = coords * float(self.input_size)
++
++        keep = confs >= self.conf
++        coords, confs, class_ids = coords[keep], confs[keep], class_ids[keep]
++        if coords.shape[0] == 0:
++            return []
++
++        x1, y1, x2, y2 = self._rescale_xyxy(
++            coords[:, 0].copy(), coords[:, 1].copy(),
++            coords[:, 2].copy(), coords[:, 3].copy(),
++            scale, pad_left, pad_top, src_w, src_h)
++
++        dets = [(float(x1[i]), float(y1[i]), float(x2[i]), float(y2[i]),
++                 int(class_ids[i]), float(confs[i])) for i in range(len(confs))]
++        dets.sort(key=lambda d: -d[5])
++        return dets if self.max_dets is None else dets[:self.max_dets]
++
++
++# ═════════════════════════════════════════════════════════════════════════════
++# Hailo-10H NPU backend (pyHailoRT)
++# ═════════════════════════════════════════════════════════════════════════════
++class HailoNPUYoloPredictor(BaseYoloPredictor):
++    """NPU inference via pyHailoRT.
++
++    Reuses the verified post-processing already shipping in yolo_producer.py
++    (DFL raw-tensor path + on-device-NMS parser) so NPU results are bit-identical
++    to the production HIL pipeline — only the HEF path changes per model.
++    """
++
++    def __init__(self, model_path: str,
++                 hef_postproc: Optional[str] = None,
++                 **kw):
++        self.hef_postproc = hef_postproc     # 'ondevice_nms' | 'raw_tensor' | None
++        self._vdevice = None
++        self._configured = None
++        super().__init__(model_path, **kw)
++
++    def load_model(self, path: str) -> None:
++        from hailo_platform import VDevice, FormatType         # lazy import
++
++        # Reuse the production post-processing. Import lazily AND from this dir so
++        # CPU-only hosts (no hailo_platform) never trip over it.
++        if _THIS_DIR not in sys.path:
++            sys.path.insert(0, _THIS_DIR)
++        from yolo_producer import postprocess, postprocess_ondevice_nms
++        self._pp = postprocess
++        self._pp_ondevice = postprocess_ondevice_nms
++
++        self._vdevice = VDevice()
++        infer_model = self._vdevice.create_infer_model(path)
++
++        in_info = infer_model.input()
++        self.input_h, self.input_w = in_info.shape[0], in_info.shape[1]
++        self.input_size = self.input_w
++
++        for out in infer_model.outputs:
++            out.set_format_type(FormatType.FLOAT32)          # Hailo upconverts INT8 -> f32
++        self._configured = infer_model.configure()
++
++        # Auto-detect on-device NMS exactly like yolo_producer / hef_bench: single
++        # output whose name carries 'nms_postprocess'. Registry hint is the fallback.
++        outs = infer_model.outputs
++        self.use_ondevice_nms = (len(outs) == 1 and "nms_postprocess" in outs[0].name)
++        if not self.use_ondevice_nms and self.hef_postproc == "ondevice_nms":
++            self.use_ondevice_nms = True
++
++        # Pre-allocate + bind I/O buffers once; reused every frame (zero realloc).
++        self._bindings = self._configured.create_bindings()
++        self._input_buf = np.empty((self.input_h, self.input_w, 3), dtype=np.uint8)
++        self._bindings.input().set_buffer(self._input_buf)
++        self._output_buffers = {}
++        for ov in outs:
++            buf = np.empty(ov.shape, dtype=np.float32)
++            self._bindings.output(ov.name).set_buffer(buf)
++            self._output_buffers[ov.name] = buf
++
++        # Anchor grids for the raw-tensor (DFL) path (3 scales: stride 8/16/32).
++        self._grids = {}
++        if not self.use_ondevice_nms:
++            for H, W, s in [(80, 80, 8), (40, 40, 16), (20, 20, 32)]:
++                gy, gx = np.meshgrid(np.arange(H), np.arange(W), indexing="ij")
++                self._grids[(H, W)] = ((gx.flatten() + 0.5) * s,
++                                       (gy.flatten() + 0.5) * s)
++
++        mode = "on-device-NMS" if self.use_ondevice_nms else "raw-tensor-CPU-PP"
++        print(f"[hailo] {os.path.basename(path)} in={self.input_w}x{self.input_h} "
++              f"outputs={len(outs)} mode={mode}")
++
++    def infer(self, image_mat: np.ndarray,
++              timing: Optional[Dict] = None) -> List[Detection]:
++        t = timing if timing is not None else {}
++        src_h, src_w = image_mat.shape[:2]
++
++        # Letterbox directly into the bound input buffer (NPU wants uint8 HWC).
++        scale = min(self.input_w / src_w, self.input_h / src_h)
++        new_w, new_h = int(round(src_w * scale)), int(round(src_h * scale))
++        pad_left = (self.input_w - new_w) // 2
++        pad_top = (self.input_h - new_h) // 2
++        self._input_buf[:] = 114
++        self._input_buf[pad_top:pad_top + new_h, pad_left:pad_left + new_w] = \
++            cv2.resize(image_mat, (new_w, new_h))
++        t["pre_done"] = _now_ns()
++
++        t["inf_start"] = _now_ns()
++        self._configured.run([self._bindings], timeout=2000)
++        t["inf_done"] = _now_ns()
++
++        # max_dets=None means "keep the deployed behaviour", which for both NPU
++        # paths is yolo_producer's own YOLO_MAX_DETS default.
++        pp_kw = {"float_coords": self.float_coords}
++        if self.max_dets is not None:
++            pp_kw["max_dets"] = self.max_dets
++
++        if self.use_ondevice_nms:
++            # on-device path already rescales to source pixels.
++            out_flat = list(self._output_buffers.values())[0].flatten()
++            dd = self._pp_ondevice(
++                out_flat, img_w=src_w, img_h=src_h, input_size=self.input_w,
++                pad_left=pad_left, pad_top=pad_top, scale=scale, conf_thresh=self.conf,
++                **pp_kw)
++        else:
++            # raw-tensor path returns boxes in letterboxed model space -> rescale.
++            dd = self._pp(self._output_buffers, src_h, src_w,
++                          input_size=self.input_w, conf_thresh=self.conf,
++                          iou_thresh=self.iou, grids=self._grids, **pp_kw)
++            # Deployed path truncates to int here as well as inside postprocess:
++            # two truncations, each biasing the box inward. Keep that exactly as
++            # it is by default; skip both when float coords are requested.
++            if self.float_coords:
++                for d in dd:
++                    d["x1"] = max(0.0, min((d["x1"] - pad_left) / scale, float(src_w - 1)))
++                    d["y1"] = max(0.0, min((d["y1"] - pad_top) / scale, float(src_h - 1)))
++                    d["x2"] = max(0.0, min((d["x2"] - pad_left) / scale, float(src_w - 1)))
++                    d["y2"] = max(0.0, min((d["y2"] - pad_top) / scale, float(src_h - 1)))
++            else:
++                for d in dd:
++                    d["x1"] = max(0, min(int((d["x1"] - pad_left) / scale), src_w - 1))
++                    d["y1"] = max(0, min(int((d["y1"] - pad_top) / scale), src_h - 1))
++                    d["x2"] = max(0, min(int((d["x2"] - pad_left) / scale), src_w - 1))
++                    d["y2"] = max(0, min(int((d["y2"] - pad_top) / scale), src_h - 1))
++        t["nms_done"] = _now_ns()
++
++        # dict -> canonical tuple (caller is layout/backend blind)
++        return [(float(d["x1"]), float(d["y1"]), float(d["x2"]), float(d["y2"]),
++                 int(d["class_id"]), float(d["confidence"])) for d in dd]
++
++    def close(self) -> None:
++        """Clean release. Leaking the VDevice/CIM wedges the Hailo SoC off PCIe."""
++        try:
++            if self._configured is not None:
++                self._configured.shutdown()
++        except Exception:
++            pass
++        try:
++            if self._vdevice is not None:
++                self._vdevice.release()
++        except Exception:
++            pass
++        self._configured = None
++        self._vdevice = None
++
++
++# ═════════════════════════════════════════════════════════════════════════════
++# Factory — the caller's single entry point
++# ═════════════════════════════════════════════════════════════════════════════
++_CPU_BACKENDS = {"cpu", "onnx", "ort", "onnxruntime"}
++_NPU_BACKENDS = {"npu", "hailo", "hef", "hailort"}
++
++
++def build_predictor(backend: str,
++                    model_id: Optional[str] = None,
++                    model_path: Optional[str] = None,
++                    registry: Optional[ModelRegistry] = None,
++                    conf: Optional[float] = None,
++                    iou: Optional[float] = None,
++                    threads: Optional[int] = None,
++                    inter_threads: Optional[int] = None,
++                    input_size: Optional[int] = None,
++                    num_classes: Optional[int] = None,
++                    max_dets: Optional[int] = None,
++                    float_coords: bool = False,
++                    onnx_layout: Optional[str] = None,
++                    **extra) -> BaseYoloPredictor:
++    """Construct a predictor for `backend` ('cpu'|'npu').
++
++    Resolve the model either by registry `model_id` or by an explicit
++    `model_path`. All model-specific paths/params are swallowed here so callers
++    stay oblivious to the backend.
++    """
++    backend = backend.lower()
++    meta: Dict = {}
++    if model_id:
++        reg = registry or ModelRegistry()
++        meta = reg.resolve(model_id)
++
++    common = dict(
++        input_size=input_size if input_size is not None else meta.get("input_size", 640),
++        num_classes=num_classes if num_classes is not None else meta.get("classes", 80),
++        conf=conf if conf is not None else meta.get("conf", 0.25),
++        iou=iou if iou is not None else meta.get("iou", 0.45),
++        max_dets=max_dets,
++        float_coords=float_coords,
++    )
++
++    if backend in _CPU_BACKENDS:
++        path = model_path or meta.get("onnx")
++        if not path:
++            raise ValueError("CPU backend needs --model_path or a registry id with an onnx artifact")
++        if not os.path.exists(path):
++            raise FileNotFoundError(f"onnx model not found: {path}")
++        return ONNXYoloPredictor(
++            path,
++            intra_threads=threads if threads is not None else 2,
++            inter_threads=inter_threads if inter_threads is not None else 1,
++            onnx_layout=onnx_layout if onnx_layout is not None else meta.get("onnx_layout"),
++            **common)
++
++    if backend in _NPU_BACKENDS:
++        path = model_path or meta.get("hef")
++        if not path:
++            raise ValueError("NPU backend needs --model_path or a registry id with a hef artifact")
++        if not os.path.exists(path):
++            raise FileNotFoundError(f"hef model not found: {path}")
++        return HailoNPUYoloPredictor(path, hef_postproc=meta.get("hef_postproc"), **common)
++
++    raise ValueError(f"unknown backend '{backend}' (expected cpu|npu)")
++
++
++if __name__ == "__main__":
++    # Tiny smoke probe: `python3 yolo_runtime_engine.py cpu yolov8n /tmp/bus.jpg`
++    import argparse
++    ap = argparse.ArgumentParser(description="engine smoke probe")
++    ap.add_argument("backend", choices=["cpu", "npu"])
++    ap.add_argument("model_id")
++    ap.add_argument("image", nargs="?", default="/tmp/bus.jpg")
++    a = ap.parse_args()
++
++    bgr = cv2.imread(a.image)
++    if bgr is None:
++        sys.exit(f"cannot read image: {a.image}")
++    rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
++
++    pred = build_predictor(a.backend, model_id=a.model_id)
++    tdict: Dict = {}
++    dets = pred.infer(rgb, timing=tdict)
++    print(f"{len(dets)} detections:")
++    for x1, y1, x2, y2, cid, cf in dets[:10]:
++        print(f"  {pred.class_name(cid):14s} {cf:.2f}  [{x1:.0f},{y1:.0f},{x2:.0f},{y2:.0f}]")
++    if {"inf_start", "inf_done"} <= tdict.keys():
++        print(f"inference: {(tdict['inf_done'] - tdict['inf_start']) / 1e6:.2f} ms")
++    pred.close()
+diff --git a/src/yolo_producer/yolo_shm_producer.py b/src/yolo_producer/yolo_shm_producer.py
+new file mode 100644
+index 0000000000000000000000000000000000000000..c332592981594a49bc4242d2b4750aa0f82bc3be
+--- /dev/null
++++ b/src/yolo_producer/yolo_shm_producer.py
+@@ -0,0 +1,404 @@
++#!/usr/bin/env python3
++"""
++yolo_shm_producer — generic, fully-parameterized SHM YOLO producer.
++
++Successor to yolo_cpu_producer.py: a single backend-agnostic host process that
++
++  1. reads NV12 camera frames from /ovcam_frames (POSIX shm seqlock, zero-copy)
++     via the verified OvcamReader,
++  2. runs inference through yolo_runtime_engine (CPU/onnxruntime or NPU/pyHailoRT,
++     selected at runtime),
++  3. writes detections (+ optional annotated frame) to /yolo_shm via YoloShmWriter
++     for the existing C++ yolo_bridge to consume — UNCHANGED binary layout, and
++  4. stamps 7 high-resolution monotonic timestamps per frame for the paper's
++     per-stage latency-breakdown figures.
++
++Every choice (backend, model, threads, image on/off) is a CLI flag AND an env var,
++so one shell script can sweep the whole matrix on a single branch. An optional
++rclpy LifecycleNode wrapper (--ros2) exposes the same knobs as ROS2 parameters for
++launch-file integration; the default path stays ROS2/DDS-free (the zero-overhead
++host property is itself a paper result).
++
++Telemetry (binary-safe): the 7 stamps are packed with struct.pack("<7Q", ...) into
++the spare YoloSlotHeader._reserved[8] (offset +56, 56 of its 64 bytes), INSIDE the
++seqlock window. The C++ bridge ignores _reserved, so /yolo_shm stays compatible and
++needs no rebuild. The stamps are also mirrored to a per-run CSV.
++
++Usage:
++    python3 yolo_shm_producer.py --backend npu --model_variant n --model_family yolo26
++    python3 yolo_shm_producer.py --backend cpu --model_id yolov8n --threads 2 \
++        --telemetry_csv /tmp/telem.csv
++    YOLO_BACKEND=cpu YOLO_MODEL=yolov11s YOLO_CPU_THREADS=2 python3 yolo_shm_producer.py
++"""
++
++import argparse
++import csv
++import hashlib
++import os
++import signal
++import struct
++import sys
++import threading
++import time
++from typing import Dict, List, Optional
++
++# Engine + reused SHM plumbing live next to this file.
++_THIS_DIR = os.path.dirname(os.path.abspath(__file__))
++if _THIS_DIR not in sys.path:
++    sys.path.insert(0, _THIS_DIR)
++
++from yolo_runtime_engine import build_predictor, ModelRegistry  # noqa: E402
++# Reuse the verified SHM classes + layout constants (no copy-paste drift).
++import yolo_producer as yp  # noqa: E402
++from yolo_producer import (  # noqa: E402
++    OvcamReader, YoloShmWriter, YOLO_SLOT_HDR, YOLO_IMG_OFFSET, YOLO_MAX_DETS,
++)
++
++# Offset of _reserved[8] within YoloSlotHeader (see yolo_shm.hpp):
++#   seq(8)+t_ns(8)+det_count(4)+img_w(4)+img_h(4)+img_stride(4)+img_bytes(4)
++#   +_pad[5](20) = 56  ->  _reserved[8] starts here. We use 7*8 = 56 of its 64 bytes.
++TELEM_RESERVED_OFF = 56
++TELEM_FIELDS = (
++    "ts_capture",              # frame written by camera driver (from SlotHeader.t_ns)
++    "ts_yolo_shm_read",        # YOLO picked the frame up from shm
++    "ts_yolo_preprocess_done", # resize/normalize finished
++    "ts_inference_start",      # handed to the execution provider
++    "ts_inference_done",       # raw tensors returned
++    "ts_nms_done",             # bbox parsing / NMS finished
++    "ts_yolo_shm_write",       # detections committed back to shm
++    "frame_hash",              # blake2b-4 of raw RGB frame; repeated value → frozen camera
++)
++
++
++def _now_ns() -> int:
++    """CLOCK_MONOTONIC ns — same epoch as the C++ camera driver's t_ns stamp."""
++    return time.clock_gettime_ns(time.CLOCK_MONOTONIC)
++
++
++# ═════════════════════════════════════════════════════════════════════════════
++# Telemetry-aware shm writer
++# ═════════════════════════════════════════════════════════════════════════════
++class TelemetryYoloShmWriter(YoloShmWriter):
++    """YoloShmWriter that also commits the 7-point timing struct into the slot
++    header's reserved bytes, inside the same seqlock window as the detections.
++
++    We override write() wholesale (rather than post-patching) so the telemetry is
++    written BEFORE the seqlock closes — otherwise a consumer could observe a 'done'
++    slot whose timing bytes are still being written (a torn read).
++    """
++
++    def write(self, dets: list, img, t_ns: int,
++              telemetry: Optional[Dict[str, int]] = None):
++        self._frame_num += 1
++        fn = self._frame_num
++        idx = (fn - 1) % self.slot_count
++        slot_off = 128 + idx * self.slot_size          # after YoloShmGlobal (128 B)
++
++        det_count = min(len(dets), YOLO_MAX_DETS)
++
++        # ── seqlock open (odd) ────────────────────────────────────────────────
++        self.mm[slot_off:slot_off + 8] = struct.pack("<Q", fn * 2 - 1)
++
++        # ── slot header meta (unchanged layout) ───────────────────────────────
++        write_img = self.include_image and img is not None
++        meta = struct.pack("<QIIIIi",
++                           t_ns, det_count,
++                           self.img_w, self.img_h, self.img_stride,
++                           self.img_bytes if write_img else 0)
++        self.mm[slot_off + 8:slot_off + 8 + len(meta)] = meta
++
++        # ── detection array ───────────────────────────────────────────────────
++        det_off = slot_off + YOLO_SLOT_HDR
++        for i in range(det_count):
++            d = dets[i]
++            self.mm[det_off + i * 16:det_off + i * 16 + 16] = struct.pack(
++                "<HHfHHHH", d["class_id"], 0, d["confidence"],
++                d["x1"], d["y1"], d["x2"], d["y2"])
++
++        # ── annotated image (optional) ────────────────────────────────────────
++        if write_img:
++            img_off = slot_off + YOLO_IMG_OFFSET
++            img_flat = img.tobytes()
++            self.mm[img_off:img_off + len(img_flat)] = img_flat
++
++        # ── telemetry into _reserved[8] (the 7th stamp = the commit itself) ───
++        ts_write = _now_ns()
++        if telemetry is not None:
++            packed = struct.pack(
++                "<7Q",
++                int(telemetry.get("ts_capture", t_ns)),
++                int(telemetry.get("ts_yolo_shm_read", 0)),
++                int(telemetry.get("ts_yolo_preprocess_done", 0)),
++                int(telemetry.get("ts_inference_start", 0)),
++                int(telemetry.get("ts_inference_done", 0)),
++                int(telemetry.get("ts_nms_done", 0)),
++                int(ts_write),
++            )
++            # 56-byte window, well within the 64-byte _reserved region.
++            self.mm[slot_off + TELEM_RESERVED_OFF:
++                    slot_off + TELEM_RESERVED_OFF + 56] = packed
++            telemetry["ts_yolo_shm_write"] = ts_write     # report back for CSV
++
++        # ── seqlock close (even) + publish + wake consumer ────────────────────
++        self.mm[slot_off:slot_off + 8] = struct.pack("<Q", fn * 2)
++        self.mm[64:72] = struct.pack("<Q", fn)
++        yp._pt.sem_post(self.sem)
++
++
++# ═════════════════════════════════════════════════════════════════════════════
++# Producer
++# ═════════════════════════════════════════════════════════════════════════════
++class YoloShmProducer:
++    """Camera-shm -> predictor -> yolo-shm, with per-frame telemetry."""
++
++    def __init__(self, cfg: argparse.Namespace):
++        self.cfg = cfg
++
++        # Resolve the model id (registry id OR family+variant; --model_path bypasses).
++        model_id = cfg.model_id
++        if model_id is None and cfg.model_family and cfg.model_variant:
++            model_id = ModelRegistry.id_from(cfg.model_family, cfg.model_variant)
++        self.model_id = model_id
++
++        # Build the predictor — backend chosen at runtime.
++        self.predictor = build_predictor(
++            cfg.backend, model_id=model_id, model_path=cfg.model_path,
++            conf=cfg.conf, iou=cfg.iou,
++            threads=cfg.threads, inter_threads=cfg.inter_threads)
++
++        # Camera reader (zero-copy seqlock) + telemetry-aware writer.
++        self.reader = OvcamReader()
++        self.writer = TelemetryYoloShmWriter(
++            self.reader.w, self.reader.h, include_image=not cfg.no_image)
++
++        # Per-run telemetry CSV (mirror of the in-shm timing struct).
++        self.csv_file = None
++        self.csv_writer = None
++        if cfg.telemetry_csv:
++            os.makedirs(os.path.dirname(os.path.abspath(cfg.telemetry_csv)), exist_ok=True)
++            self.csv_file = open(cfg.telemetry_csv, "w", newline="")
++            self.csv_writer = csv.writer(self.csv_file)
++            self.csv_writer.writerow(
++                ["frame", *TELEM_FIELDS,
++                 "capture_read_ms", "preprocess_ms", "inference_ms",
++                 "nms_ms", "shmwrite_ms", "e2e_capture_to_commit_ms", "n_dets"])
++
++        self.frame_count = 0
++        label = self.model_id or os.path.basename(cfg.model_path or "?")
++        print(f"[yolo_shm_producer] backend={cfg.backend} model={label} "
++              f"threads={cfg.threads} image={'off' if cfg.no_image else 'on'} "
++              f"csv={cfg.telemetry_csv or '-'}")
++
++    # -- one frame ---------------------------------------------------------
++    def step(self, timeout_s: float = 1.0) -> bool:
++        """Process one frame. Returns False on read timeout."""
++        try:
++            rgb, ts_capture = self.reader.wait_frame(timeout_s=timeout_s)
++        except TimeoutError:
++            return False
++
++        stamps: Dict[str, int] = {"ts_capture": int(ts_capture)}
++        stamps["frame_hash"] = int.from_bytes(
++            hashlib.blake2b(rgb.tobytes(), digest_size=4).digest(), "little")
++        stamps["ts_yolo_shm_read"] = _now_ns()
++
++        # Engine fills pre_done / inf_start / inf_done / nms_done (absolute ns).
++        timing: Dict[str, int] = {}
++        dets_t = self.predictor.infer(rgb, timing=timing)
++        stamps["ts_yolo_preprocess_done"] = timing.get("pre_done", 0)
++        stamps["ts_inference_start"] = timing.get("inf_start", 0)
++        stamps["ts_inference_done"] = timing.get("inf_done", 0)
++        stamps["ts_nms_done"] = timing.get("nms_done", 0)
++
++        # canonical tuple -> SHM dict (clamp to uint16 box range)
++        dets = [{
++            "class_id": int(c), "confidence": float(cf),
++            "x1": max(0, int(x1)), "y1": max(0, int(y1)),
++            "x2": max(0, int(x2)), "y2": max(0, int(y2)),
++        } for (x1, y1, x2, y2, c, cf) in dets_t]
++
++        # commit (writer stamps ts_yolo_shm_write inside the seqlock)
++        self.writer.write(dets, rgb if not self.cfg.no_image else None,
++                          int(ts_capture), telemetry=stamps)
++
++        self.frame_count += 1
++        self._log_frame(stamps, len(dets))
++        return True
++
++    def _log_frame(self, s: Dict[str, int], n_dets: int):
++        if self.csv_writer is not None:
++            def dms(a, b):  # ns delta -> ms
++                return f"{(s[a] - s[b]) / 1e6:.4f}" if s.get(a) and s.get(b) else "0.0"
++            self.csv_writer.writerow([
++                self.frame_count, *[s.get(k, 0) for k in TELEM_FIELDS],
++                dms("ts_yolo_shm_read", "ts_capture"),
++                dms("ts_yolo_preprocess_done", "ts_yolo_shm_read"),
++                dms("ts_inference_done", "ts_inference_start"),
++                dms("ts_nms_done", "ts_inference_done"),
++                dms("ts_yolo_shm_write", "ts_nms_done"),
++                dms("ts_yolo_shm_write", "ts_capture"),
++                n_dets])
++
++        if self.frame_count % 100 == 0:
++            e2e = (s["ts_yolo_shm_write"] - s["ts_capture"]) / 1e6
++            inf = (s["ts_inference_done"] - s["ts_inference_start"]) / 1e6
++            print(f"[yolo_shm_producer] {self.frame_count} frames | "
++                  f"infer={inf:.1f}ms capture→commit={e2e:.1f}ms dets={n_dets}")
++
++    # -- loops -------------------------------------------------------------
++    def run_forever(self, stop: threading.Event):
++        max_frames = self.cfg.max_frames
++        while not stop.is_set():
++            self.step(timeout_s=1.0)
++            if max_frames > 0 and self.frame_count >= max_frames:
++                print(f"[yolo_shm_producer] reached --max-frames={max_frames}")
++                break
++
++    def close(self):
++        try:
++            self.predictor.close()
++        except Exception:
++            pass
++        if self.csv_file is not None:
++            self.csv_file.close()
++            print(f"[yolo_shm_producer] telemetry CSV → {self.cfg.telemetry_csv}")
++        print(f"[yolo_shm_producer] stopped after {self.frame_count} frames")
++
++
++# ═════════════════════════════════════════════════════════════════════════════
++# Config: CLI flags with env-var fallbacks (so launch files / sweeps can set either)
++# ═════════════════════════════════════════════════════════════════════════════
++def _env(name: str, default=None):
++    v = os.environ.get(name)
++    return v if v not in (None, "") else default
++
++
++def parse_args(argv=None) -> argparse.Namespace:
++    ap = argparse.ArgumentParser(description="Generic SHM YOLO producer")
++    ap.add_argument("--backend", default=_env("YOLO_BACKEND", "npu"),
++                    choices=["cpu", "npu"])
++    ap.add_argument("--model_id", default=_env("YOLO_MODEL"),
++                    help="registry id e.g. yolov8n (overrides family/variant)")
++    ap.add_argument("--model_family", default=_env("YOLO_MODEL_FAMILY"),
++                    help="v8 | v11 | yolo26")
++    ap.add_argument("--model_variant", default=_env("YOLO_MODEL_VARIANT"),
++                    help="n | s | m")
++    ap.add_argument("--model_path", default=_env("YOLO_MODEL_PATH"),
++                    help="explicit .onnx/.hef path (bypasses registry)")
++    ap.add_argument("--threads", type=int,
++                    default=int(_env("YOLO_CPU_THREADS", "2")),
++                    help="onnxruntime intra_op threads (CPU backend)")
++    ap.add_argument("--inter_threads", type=int,
++                    default=int(_env("YOLO_CPU_INTER_THREADS", "1")))
++    ap.add_argument("--conf", type=float,
++                    default=float(_env("YOLO_CONF", "0.25")))
++    ap.add_argument("--iou", type=float,
++                    default=float(_env("YOLO_IOU", "0.45")))
++    ap.add_argument("--no-image", dest="no_image", action="store_true",
++                    default=_env("YOLO_NO_IMAGE", "") not in ("", "0", "false"),
++                    help="skip annotated image in shm (saves ~1.8MB/frame)")
++    ap.add_argument("--telemetry_csv", default=_env("YOLO_TELEMETRY_CSV"),
++                    help="per-frame 7-stamp telemetry CSV path")
++    ap.add_argument("--max-frames", dest="max_frames", type=int,
++                    default=int(_env("YOLO_MAX_FRAMES", "0")),
++                    help="stop after N frames (0 = unlimited); used by the sweep")
++    ap.add_argument("--ros2", action="store_true",
++                    help="run as an rclpy LifecycleNode exposing ROS2 parameters")
++    return ap.parse_args(argv)
++
++
++# ═════════════════════════════════════════════════════════════════════════════
++# Plain host-process entrypoint (default — no ROS2/DDS)
++# ═════════════════════════════════════════════════════════════════════════════
++def main_plain(cfg: argparse.Namespace):
++    stop = threading.Event()
++    signal.signal(signal.SIGINT, lambda *_: stop.set())
++    signal.signal(signal.SIGTERM, lambda *_: stop.set())
++
++    prod = YoloShmProducer(cfg)
++    try:
++        prod.run_forever(stop)
++    finally:
++        prod.close()
++
++
++# ═════════════════════════════════════════════════════════════════════════════
++# Optional rclpy LifecycleNode wrapper (--ros2) for launch-file integration
++# ═════════════════════════════════════════════════════════════════════════════
++def main_ros2(cfg: argparse.Namespace):
++    import rclpy
++    from rclpy.lifecycle import LifecycleNode, TransitionCallbackReturn
++    from rclpy.parameter import Parameter
++
++    class YoloShmProducerNode(LifecycleNode):
++        """Declares backend/model/threads as ROS2 params; runs the producer loop in
++        a worker thread between on_activate and on_deactivate."""
++
++        def __init__(self):
++            super().__init__("yolo_shm_producer")
++            # ROS2 parameters (overridable via launch file / `ros2 param`)
++            self.declare_parameter("backend", cfg.backend)
++            self.declare_parameter("model_id", cfg.model_id or "")
++            self.declare_parameter("model_family", cfg.model_family or "")
++            self.declare_parameter("model_variant", cfg.model_variant or "")
++            self.declare_parameter("cpu_threads", cfg.threads)
++            self.declare_parameter("telemetry_csv", cfg.telemetry_csv or "")
++            self._prod = None
++            self._thread = None
++            self._stop = threading.Event()
++
++        def _cfg_from_params(self) -> argparse.Namespace:
++            g = lambda n: self.get_parameter(n).value
++            merged = argparse.Namespace(**vars(cfg))
++            merged.backend = g("backend")
++            merged.model_id = g("model_id") or None
++            merged.model_family = g("model_family") or None
++            merged.model_variant = g("model_variant") or None
++            merged.threads = int(g("cpu_threads"))
++            merged.telemetry_csv = g("telemetry_csv") or None
++            return merged
++
++        def on_activate(self, state):
++            self.get_logger().info("activating yolo_shm_producer")
++            self._stop.clear()
++            self._prod = YoloShmProducer(self._cfg_from_params())
++            self._thread = threading.Thread(
++                target=self._prod.run_forever, args=(self._stop,), daemon=True)
++            self._thread.start()
++            return TransitionCallbackReturn.SUCCESS
++
++        def on_deactivate(self, state):
++            self.get_logger().info("deactivating yolo_shm_producer")
++            self._stop.set()
++            if self._thread:
++                self._thread.join(timeout=3.0)
++            if self._prod:
++                self._prod.close()
++                self._prod = None
++            return TransitionCallbackReturn.SUCCESS
++
++        def on_shutdown(self, state):
++            self.on_deactivate(state)
++            return TransitionCallbackReturn.SUCCESS
++
++    rclpy.init()
++    node = YoloShmProducerNode()
++    try:
++        rclpy.spin(node)
++    except KeyboardInterrupt:
++        pass
++    finally:
++        node.destroy_node()
++        rclpy.shutdown()
++
++
++def main(argv=None):
++    cfg = parse_args(argv)
++    if cfg.ros2:
++        main_ros2(cfg)
++    else:
++        main_plain(cfg)
++
++
++if __name__ == "__main__":
++    main()
