@@ -3,7 +3,7 @@
 W = 2.5 s (the ablation rows), from outcome_classes.py's classes_by_config.tsv. Two panels of horizontal stacked bars (one bar
 per configuration, segments = runs per class, a 2 px surface gap between segments, counts inside segments that fit). Each
 class keeps one fixed palette slot across versions (the six 16D classes slots 1 to 6; 16F ground contact, DEVIATIONS 17.80,
-slot 7); the segments are stacked in the order of CLASSES and the legend lists the classes present in the plotted rows.
+slot 7; 16G: the class threshold is 0.5 m, 17.80 f, the figure code unchanged apart from the footer); the segments are stacked in the order of CLASSES and the legend lists the classes present in the plotted rows.
 Sentinel rows and the 1.0 s arm are left out of the figure (they are in the table).
 Usage: python3 fig_outcome_classes.py <classes_by_config.tsv> <out stem>"""
 import csv, sys
@@ -51,7 +51,7 @@ def main():
     present = [c for c in CLASSES if any(int(r.get(c, 0) or 0) for r in pooled + abl)]
     hs = [plt.Rectangle((0, 0), 1, 1, color=S.SERIES[SLOT[c]]) for c in present]
     fig.legend(hs, [LABELS[c] for c in present], loc="lower center", ncol=3, bbox_to_anchor=(0.5, -0.06), handlelength=1.2, columnspacing=1.2)
-    fig.text(0.0, -0.13, "DRAFT (16F). Classes fixed before counting (1.0 m line); ground contact = z reached 0 after resume (DEVIATIONS 17.80), precedence over every other class;\n"
+    fig.text(0.0, -0.13, "DRAFT (16G). Classes fixed before counting (1.0 m line); ground contact = altitude at or below 0.5 m after resume (DEVIATIONS 17.80 f), precedence over every other class;\n"
              "the W = 1.0 s arm (5 valid runs) and run 032 (rig fault) are in the table only.", fontsize=6, color=S.MUTED, va="top")
     fig.tight_layout(w_pad=1.5)
     S.save(fig, stem)

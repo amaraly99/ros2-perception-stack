@@ -41,8 +41,11 @@ Definitions (stage6/analysis_16D/EXPECTED.md, fixed before any number was comput
 16F additions (stage6/analysis_16F/EXPECTED.md, DEVIATIONS 17.80 POST-HOC):
 - altitude: over the poses after resume, the minimum z, the first time it is attained, the first time z <= GROUND_Z_M (0.01 m,
   the simulator's ground at 0.0 with a float guard), z at resume and at the last pose.
-- ground contact: a run whose minimum z after resume is <= GROUND_Z_M; the class is tested first and takes precedence over
-  every other class. The other classes keep their 16D definitions and order.
+- ground contact: a run whose minimum z after resume is <= GROUND_CONTACT_Z_M (0.5 m since 16G, DEVIATIONS 17.80 f: the
+  simulator has no ground model and class membership is the same for any threshold from 0.09 to 2.3 m, so 0.5 m sits inside
+  the range where the result does not depend on it, while 0.0 m sits on a boundary; 16F used GROUND_Z_M = 0.01 m); the class
+  is tested first and takes precedence over every other class. The other classes keep their 16D definitions and order. The
+  audit columns z_reached_zero and t_ground_s keep the 0.01 m meaning (the ground itself).
 - yaw deviation while APPROACHING (and, as an extra, while REACHED): for every pose whose log time falls in an interval of
   that state in the stack log, dev = |wrap(yaw)| in degrees (the pose yaw is near 2 pi, so dev = |yaw - 360 deg|); the
   maximum, the mean, the pose count, and the lateral share = sin(max dev) x 100 pct (the body-forward component of a
@@ -63,7 +66,8 @@ T = GEOM["target_xyz"]; S1 = (GEOM.get("nontarget_signs_xyz") or [[None, None, N
 WINDOW = GEOM["smoke_final_dist_window_m"]; H_SIGN = PROTO["sign_height_m"]
 FWD_MIN_M, YAW_MIN_RAD, LAT_FRAC, CMD_EPS, VY_MIN, RESP_S = 0.10, 0.05, 0.25, 0.05, 0.2, 3.0
 CLASS_LINE_M = 1.0
-GROUND_Z_M = 0.01   # 16F: minimum z after resume at or below this is ground contact (DEVIATIONS 17.80)
+GROUND_Z_M = 0.01   # 16F: the simulator's ground (z = 0.000 m) with a float guard; z_reached_zero and t_ground_s (DEVIATIONS 17.80 a)
+GROUND_CONTACT_Z_M = 0.5   # 16G: minimum z after resume at or below this is the ground contact class (DEVIATIONS 17.80 f, Ahmed)
 CAUSE_SLACK_S = 0.05   # a detection message bagged within this time after an FSM transition stamp is taken as its cause
 ia.FX = ia.FY = float(GEOM["fx"]); ia.CAM_PITCH = math.radians(-5.0)
 RESCORED = None   # optional re-score tree for a run folder without check/<label>_run1_check.json
@@ -426,13 +430,14 @@ def one_run(sess, folder, row, rd, label, log):
     st = json.load(open(glob.glob(os.path.join(rd, "stack", "*_run1_stats.json"))[0]))
     sm = json.load(open(glob.glob(os.path.join(rd, "stack", "*_summary.json"))[0]))
     R["det_hz"] = st["det"]["hz_mean"]; R["cmd_vel_hz"] = st["cmd_vel"]["hz_mean"]; R["det_lat_ms"] = sm["detector_latency_ms"]["det_path"]["mean"]
-    # ---- 16F: altitude after resume ----
-    ground = False
+    # ---- 16F: altitude after resume (16G: the class threshold GROUND_CONTACT_Z_M is separate from the ground itself) ----
+    ground = False; contact = False
     if post:
         zmin_t, zmin = min(((p[0], p[3]) for p in post), key=lambda v: (v[1], v[0]))   # the lowest z; the earliest pose at that value
         R["z_at_resume_m"], R["min_z_m"], R["t_min_z_s"], R["z_last_m"] = post[0][3], zmin, rel(zmin_t), post[-1][3]
         tg = next((p[0] for p in post if p[3] <= GROUND_Z_M), None)
         R["t_ground_s"] = None if tg is None else rel(tg); ground = tg is not None; R["z_reached_zero"] = ground
+        contact = zmin <= GROUND_CONTACT_Z_M
     # ---- 16F: yaw deviation from the world x axis while APPROACHING (and while REACHED) ----
     def yaw_dev_in(state):
         iv = []; cur = "SEARCHING"; t0 = None
@@ -453,8 +458,8 @@ def one_run(sess, folder, row, rd, label, log):
     if dr:
         R["reached_yaw_dev_max_deg"] = max(dr)
     # ---- outcome class ----
-    if ground:   # 16F, DEVIATIONS 17.80: ground contact takes precedence over every other class
-        cls, note = "ground contact", f"z {R['min_z_m']:.3f} m at {R['t_ground_s']:.1f} s, closest {dmin:.2f} m, final {R['final_m']:.2f} m"
+    if contact:   # 16F, DEVIATIONS 17.80: ground contact takes precedence over every other class; 16G: minimum z <= 0.5 m (17.80 f)
+        cls, note = "ground contact", f"z {R['min_z_m']:.3f} m at {(R['t_ground_s'] if ground else R['t_min_z_s']):.1f} s, closest {dmin:.2f} m, final {R['final_m']:.2f} m"
     elif not R["locked_on"]:
         cls, note = "never locked on", ""
     elif R["reached"] and dmin >= CLASS_LINE_M:
@@ -494,7 +499,7 @@ def main():
         for r in csv.DictReader(open(os.path.join(a.usb, folder, "batch_state.tsv")), delimiter="\t"):
             runs.append((sess, folder, r, os.path.join(a.usb, folder, r["dir"]), "level2_" + r["dir"][4:]))
     print(f"{len(runs)} runs listed"); log.write(f"{len(runs)} runs listed\n")
-    tsv = open(os.path.join(a.out, "per_run_outcomes.tsv"), "w"); tsv.write("# 16D run_outcomes.py: one row per in-loop run; definitions in the docstring and stage6/analysis_16D/EXPECTED.md; 16F columns (altitude, yaw deviation) and the ground contact class (DEVIATIONS 17.80) per stage6/analysis_16F/EXPECTED.md\n")
+    tsv = open(os.path.join(a.out, "per_run_outcomes.tsv"), "w"); tsv.write("# 16D run_outcomes.py: one row per in-loop run; definitions in the docstring and stage6/analysis_16D/EXPECTED.md; 16F columns (altitude, yaw deviation) and the ground contact class (DEVIATIONS 17.80; 16G: minimum z <= 0.5 m, 17.80 f) per stage6/analysis_16F/EXPECTED.md and analysis_16G/EXPECTED.md\n")
     tsv.write("\t".join(COLS) + "\n")
     jl = open(os.path.join(a.out, "transitions.jsonl"), "w")
     n_err = 0

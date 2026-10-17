@@ -6,7 +6,7 @@ the 16A pool_tables per_run.tsv (reached, final_state, closest, final).
 Classes (fixed in stage6/analysis_16D/EXPECTED.md before counting): never locked on; reached cleanly (closest >= 1.0 m);
 reached after an overshoot (closest < 1.0 m); overshot and lost the sign (not REACHED, closest < 1.0 m); arrived in the window
 without REACHED (not REACHED, locked on, closest in [1.6, 2.8] m); other (named in outcome_note). 16F (DEVIATIONS 17.80,
-POST-HOC): ground contact (minimum z after resume <= 0.01 m), which takes precedence over every other class; the classes are
+POST-HOC): ground contact (minimum z after resume <= 0.01 m in 16F; <= 0.5 m since 16G, DEVIATIONS 17.80 f), which takes precedence over every other class; the classes are
 assigned by run_outcomes.py, this script counts them and lists the ground-contact runs with their minimum z and its time.
 Usage: python3 outcome_classes.py <per_run_outcomes.tsv> [--exclude <sess>:<run dir prefix> ...] [--compare-16A <per_run.tsv>]
        [--out <dir>]   (writes classes_by_config.tsv and classes_per_run.tsv into <dir>; it must not exist)"""
@@ -61,8 +61,8 @@ def main():
         sys.exit(f"outcome_classes: REFUSE: class names not in CLASSES: {unknown}")
     # 16F: the ground-contact runs (precedence over every other class)
     gc = [r for r in kept if r["outcome_class"] == "ground contact"]
-    print(f"ground contact (16F, min z after resume <= 0.01 m): {len(gc)} runs" + (": " + "; ".join(
-        f"{r['sess']} {r['run'][:3]} {r['model']} {r['backend']} W {f(r['W_s']):.1f} (z {f(r['min_z_m']):.3f} m at {f(r['t_ground_s']):.1f} s; closest {f(r['closest_m']):.2f}, final {f(r['final_m']):.2f} m)" for r in gc) if gc else ""))
+    print(f"ground contact (16G rule, min z after resume <= 0.5 m, DEVIATIONS 17.80 f; z_reached_zero still means z <= 0.01 m): {len(gc)} runs" + (": " + "; ".join(
+        f"{r['sess']} {r['run'][:3]} {r['model']} {r['backend']} W {f(r['W_s']):.1f} (z {f(r['min_z_m']):.3f} m at {(f(r['t_ground_s']) if f(r['t_ground_s']) is not None else f(r['t_min_z_s'])):.1f} s; closest {f(r['closest_m']):.2f}, final {f(r['final_m']):.2f} m)" for r in gc) if gc else ""))
     if "min_z_m" in rows[0]:
         low = [r for r in kept if f(r["min_z_m"]) is not None and f(r["min_z_m"]) < 1.0 and r["outcome_class"] != "ground contact"]
         print(f"runs below 1.0 m that are not ground contact: {len(low)} {[(r['sess'], r['run'][:3], f(r['min_z_m'])) for r in low]}")
@@ -95,7 +95,7 @@ def main():
             sys.exit(f"outcome_classes: REFUSE: {a.out} exists")
         os.makedirs(a.out)
         with open(os.path.join(a.out, "classes_by_config.tsv"), "w") as o:
-            o.write(f"# 16D outcome classes per configuration and loss window (outcome_classes.py; 16F: ground contact class, DEVIATIONS 17.80, precedence over every other class); set aside: {[(r['sess'], r['run']) for r in dropped]}; the 1.0 m line fixed before counting; band [{lo_b}, {hi_b}] m holds {len(band)} runs\n")
+            o.write(f"# 16D outcome classes per configuration and loss window (outcome_classes.py; 16F: ground contact class, DEVIATIONS 17.80, precedence over every other class; 16G: minimum z <= 0.5 m, 17.80 f); set aside: {[(r['sess'], r['run']) for r in dropped]}; the 1.0 m line fixed before counting; band [{lo_b}, {hi_b}] m holds {len(band)} runs\n")
             o.write("\t".join(hdr) + "\n")
             for r_ in out_rows:
                 o.write("\t".join(str(x) for x in r_) + "\n")

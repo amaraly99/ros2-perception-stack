@@ -4,7 +4,8 @@ approaching run, from staleness_fit.py's staleness_points.tsv. Marker shape = co
 = loss window (0.4, 1.0, 2.5 s; palette slots 1 to 3, which validate all pairs). The only model line is the identity law
 closest = S - x with S = pred_identity_m + x_m of the points file (the vx-zero standoff at the drone origin, 2.118 m): no
 fitted parameter anywhere (16F; the 16D version drew the same line and never the fitted line, which lives in fit.txt only).
-Runs whose outcome class is "ground contact" (16F, DEVIATIONS 17.80: the m-models' vertical descent to z = 0) are drawn as
+Runs whose outcome class is "ground contact" (16F, DEVIATIONS 17.80: the m-models' vertical descent to the ground; 16G: minimum
+z <= 0.5 m, 17.80 f) are drawn as
 hollow downward triangles with their own legend entry, as a failure mode apart from the horizontal stale-box overshoot, and
 are annotated. One run far off the plot (lost mid-approach) is annotated at the top edge. The 1.0 m outcome line is drawn over
 the overshoot region (x up to 2.5 m) so that it does not run behind the legends. The residuals closest - (S - x) by
@@ -58,20 +59,23 @@ def main():
     l1 = ax.legend(hs, [SHAPES[k][1] for k in SHAPES] + ["ground contact"], loc="upper left", bbox_to_anchor=(0.71, 0.57), title="family", title_fontsize=6.5, handletextpad=0.4)
     ax.add_artist(l1)
     ax.legend(hw, ["0.4 s (pooled)", "1.0 s", "2.5 s"], loc="upper left", bbox_to_anchor=(0.37, 0.57), title="loss window W", title_fontsize=6.5, handletextpad=0.4)
-    fig.text(0.0, -0.03, f"DRAFT (16F), exploratory. {len(rows)} approaching runs; v = horizontal ground speed at the last box before the closest point; the line is the identity law, no fitted parameter.",
+    fig.text(0.0, -0.03, f"DRAFT (16G), exploratory. {len(rows)} approaching runs; v = horizontal ground speed at the last box before the closest point; the line is the identity law, no fitted parameter.",
              fontsize=5.5, color=S.MUTED)
     S.save(fig, stem)
     # residuals by family, backend and window into the caption file
     groups = {}
     for r in rows:
         groups.setdefault((r["family"], r["backend"], r["W_s"], r["outcome_class"] == GC), []).append(r)
-    lines = [f"DRAFT caption (16F, figure b). Closest approach to the target against x = v (L + G) for the {len(rows)} approaching runs (locked on, closest at least 1 m inside the start;",
+    lines = [f"DRAFT caption (16G, figure b). Closest approach to the target against x = v (L + G) for the {len(rows)} approaching runs (locked on, closest at least 1 m inside the start;",
              f"run 032 set aside): v the horizontal ground speed at the capture of the last target box before the closest point, L the mean capture-to-commit latency, G the mean gap",
              f"between target-box captures. The line is the identity law closest = S - x with S = {Sm:.3f} m, the vx-zero standoff at the drone origin; it has no fitted parameter.",
-             "Marker shape = configuration family, colour = loss window. Hollow downward triangles are the ground-contact runs (the m-models at W = 2.5 s): they descended to z = 0 on",
-             "stale vertical commands and lost the sign above the frame, a vertical failure to which the horizontal law does not apply (DEVIATIONS 17.80).",
-             (f"{sum(1 for r in rows if r['family'] == 'm' and r['backend'] == 'cpu' and r['outcome_class'] != GC)} m-model CPU run(s) drawn as filled triangles descended without reaching z <= 0.01 m and keep the 16D class (see the 16F altitude audit)."),
-             "", "Residuals closest - (S - x), in m, by family, backend and window (n; mean; min to max):"]
+             "Marker shape = configuration family, colour = loss window. Hollow downward triangles are the ground-contact runs (the m-models at W = 2.5 s; minimum altitude at or",
+             "below 0.5 m after resume, DEVIATIONS 17.80 f; eight of them reached z = 0 and the ninth 0.08 m): they descended on stale vertical commands and lost the sign above the frame,",
+             "a vertical failure to which the horizontal law does not apply."]
+    n_m_not_gc = sum(1 for r in rows if r['family'] == 'm' and r['backend'] == 'cpu' and r['outcome_class'] != GC)
+    if n_m_not_gc:
+        lines.append(f"{n_m_not_gc} m-model CPU run(s) drawn as filled triangles stayed above 0.5 m and keep their class.")
+    lines += ["", "Residuals closest - (S - x), in m, by family, backend and window (n; mean; min to max):"]
     def fam_name(k):
         return {"n": "n-models", "s": "s-models", "m": "m-models", "centernet": "CenterNet"}[k]
     for g in sorted(groups, key=lambda g: ("nsmc".index(g[0][0]), g[1], float(g[2]), g[3])):
