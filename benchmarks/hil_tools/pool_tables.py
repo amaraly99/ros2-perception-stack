@@ -301,7 +301,7 @@ def main():
     t13 = open(os.path.join(a.out, "DRAFT_table13.tsv"), "w")
     t13.write("# DRAFT Table 13 (16A pool_tables.py, 16D columns): per configuration over the pooled rows (sentinels listed separately); reach = sim time to REACHED over reached runs; final = horizontal distance to the frozen target (drone origin)"
               + (f"; every final distance carries the frozen target's along-axis uncertainty of {a.axis_uncertainty} m (REPORT_16A, DEVIATIONS 17.76 b iv), the same for every row" if a.axis_uncertainty else "")
-              + ("; outcome classes from run_outcomes.py (16D step 3)" if outcomes else "") + (f"; sensitivity lines without {a.sensitivity}" if a.sensitivity else "") + "\n")
+              + ("; outcome classes from run_outcomes.py (16D step 3; 16F adds ground contact, DEVIATIONS 17.80)" if outcomes else "") + (f"; sensitivity lines without {a.sensitivity}" if a.sensitivity else "") + "\n")
     t13.write("model\tbackend\truns\treached\tno_lockon\treach_s_mean\treach_s_std\tfinal_m_mean\tfinal_m_std\tfinal_m_min\tfinal_m_max\tfinal_axis_uncert_m\tclosest_m_min\tn_lost_runs\tdet_hz_mean\tdet_hz_std\tcmd_vel_hz_mean\tdet_lat_ms_mean\tdet_lat_ms_std\tgate_px_max\toutcome_classes\n")
     def ms_(v):
         return (statistics.fmean(v), statistics.stdev(v) if len(v) > 1 else 0.0) if v else (None, None)
@@ -316,7 +316,10 @@ def main():
         fin = [p["final_m"] for p in re_ if p["final_m"] is not None]; clo = [p["closest_m"] for p in rs if p["closest_m"] is not None]
         if outcomes:
             cls = [p["outcome"] for p in rs if p["outcome"]]
-            oc = "; ".join(f"{cls.count(c)} {c}" for c in ("reached cleanly", "reached after an overshoot", "overshot and lost the sign", "arrived in the window without REACHED", "never locked on", "other") if cls.count(c))
+            known = ("reached cleanly", "reached after an overshoot", "overshot and lost the sign", "ground contact", "arrived in the window without REACHED", "never locked on", "other")   # 16F: ground contact (DEVIATIONS 17.80)
+            if set(cls) - set(known):
+                print(f"  note: {name} {bk}: outcome class names not counted: {sorted(set(cls) - set(known))}")
+            oc = "; ".join(f"{cls.count(c)} {c}" for c in known if cls.count(c))
         else:
             oc = ""
         t13.write("\t".join([name, bk, str(len(rs)), f"{len(re_)}/{len(rs)}", str(nolock), fmt(tm), fmt(ts), fmt(fm, 3), fmt(fs, 3), fmt(min(fin), 3) if fin else "", fmt(max(fin), 3) if fin else "",

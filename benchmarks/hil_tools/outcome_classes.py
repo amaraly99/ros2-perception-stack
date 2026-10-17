@@ -5,11 +5,13 @@ stored values (check_run's closest approach, mission.json's final distance, the 
 the 16A pool_tables per_run.tsv (reached, final_state, closest, final).
 Classes (fixed in stage6/analysis_16D/EXPECTED.md before counting): never locked on; reached cleanly (closest >= 1.0 m);
 reached after an overshoot (closest < 1.0 m); overshot and lost the sign (not REACHED, closest < 1.0 m); arrived in the window
-without REACHED (not REACHED, locked on, closest in [1.6, 2.8] m); other (named in outcome_note).
+without REACHED (not REACHED, locked on, closest in [1.6, 2.8] m); other (named in outcome_note). 16F (DEVIATIONS 17.80,
+POST-HOC): ground contact (minimum z after resume <= 0.01 m), which takes precedence over every other class; the classes are
+assigned by run_outcomes.py, this script counts them and lists the ground-contact runs with their minimum z and its time.
 Usage: python3 outcome_classes.py <per_run_outcomes.tsv> [--exclude <sess>:<run dir prefix> ...] [--compare-16A <per_run.tsv>]
        [--out <dir>]   (writes classes_by_config.tsv and classes_per_run.tsv into <dir>; it must not exist)"""
 import argparse, csv, os, sys
-CLASSES = ["reached cleanly", "reached after an overshoot", "overshot and lost the sign", "arrived in the window without REACHED", "never locked on", "other"]
+CLASSES = ["reached cleanly", "reached after an overshoot", "overshot and lost the sign", "ground contact", "arrived in the window without REACHED", "never locked on", "other"]
 ORDER = ["yolo26n", "yolo26s", "yolo26m", "yolov8n", "yolov8s", "yolov8m", "yolov11n", "yolov11s", "yolov11m", "centernet_resnet_v1_18"]
 
 
@@ -54,6 +56,16 @@ def main():
                     or (f(q["final_m"]) is not None and abs(f(q["final_m"]) - f(r["final_m"])) > 1e-3)):
                 bad.append(k)
         print(f"against 16A per_run.tsv: {n} runs matched, {len(bad)} differ in reached/final_state/closest/final: {bad}")
+    unknown = sorted({r["outcome_class"] for r in rows} - set(CLASSES))
+    if unknown:
+        sys.exit(f"outcome_classes: REFUSE: class names not in CLASSES: {unknown}")
+    # 16F: the ground-contact runs (precedence over every other class)
+    gc = [r for r in kept if r["outcome_class"] == "ground contact"]
+    print(f"ground contact (16F, min z after resume <= 0.01 m): {len(gc)} runs" + (": " + "; ".join(
+        f"{r['sess']} {r['run'][:3]} {r['model']} {r['backend']} W {f(r['W_s']):.1f} (z {f(r['min_z_m']):.3f} m at {f(r['t_ground_s']):.1f} s; closest {f(r['closest_m']):.2f}, final {f(r['final_m']):.2f} m)" for r in gc) if gc else ""))
+    if "min_z_m" in rows[0]:
+        low = [r for r in kept if f(r["min_z_m"]) is not None and f(r["min_z_m"]) < 1.0 and r["outcome_class"] != "ground contact"]
+        print(f"runs below 1.0 m that are not ground contact: {len(low)} {[(r['sess'], r['run'][:3], f(r['min_z_m'])) for r in low]}")
     # the band around the line
     band = [r for r in kept if f(r["closest_m"]) is not None and lo_b <= f(r["closest_m"]) <= hi_b]
     locked = [r for r in kept if r["locked_on"] == "True"]
@@ -83,12 +95,12 @@ def main():
             sys.exit(f"outcome_classes: REFUSE: {a.out} exists")
         os.makedirs(a.out)
         with open(os.path.join(a.out, "classes_by_config.tsv"), "w") as o:
-            o.write(f"# 16D outcome classes per configuration and loss window (outcome_classes.py); set aside: {[(r['sess'], r['run']) for r in dropped]}; the 1.0 m line fixed before counting; band [{lo_b}, {hi_b}] m holds {len(band)} runs\n")
+            o.write(f"# 16D outcome classes per configuration and loss window (outcome_classes.py; 16F: ground contact class, DEVIATIONS 17.80, precedence over every other class); set aside: {[(r['sess'], r['run']) for r in dropped]}; the 1.0 m line fixed before counting; band [{lo_b}, {hi_b}] m holds {len(band)} runs\n")
             o.write("\t".join(hdr) + "\n")
             for r_ in out_rows:
                 o.write("\t".join(str(x) for x in r_) + "\n")
         with open(os.path.join(a.out, "classes_per_run.tsv"), "w") as o:
-            o.write("# 16D outcome class per run (outcome_classes.py)\n"); cols = ["sess", "run", "key", "model", "backend", "W_s", "role", "locked_on", "reached", "final_state", "closest_m", "final_m", "closest_in_window", "final_in_window", "outcome_class", "outcome_note"]
+            o.write("# 16D outcome class per run (outcome_classes.py; 16F columns min_z_m, t_ground_s)\n"); cols = ["sess", "run", "key", "model", "backend", "W_s", "role", "locked_on", "reached", "final_state", "closest_m", "final_m", "closest_in_window", "final_in_window"] + (["min_z_m", "t_ground_s"] if "min_z_m" in rows[0] else []) + ["outcome_class", "outcome_note"]
             o.write("\t".join(cols) + "\n")
             for r in rows:
                 o.write("\t".join(r[c] for c in cols) + ("\tSET ASIDE" if excluded(r) else "") + "\n")

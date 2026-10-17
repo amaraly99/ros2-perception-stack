@@ -38,6 +38,15 @@ Definitions (stage6/analysis_16D/EXPECTED.md, fixed before any number was comput
   e2e_capture_to_commit over frames captured between resume and the closest point; G = mean gap between consecutive target-box
   captures between resume and the closest point; S = fy x 0.914 / (target_bbox_ratio x 480) + 0.2 m (vx-zero standoff at the
   drone origin).
+16F additions (stage6/analysis_16F/EXPECTED.md, DEVIATIONS 17.80 POST-HOC):
+- altitude: over the poses after resume, the minimum z, the first time it is attained, the first time z <= GROUND_Z_M (0.01 m,
+  the simulator's ground at 0.0 with a float guard), z at resume and at the last pose.
+- ground contact: a run whose minimum z after resume is <= GROUND_Z_M; the class is tested first and takes precedence over
+  every other class. The other classes keep their 16D definitions and order.
+- yaw deviation while APPROACHING (and, as an extra, while REACHED): for every pose whose log time falls in an interval of
+  that state in the stack log, dev = |wrap(yaw)| in degrees (the pose yaw is near 2 pi, so dev = |yaw - 360 deg|); the
+  maximum, the mean, the pose count, and the lateral share = sin(max dev) x 100 pct (the body-forward component of a
+  world-y lateral command at that heading; the simulator integrates cmd_vel along the world axes, SIM_PARAMS.md).
 Usage:
   ~/venvs/mcap/bin/python benchmarks/hil_tools/run_outcomes.py --batches <list.tsv> --out <dir> [--usb /mnt/usb/hil_runs]
 <list.tsv>: lines "<session> <batch folder under --usb>" (a folder may contain a slash). <out dir> must not exist.
@@ -54,6 +63,7 @@ T = GEOM["target_xyz"]; S1 = (GEOM.get("nontarget_signs_xyz") or [[None, None, N
 WINDOW = GEOM["smoke_final_dist_window_m"]; H_SIGN = PROTO["sign_height_m"]
 FWD_MIN_M, YAW_MIN_RAD, LAT_FRAC, CMD_EPS, VY_MIN, RESP_S = 0.10, 0.05, 0.25, 0.05, 0.2, 3.0
 CLASS_LINE_M = 1.0
+GROUND_Z_M = 0.01   # 16F: minimum z after resume at or below this is ground contact (DEVIATIONS 17.80)
 CAUSE_SLACK_S = 0.05   # a detection message bagged within this time after an FSM transition stamp is taken as its cause
 ia.FX = ia.FY = float(GEOM["fx"]); ia.CAM_PITCH = math.radians(-5.0)
 RESCORED = None   # optional re-score tree for a run folder without check/<label>_run1_check.json
@@ -81,7 +91,11 @@ COLS = ["sess", "batch", "run", "n", "key", "model", "backend", "role", "W_s", "
         "approached", "v_at_last_prebox_m_s", "lat_L_s", "gap_G_s", "x_vLG_m", "S_origin_m", "closest_pred_m", "resid_m",
         "last_prebox_capture_range_m", "travel_prebox_to_closest_m",
         # rates
-        "det_hz", "cmd_vel_hz", "det_lat_ms", "outcome_class", "outcome_note"]
+        "det_hz", "cmd_vel_hz", "det_lat_ms",
+        # 16F: altitude and yaw deviation
+        "z_at_resume_m", "min_z_m", "t_min_z_s", "t_ground_s", "z_reached_zero", "z_last_m",
+        "appr_n_poses", "appr_yaw_dev_max_deg", "appr_yaw_dev_mean_deg", "appr_lateral_share_max_pct", "reached_n_poses", "reached_yaw_dev_max_deg",
+        "outcome_class", "outcome_note"]
 
 
 def fnum(v, d=3):
@@ -412,8 +426,36 @@ def one_run(sess, folder, row, rd, label, log):
     st = json.load(open(glob.glob(os.path.join(rd, "stack", "*_run1_stats.json"))[0]))
     sm = json.load(open(glob.glob(os.path.join(rd, "stack", "*_summary.json"))[0]))
     R["det_hz"] = st["det"]["hz_mean"]; R["cmd_vel_hz"] = st["cmd_vel"]["hz_mean"]; R["det_lat_ms"] = sm["detector_latency_ms"]["det_path"]["mean"]
+    # ---- 16F: altitude after resume ----
+    ground = False
+    if post:
+        zmin_t, zmin = min(((p[0], p[3]) for p in post), key=lambda v: (v[1], v[0]))   # the lowest z; the earliest pose at that value
+        R["z_at_resume_m"], R["min_z_m"], R["t_min_z_s"], R["z_last_m"] = post[0][3], zmin, rel(zmin_t), post[-1][3]
+        tg = next((p[0] for p in post if p[3] <= GROUND_Z_M), None)
+        R["t_ground_s"] = None if tg is None else rel(tg); ground = tg is not None; R["z_reached_zero"] = ground
+    # ---- 16F: yaw deviation from the world x axis while APPROACHING (and while REACHED) ----
+    def yaw_dev_in(state):
+        iv = []; cur = "SEARCHING"; t0 = None
+        for tt, a_, b_, _ in trans:
+            if cur == state and t0 is not None:
+                iv.append((t0, tt))
+            cur = b_; t0 = tt
+        if cur == state and t0 is not None:
+            iv.append((t0, poses[-1][0] + 1 if poses else t0))
+        devs = [abs(math.degrees(wrap(p[4]))) for p in poses if any(lo <= p[0] < hi for lo, hi in iv)]
+        return devs
+    da = yaw_dev_in("APPROACHING"); dr = yaw_dev_in("REACHED")
+    R["appr_n_poses"] = len(da)
+    if da:
+        R["appr_yaw_dev_max_deg"] = max(da); R["appr_yaw_dev_mean_deg"] = statistics.fmean(da)
+        R["appr_lateral_share_max_pct"] = 100.0 * math.sin(math.radians(max(da)))
+    R["reached_n_poses"] = len(dr)
+    if dr:
+        R["reached_yaw_dev_max_deg"] = max(dr)
     # ---- outcome class ----
-    if not R["locked_on"]:
+    if ground:   # 16F, DEVIATIONS 17.80: ground contact takes precedence over every other class
+        cls, note = "ground contact", f"z {R['min_z_m']:.3f} m at {R['t_ground_s']:.1f} s, closest {dmin:.2f} m, final {R['final_m']:.2f} m"
+    elif not R["locked_on"]:
         cls, note = "never locked on", ""
     elif R["reached"] and dmin >= CLASS_LINE_M:
         cls, note = "reached cleanly", ""
@@ -452,7 +494,7 @@ def main():
         for r in csv.DictReader(open(os.path.join(a.usb, folder, "batch_state.tsv")), delimiter="\t"):
             runs.append((sess, folder, r, os.path.join(a.usb, folder, r["dir"]), "level2_" + r["dir"][4:]))
     print(f"{len(runs)} runs listed"); log.write(f"{len(runs)} runs listed\n")
-    tsv = open(os.path.join(a.out, "per_run_outcomes.tsv"), "w"); tsv.write("# 16D run_outcomes.py: one row per in-loop run; definitions in the docstring and stage6/analysis_16D/EXPECTED.md\n")
+    tsv = open(os.path.join(a.out, "per_run_outcomes.tsv"), "w"); tsv.write("# 16D run_outcomes.py: one row per in-loop run; definitions in the docstring and stage6/analysis_16D/EXPECTED.md; 16F columns (altitude, yaw deviation) and the ground contact class (DEVIATIONS 17.80) per stage6/analysis_16F/EXPECTED.md\n")
     tsv.write("\t".join(COLS) + "\n")
     jl = open(os.path.join(a.out, "transitions.jsonl"), "w")
     n_err = 0
