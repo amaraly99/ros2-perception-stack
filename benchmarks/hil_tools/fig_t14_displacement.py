@@ -4,7 +4,9 @@ pool_tables.py's DRAFT_table14_bins.tsv. Two panels (at capture, at delivery), x
 y = the pooled median displacement in px; one thin line per configuration, NPU rows in slot 1 (blue), CPU rows in slot 2
 (orange); the backend legend plus direct labels on the CPU lines and on the one NPU line that separates (CenterNet).
 Bins below the reporting floor are not drawn (the table prints them as text). Usage:
-  python3 fig_t14_displacement.py <DRAFT_table14_bins.tsv> <out stem>"""
+  python3 fig_t14_displacement.py <DRAFT_table14_bins.tsv> <out stem> [--final]
+17D: --final drops the DRAFT footer line (nothing else changes); in both modes the script prints "plotted_sha256 <hex>", the
+sha256 of the arrays it draws (per configuration and panel), so a final figure can be checked against its draft run."""
 import csv, sys
 import fig_style as S
 import matplotlib.pyplot as plt
@@ -14,7 +16,10 @@ DISPLAY = {"yolo26n": "YOLO26n", "yolo26s": "YOLO26s", "yolo26m": "YOLO26m", "yo
 
 
 def main():
-    src, stem = sys.argv[1], sys.argv[2]
+    final = "--final" in sys.argv                                      # 17D: no DRAFT footer
+    args = [a for a in sys.argv[1:] if a != "--final"]
+    src, stem = args[0], args[1]
+    plotted = []                                                       # 17D: every series drawn, for the printed hash
     rows = [r for r in csv.DictReader((l for l in open(src) if not l.startswith("#")), delimiter="\t") if r["status"] == "ok" and "(" not in r["model"]]
     bins = []
     for r in rows:
@@ -31,6 +36,7 @@ def main():
             if not pts:
                 continue
             pts.sort(); color = S.SERIES[0] if bk == "npu" else S.SERIES[1]
+            plotted.append([col, model, bk, [[bins[p[0]], p[1]] for p in pts]])
             ax.plot([p[0] for p in pts], [p[1] for p in pts], color=color, alpha=0.85 if bk == "cpu" else 0.55, marker="o", markersize=3.2,
                     markeredgecolor=S.SURFACE, markeredgewidth=0.6)
             if bk == "cpu" or model.startswith("centernet"):
@@ -49,8 +55,11 @@ def main():
     axes[0].set_ylabel("median displacement (px)")
     h = [plt.Line2D([], [], color=S.SERIES[0]), plt.Line2D([], [], color=S.SERIES[1])]
     axes[0].legend(h, ["NPU rows (10 configurations)", "CPU rows with approach frames (3 n-models)"], loc="upper left", handlelength=1.6)
-    fig.text(0.0, -0.10, "DRAFT (16D). Pooled medians over the approach phase, 6 runs per row; CPU s-, m-model and CenterNet rows have no approach frames at W = 0.4 s.",
-             fontsize=6, color=S.MUTED)
+    if not final:
+        fig.text(0.0, -0.10, "DRAFT (16D). Pooled medians over the approach phase, 6 runs per row; CPU s-, m-model and CenterNet rows have no approach frames at W = 0.4 s.",
+                 fontsize=6, color=S.MUTED)
+    import hashlib, json
+    print("plotted_sha256", hashlib.sha256(json.dumps(plotted, sort_keys=True).encode()).hexdigest(), "(final)" if final else "(draft)")
     S.save(fig, stem)
 
 

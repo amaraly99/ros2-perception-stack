@@ -5,7 +5,10 @@ per configuration, segments = runs per class, a 2 px surface gap between segment
 class keeps one fixed palette slot across versions (the six 16D classes slots 1 to 6; 16F ground contact, DEVIATIONS 17.80,
 slot 7; 16G: the class threshold is 0.5 m, 17.80 f, the figure code unchanged apart from the footer); the segments are stacked in the order of CLASSES and the legend lists the classes present in the plotted rows.
 Sentinel rows and the 1.0 s arm are left out of the figure (they are in the table).
-Usage: python3 fig_outcome_classes.py <classes_by_config.tsv> <out stem>"""
+Usage: python3 fig_outcome_classes.py <classes_by_config.tsv> <out stem> [--final]
+17D: --final drops the DRAFT footer line and its DEVIATIONS reference (nothing else changes); in both modes the script prints
+"plotted_sha256 <hex>", the sha256 of the arrays it draws (per panel, configuration and class), so a final figure can be
+checked against its draft run."""
 import csv, sys
 import fig_style as S
 import matplotlib.pyplot as plt
@@ -20,6 +23,9 @@ DISPLAY = {"yolo26n": "YOLO26n", "yolo26s": "YOLO26s", "yolo26m": "YOLO26m", "yo
            "yolov11n": "YOLOv11n", "yolov11s": "YOLOv11s", "yolov11m": "YOLOv11m", "centernet_resnet_v1_18": "CenterNet"}
 
 
+PLOTTED = []   # 17D: every segment drawn, for the printed hash
+
+
 def panel(ax, rows, title):
     rows = sorted(rows, key=lambda r: (r["backend"] != "npu", ORDER.index(r["model"]) if r["model"] in ORDER else 99))
     names = [f"{DISPLAY.get(r['model'], r['model'])} {r['backend'].upper()}" for r in rows]
@@ -31,6 +37,7 @@ def panel(ax, rows, title):
             if not n:
                 continue
             i = SLOT[c]
+            PLOTTED.append([title, r["model"], r["backend"], c, n, left])
             ax.barh(y, n, left=left, height=0.62, color=S.SERIES[i], edgecolor=S.SURFACE, linewidth=1.2, zorder=3)
             ax.text(left + n / 2, y, str(n), ha="center", va="center", fontsize=6, color="white" if i in WHITE_TEXT else S.INK, zorder=4)
             left += n
@@ -40,7 +47,9 @@ def panel(ax, rows, title):
 
 
 def main():
-    src, stem = sys.argv[1], sys.argv[2]
+    final = "--final" in sys.argv                                      # 17D: no DRAFT footer
+    args = [a for a in sys.argv[1:] if a != "--final"]
+    src, stem = args[0], args[1]
     rows = [r for r in csv.DictReader((l for l in open(src) if not l.startswith("#")), delimiter="\t") if r["role"] != "sentinel"]
     pooled = [r for r in rows if r["set"] == "pooled" and r["W_s"] == "0.4"]
     abl = [r for r in rows if r["set"] == "5a" and r["W_s"] == "2.5"]
@@ -51,9 +60,12 @@ def main():
     present = [c for c in CLASSES if any(int(r.get(c, 0) or 0) for r in pooled + abl)]
     hs = [plt.Rectangle((0, 0), 1, 1, color=S.SERIES[SLOT[c]]) for c in present]
     fig.legend(hs, [LABELS[c] for c in present], loc="lower center", ncol=3, bbox_to_anchor=(0.5, -0.06), handlelength=1.2, columnspacing=1.2)
-    fig.text(0.0, -0.13, "DRAFT (16G). Classes fixed before counting (1.0 m line); ground contact = altitude at or below 0.5 m after resume (DEVIATIONS 17.80 f), precedence over every other class;\n"
-             "the W = 1.0 s arm (5 valid runs) and run 032 (rig fault) are in the table only.", fontsize=6, color=S.MUTED, va="top")
+    if not final:
+        fig.text(0.0, -0.13, "DRAFT (16G). Classes fixed before counting (1.0 m line); ground contact = altitude at or below 0.5 m after resume (DEVIATIONS 17.80 f), precedence over every other class;\n"
+                 "the W = 1.0 s arm (5 valid runs) and run 032 (rig fault) are in the table only.", fontsize=6, color=S.MUTED, va="top")
     fig.tight_layout(w_pad=1.5)
+    import hashlib, json
+    print("plotted_sha256", hashlib.sha256(json.dumps(PLOTTED, sort_keys=True).encode()).hexdigest(), "(final)" if final else "(draft)")
     S.save(fig, stem)
 
 
