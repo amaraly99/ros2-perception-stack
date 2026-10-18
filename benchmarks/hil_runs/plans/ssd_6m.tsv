@@ -1,0 +1,25 @@
+# SSD in-loop block at the supplementary 6 m start (prompt 18B, 2026-10-18; PLAN_SSD_BLOCK.md, DEVIATIONS 17.83).
+# 18 runs: sentinel first (not counted), then the 17 rows in one fixed random order; shuffle seed 20261018
+# (python random.Random(20261018).shuffle on the rows in PLAN_SSD_BLOCK.md order: c6_1, c6_2, c6c_1..3, x6c_1..6, x6n_1..6).
+# Launch with HIL_GEOM=config/sim_geometry_6m.json HIL_HELD_REF=config/held_reference_6m.json
+# SIM_MODEL_SHA256=c27681cb4dbeaff7db2823006ef52a94a594d18857b3fda3ece920fe527820ff (the 20 m profile stays the default).
+# NPU opens: 2 + 2 x 9 = 20 <= 40. Power cycle before the block. Sentinel band unchanged (A3, 5 pct; LATENCY baseline 37.289 ms).
+# key	model	backend	role   (batch.sh plan; npu: placement A / ours_fx554_A_ibvs, cpu: B / ours_fx554_B_ibvs; window from config/protocol_fx554.json)
+sen6	yolo26n	npu	sentinel
+x6n_5	ssd_mobilenet_v2	npu	row
+x6n_4	ssd_mobilenet_v2	npu	row
+x6n_6	ssd_mobilenet_v2	npu	row
+x6c_5	ssd_mobilenet_v2	cpu	row
+x6c_1	ssd_mobilenet_v2	cpu	row
+c6c_1	yolo26n	cpu	row
+c6c_3	yolo26n	cpu	row
+c6_1	yolo26n	npu	row
+c6c_2	yolo26n	cpu	row
+x6n_3	ssd_mobilenet_v2	npu	row
+x6n_1	ssd_mobilenet_v2	npu	row
+x6c_4	ssd_mobilenet_v2	cpu	row
+x6c_3	ssd_mobilenet_v2	cpu	row
+c6_2	yolo26n	npu	row
+x6n_2	ssd_mobilenet_v2	npu	row
+x6c_6	ssd_mobilenet_v2	cpu	row
+x6c_2	ssd_mobilenet_v2	cpu	row

@@ -216,6 +216,9 @@ import glob, json, os, sys
 #   zero-yaw frames and is a result (recorded below with reason "no lock-on"), while a run whose geometry is
 #   wrong on those frames still stops the batch. See DEVIATIONS 17.68 (e) and 17.69.
 OUTCOME = {"final_dist_in_window_provisional", "det_hz_gt_0", "cmd_within_5pct_of_det"}
+# 17D/18A/18B (DEVIATIONS 17.81, 17.82, 17.83): first_motion_ok and slam_coload_alive (check_run.py) are VALIDITY checks: they stay out
+#   of OUTCOME and out of RECORDED on every key, so a run whose commands the simulator never applied, or whose SLAM co-load
+#   never ran, is INVALID and stops the batch like every other plumbing check (the two faults of 17.79 and REPORT_S5 attempt 1).
 # 16A (DEVIATIONS 17.77, Ahmed): on an ABLATION row (plan key starting with "lw": session 5a, never pooled into Tables 13/14)
 #   scorer_runs and geometry_gate_capture_pass are RECORDED, not stopping. The gate still runs on every row and its value is
 #   logged here; the sentinel (sen*) and every main-table key (c*, x*) stay gated, so a rig-level geometry fault still stops

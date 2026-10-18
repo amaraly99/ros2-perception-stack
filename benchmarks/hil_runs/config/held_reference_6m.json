@@ -1,0 +1,23 @@
+{
+ "_doc": "The fixed held render of the 6 m start profile (prompt 18B, 2026-10-18; PLAN_SSD_BLOCK.md, DEVIATIONS 17.83). Windows start_hold pauses at sim t = 0.30 (as the 20 m start). Two independent captures agree pixel for pixel: the Pi's gate-tool capture (hold_once.sh, stage6/run_18B/A/hold1) and 18W's separate MATLAB-side read of /sim/camera/image_raw, whose sha256 eee7abd9b8df45f67c526a1c71392640ca95d046579efff29494d47c41acae42 equals the Pi frame's after BGR to RGB channel swap and column-major (MATLAB memory layout) serialisation; the Pi raw bgr8 bytes give sha256 5229b002446fd6014de8cf16a1fbcef9d234353b140a84404062abd2c46e7500. Model c27681cb. Used only when HIL_HELD_REF names this file; the 20 m held_reference.json stays the default and is unchanged.",
+ "sim_model_sha256": "c27681cb4dbeaff7db2823006ef52a94a594d18857b3fda3ece920fe527820ff",
+ "hold_sim_t": 0.3,
+ "render_sha1": "4192edbc4fec0b8674b5341ce7ba2a65c1eb347c",
+ "inloop_frame_hash": 1096990245,
+ "fixture_png": "fixtures/held_4192edbc.png",
+ "measured_in": "stage6/run_18B/A/hold1 (2026-10-18 22:46 UTC, 122 identical copies) against 18W's Windows-side capture; npu_reference from stage6/run_18B/B2/gate_6m_yolo26n_npu.json",
+ "npu_reference": {
+  "config": "yolo26n_npu",
+  "dets": [
+   [
+    "stop sign",
+    0.891,
+    87.0,
+    91.0,
+    331.5,
+    262.5
+   ]
+  ],
+  "note": "gate_render.py all_dets (class, conf, w, h, cx, cy) on in-loop pixels of the held render, with HIL_GEOM = config/sim_geometry_6m.json (sign projects at u 332.9 v 261.6 w 87.1, as PLAN_SSD_BLOCK.md predicted). batch.sh checks it at the start and end of every session (1 NPU open each); a mismatch stops the batch."
+ }
+}

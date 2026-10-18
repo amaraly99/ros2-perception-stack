@@ -13,8 +13,20 @@ t_resume_ns.txt in --pre-resume-dir). 8J: new check latched_at_resume (the contr
 resume, from the stack log's "Sim health LOST"/"RECOVERED" stamps), and t_resume_ns.txt now carries the resume gate's exact
 wall ns (the sidecar's polled value moved to t_resume_ns_sidecar.txt). See DEVIATIONS 17.67.
 9C: geometry_gate_is_protocol asks a CONFIGURATION question (does this run's scoring use the protocol's gate?) and is computed
-from the run's fx through the scorer's own default_rms_gate, independent of whether the scorer produced output (17.69)."""
-import glob, importlib.util, json, math, os, re, subprocess, sys
+from the run's fx through the scorer's own default_rms_gate, independent of whether the scorer produced output (17.69).
+17D/18A/18B (DEVIATIONS 17.81, 17.82, 17.83): two liveness checks, both validity checks in batch.sh. first_motion_ok,
+proportional and anchored: per channel, the first 3 s interval after resume starting at a /cmd_vel message that ITSELF commands
+the tested channel (|vx| or |vy| > 0 for translation, wz != 0 for yaw; 18B, the 028 tail-catch mechanism of RESULTS_18A) and
+whose zero-order-hold command integral reaches 0.20 m (horizontal velocity vector, as a magnitude) or 0.10 rad (wz) must show
+at least half the commanded amount in the measured pose (horizontal displacement magnitude; unwrapped yaw change in the sign
+of the integral); a channel with no qualifying interval inside the mission window is n/a; False if a tested channel fails or
+if the run resumed with both channels n/a; a run that never resumed is n/a. The same ratio over the interval shifted 1.0 s
+later is a covariate, never a check (18B: the transport delay is 0.3 to 0.8 s, so the shifted window shows the applied motion). slam_coload_alive: the OV2SLAM co-load ran (stack log: "SLAM sidecar started", no "error
+while loading shared libraries"; ov2slam_node in the last topthreads sample at or before resume + mission_window_s OR in the
+first sample after it: level2_coresampler.py line 43 lists only threads that existed in the previous 15 s sample, so a co-load
+restarted late in the window is invisible for one sample). The /slam/pose count, first-pose delay and largest pose gap are
+covariates (info), never checks."""
+import datetime, glob, importlib.util, json, math, os, re, subprocess, sys
 from collections import deque
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import hilpaths
@@ -195,6 +207,148 @@ I["latch_recovered_after_resume_s"] = round((min((t for t in recov if tr_ns and 
 I["latch_n_lost"], I["latch_n_recovered"] = len(lost), len(recov)
 C["latched_at_resume"] = bool(lat_t) and not any(lat_t < t < tr_ns for t in recov)
 
+# 3d. 17D/18A/18B (DEVIATIONS 17.81, 17.82, 17.83): first_motion_ok. Two transport-class faults in 181 in-loop runs (REPORT_S4
+#     attempt 1 run 006, 17.79 run 032) showed that nothing checked that the simulator APPLIED the commands the controller
+#     published.
+#     PROPORTIONAL (18A, planning chat): a fixed displacement floor after the first command above a fixed threshold could stop
+#     a batch on a small real command (17.81 f, the yaw margin on 5a run 007), so the commanded amount itself sets the floor.
+#     ANCHORED (18B, planning chat on RESULTS_18A): the interval's starting /cmd_vel message must itself command the tested
+#     channel (|vx| or |vy| > 0 for translation, wz != 0 for yaw). Without it, an interval can start in a zero-command span and
+#     catch the first fraction of a late burst at its tail, where the 0.3 to 0.8 s transport delay pushes the measured response
+#     outside the interval: first_motion_ok as settled in 18A was False on 30 of 161 stored valid runs through that artifact
+#     (the 028_yolov8s_cpu_B_rc1 mechanism, RESULTS_18A); with the anchor it is False on the one true rig fault (032) alone.
+#     Per channel, from the approach bag (rec.sh, up before resume; /cmd_vel and /sim/drone_pose on the same recorder clock):
+#     the first FM_WIN_S interval after resume, starting at a /cmd_vel message that commands the tested channel, over which the
+#     commanded horizontal velocity vector (zero-order hold) integrates to a magnitude of at least FM_CMD_DISP_M (translation),
+#     or the integrated wz reaches
+#     FM_CMD_YAW_RAD in magnitude (yaw); the measured horizontal displacement magnitude (translation) or unwrapped yaw change
+#     in the sign of the integral (yaw) over that interval must be at least FM_RATIO of the commanded amount. Magnitudes keep
+#     the check independent of the simulator's command frame (world axes today, SIM_PARAMS.md line 17, and that convention may
+#     change; the 16D audit's heading projection is not used); the signed world-x and world-y displacements stay covariates.
+#     A channel with no qualifying interval inside the mission window is n/a. False if a tested channel fails, or if the run
+#     resumed and both channels are n/a (a live controller always searches or approaches). A run that never resumed is n/a
+#     (True here; first_det_before_resume and the resume gate catch it). Interval start, commanded amount, measured amount and
+#     their ratio are covariates per channel, plus (18B) the measured amount and ratio over the interval shifted 1.0 s later
+#     (same commanded amount; the transport-delay view): covariates only, never a check.
+FM_WIN_S, FM_CMD_DISP_M, FM_CMD_YAW_RAD, FM_RATIO = 3.0, 0.20, 0.10, 0.5
+_mb = re.match(r"^level2_(.+)_(npu|cpu)_[AB]_r", label)
+MODEL_BACKEND = f"{_mb.group(1)}_{_mb.group(2)}" if _mb else None
+MISSION_WINDOW_S = PROTO["mission_window_s"].get(MODEL_BACKEND, PROTO["mission_window_s"]["default"])
+
+
+def _zoh_integral(cmds, t0, t1):
+    """Integrals of (vx, vy, wz) over [t0, t1] ns, zero-order hold: each command holds until the next message (the last one
+    to t1). Commands are sorted; a command issued before t0 and still held at t0 contributes from t0."""
+    ivx = ivy = iwz = 0.0
+    for i, c in enumerate(cmds):
+        a = max(c[0], t0); b = min(cmds[i + 1][0], t1) if i + 1 < len(cmds) else t1
+        if b <= a:
+            continue
+        dt = (b - a) / 1e9
+        ivx += c[1] * dt; ivy += c[2] * dt; iwz += c[3] * dt
+    return ivx, ivy, iwz
+
+
+def _read_cmd_pose(bag):
+    """(/cmd_vel as (log ns, vx, vy, wz), /sim/drone_pose as (log ns, x, y, z, yaw)) over the whole approach bag; the same
+    truncated-bag fallback as the start-pose read."""
+    cmds, poses = [], []
+    try:
+        from mcap_ros2.reader import read_ros2_messages as _rr
+        for x in _rr(bag, topics=["/cmd_vel", "/sim/drone_pose"]):
+            if x.channel.topic == "/cmd_vel":
+                cmds.append((x.log_time_ns, x.ros_msg.linear.x, x.ros_msg.linear.y, x.ros_msg.angular.z))
+            elif len(x.ros_msg.data) >= 5:
+                poses.append((x.log_time_ns, x.ros_msg.data[0], x.ros_msg.data[1], x.ros_msg.data[2], x.ros_msg.data[4]))
+    except Exception:                                        # noqa: BLE001  (truncated bag: no summary) -> stream read
+        from mcap.reader import NonSeekingReader
+        from mcap_ros2.decoder import DecoderFactory
+        cmds, poses = [], []
+        with open(bag, "rb") as fh:
+            try:
+                for _s, ch, m, dm in NonSeekingReader(fh, decoder_factories=[DecoderFactory()]).iter_decoded_messages(
+                        topics=["/cmd_vel", "/sim/drone_pose"], log_time_order=False):
+                    if ch.topic == "/cmd_vel":
+                        cmds.append((m.log_time, dm.linear.x, dm.linear.y, dm.angular.z))
+                    elif len(dm.data) >= 5:
+                        poses.append((m.log_time, dm.data[0], dm.data[1], dm.data[2], dm.data[4]))
+            except Exception:                                # noqa: BLE001
+                pass
+    cmds.sort(); poses.sort()
+    return cmds, poses
+
+
+def _pose_at_or_before(poses, t):
+    import bisect
+    i = bisect.bisect_right([p[0] for p in poses], t) - 1
+    return poses[i] if i >= 0 else (poses[0] if poses else None)
+
+
+FM = {"rule": f"per channel, the first {FM_WIN_S} s interval after resume starting at a /cmd_vel message that itself commands "
+              f"the tested channel and whose zero-order-hold command integral reaches {FM_CMD_DISP_M} m (horizontal vector "
+              f"magnitude) or {FM_CMD_YAW_RAD} rad (wz) must show at least {FM_RATIO} of the commanded amount in the measured "
+              f"pose, in the sign of the integral for yaw",
+      "resumed": bool(tr_ns), "vx": "n/a", "wz": "n/a"}
+if not tr_ns:
+    FM["status"] = "n/a: the run never resumed"; C["first_motion_ok"] = True
+elif not ab:
+    FM["status"] = "no approach bag"; C["first_motion_ok"] = False
+else:
+    _cmds, _poses = _read_cmd_pose(ab[0])
+    FM["cmd_vel_msgs_after_resume"] = sum(1 for c in _cmds if c[0] > tr_ns)
+    FM["poses_after_resume"] = sum(1 for p in _poses if p[0] > tr_ns)
+    _win_ns, _w_end_ns = int(FM_WIN_S * 1e9), tr_ns + int(MISSION_WINDOW_S * 1e9)
+    tested = []
+    for chan in ("vx", "wz"):
+        t0 = cmd_amt = None
+        for c in _cmds:
+            if c[0] <= tr_ns:
+                continue
+            if c[0] + _win_ns > _w_end_ns:
+                break
+            if (chan == "vx" and c[1] == 0 and c[2] == 0) or (chan == "wz" and c[3] == 0):
+                continue                 # 18B anchor: the starting message must itself command the tested channel
+            ivx, ivy, iwz = _zoh_integral(_cmds, c[0], c[0] + _win_ns)
+            amt = math.hypot(ivx, ivy) if chan == "vx" else iwz
+            if abs(amt) >= (FM_CMD_DISP_M if chan == "vx" else FM_CMD_YAW_RAD):
+                t0, cmd_amt = c[0], amt; break
+        if t0 is None:
+            continue                     # channel n/a: no qualifying interval inside the mission window
+        FM[f"{chan}_interval_start_s"] = round((t0 - tr_ns) / 1e9, 3); FM[f"{chan}_cmd_amount"] = round(cmd_amt, 4)
+        pa = _pose_at_or_before(_poses, t0); pb = _pose_at_or_before(_poses, t0 + _win_ns)
+        if pa is None or pb is None or pb[0] - pa[0] < 0.5 * _win_ns:
+            FM[f"{chan}_pose_window_s"] = round((pb[0] - pa[0]) / 1e9, 3) if (pa and pb) else None
+            FM[chan] = False; FM[f"{chan}_note"] = "no pose window of at least 1.5 s over the interval"; tested.append(False); continue
+        if chan == "vx":
+            dx, dy = pb[1] - pa[1], pb[2] - pa[2]
+            meas = math.hypot(dx, dy); FM["disp_x_world_m"], FM["disp_y_world_m"] = round(dx, 4), round(dy, 4)
+            FM[chan] = meas >= FM_RATIO * cmd_amt
+        else:
+            seg = [p for p in _poses if pa[0] <= p[0] <= pb[0]]
+            meas = sum((b[4] - a[4] + math.pi) % (2 * math.pi) - math.pi for a, b in zip(seg, seg[1:]))
+            FM[chan] = meas * math.copysign(1.0, cmd_amt) >= FM_RATIO * abs(cmd_amt)
+        FM[f"{chan}_meas_amount"] = round(meas, 4); FM[f"{chan}_ratio"] = round(meas / cmd_amt, 4)
+        # 18B covariate, never a check: the same measured amount and ratio over the interval shifted 1.0 s later (same
+        # commanded amount). The transport delay is 0.3 to 0.8 s, so the shifted window shows the motion the simulator applied.
+        _ts = t0 + int(1.0 * 1e9)
+        pa_s, pb_s = _pose_at_or_before(_poses, _ts), _pose_at_or_before(_poses, _ts + _win_ns)
+        if pa_s is not None and pb_s is not None and pb_s[0] - pa_s[0] >= 0.5 * _win_ns:
+            if chan == "vx":
+                meas_s = math.hypot(pb_s[1] - pa_s[1], pb_s[2] - pa_s[2])
+            else:
+                seg_s = [p for p in _poses if pa_s[0] <= p[0] <= pb_s[0]]
+                meas_s = sum((b[4] - a[4] + math.pi) % (2 * math.pi) - math.pi for a, b in zip(seg_s, seg_s[1:]))
+            FM[f"{chan}_meas_amount_shift1s"] = round(meas_s, 4); FM[f"{chan}_ratio_shift1s"] = round(meas_s / cmd_amt, 4)
+        else:
+            FM[f"{chan}_meas_amount_shift1s"] = FM[f"{chan}_ratio_shift1s"] = None
+        tested.append(FM[chan])
+    if not tested:
+        FM["status"] = "FAIL: resumed but no command interval reached the threshold on either channel"; C["first_motion_ok"] = False
+    else:
+        C["first_motion_ok"] = all(tested)
+        FM["status"] = "ok" if C["first_motion_ok"] else "FAIL: a commanded channel produced too little motion"
+I["first_motion"] = FM
+
 # 4. our scorer (benchmarks/inloop_accuracy.py at this repo's HEAD). The capture pose needs the recording
 #    host's realtime - monotonic offset, recorded before the run in <label>_clock_offset.json; the
 #    scorer refuses to run without it, so a missing file fails here instead of falling back.
@@ -338,6 +492,62 @@ if msgs:
     I["slam_tracking"] = "tracking" if sp and (t_end - sp[-1]) / 1e9 < 2.0 else "lost"
 m = re.findall(r"(reset|lost|LOST|tracking lost|Reset)", log)
 I["slam_log_reset_or_lost_mentions"] = len(m)
+
+# 6b. 17D/18A (DEVIATIONS 17.81, 17.82): slam_coload_alive, Ahmed's definition (IMPROVEMENTS_16A item 1 note): the co-load
+#     PROCESS ran. Session 5a attempt 1 ran four rows with the OV2SLAM sidecar dead (liblcdetector.so missing in the ablation
+#     worktree) and nothing fired (REPORT_S5). Alive = the stack log says "SLAM sidecar started", holds no "error while loading
+#     shared libraries" (the persisted sidecar tail is part of the stack log), and ov2slam_node appears in the LAST
+#     topthreads.csv sample (smoke_run_hold.sh, 15 s cadence) at or before resume + mission_window_s (protocol_fx554.json, by
+#     model_backend) OR in the FIRST sample after it (18A: level2_coresampler.py line 43 lists only threads that existed in the
+#     previous 15 s sample, so a co-load restarted late in the window is absent from the last in-window sample while alive;
+#     5a attempt 2 run 019, DEVIATIONS 17.81 e f). The deciding sample and its time are covariates. /slam/pose count,
+#     first-pose delay and the largest pose gap are covariates, never checks: a pose gap is SLAM tracking behaviour, not a
+#     missing co-load (s2 005 and s4 024 stay pooled). A run that never resumed is n/a (True here).
+SC = {"sidecar_started": "SLAM sidecar started" in log, "library_error": "error while loading shared libraries" in log,
+      "model_backend": MODEL_BACKEND, "mission_window_s": MISSION_WINDOW_S}
+_tt = sorted(glob.glob(os.path.join(d, "*_topthreads.csv")))
+SC["topthreads_file"] = os.path.basename(_tt[0]) if _tt else None
+SC["ov2slam_in_last_window_sample"] = SC["ov2slam_in_first_sample_after_window"] = None
+if tr_ns and _tt:
+    import csv as _csv
+    _samples = {}
+    for row in _csv.DictReader(open(_tt[0])):
+        try:
+            tu = int(datetime.datetime.strptime(row["utc"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=datetime.timezone.utc).timestamp() * 1e9)
+        except (KeyError, ValueError):
+            continue
+        _samples.setdefault(tu, []).append(row.get("comm", ""))
+    _inwin = sorted(t for t in _samples if t <= tr_ns + int(SC["mission_window_s"] * 1e9))
+    SC["samples_in_window"] = len(_inwin)
+    SC["samples_in_window_with_ov2slam"] = sum(1 for t in _inwin if any(c.startswith("ov2slam") for c in _samples[t]))
+    if _inwin:
+        SC["last_window_sample_s_after_resume"] = round((_inwin[-1] - tr_ns) / 1e9, 1)
+        SC["ov2slam_in_last_window_sample"] = any(c.startswith("ov2slam") for c in _samples[_inwin[-1]])
+    _after = sorted(t for t in _samples if t > tr_ns + int(SC["mission_window_s"] * 1e9))
+    SC["ov2slam_in_first_sample_after_window"] = any(c.startswith("ov2slam") for c in _samples[_after[0]]) if _after else None
+    SC["first_sample_after_window_s_after_resume"] = round((_after[0] - tr_ns) / 1e9, 1) if _after else None
+if not tr_ns:
+    SC["status"] = "n/a: the run never resumed"; C["slam_coload_alive"] = True
+else:
+    SC["decided_by_sample"], SC["decided_sample_s_after_resume"] = (
+        ("last_in_window", SC.get("last_window_sample_s_after_resume")) if SC["ov2slam_in_last_window_sample"]
+        else ("first_after_window", SC.get("first_sample_after_window_s_after_resume"))
+        if SC["ov2slam_in_first_sample_after_window"] else (None, None))
+    _present = bool(SC["ov2slam_in_last_window_sample"]) or bool(SC["ov2slam_in_first_sample_after_window"])
+    C["slam_coload_alive"] = bool(SC["sidecar_started"] and not SC["library_error"] and _present)
+    SC["status"] = "ok" if C["slam_coload_alive"] else "FAIL: " + "; ".join(w for w, bad in (
+        ("sidecar not started", not SC["sidecar_started"]), ("library error in the sidecar or stack log", SC["library_error"]),
+        ("no topthreads sample", not _tt),
+        ("ov2slam_node absent from the last sample in the mission window and from the first sample after it",
+         _tt and not _present)) if bad)
+I["slam_coload"] = SC
+# covariates of the co-load's tracking (never checks): over the window after resume
+if msgs and tr_ns:
+    _w_end = tr_ns + int(SC["mission_window_s"] * 1e9)
+    _sp = [t for t in sp if tr_ns <= t <= _w_end]
+    I["slam_pose_msgs_in_window"] = len(_sp)
+    I["slam_first_pose_delay_s"] = round((_sp[0] - tr_ns) / 1e9, 2) if _sp else None
+    I["slam_max_pose_gap_s"] = round(max((b - a for a, b in zip(_sp, _sp[1:])), default=0) / 1e9, 2) if len(_sp) > 1 else None
 
 # 7. forward-speed law per APPROACHING tick against /cmd_vel (ramp limiter applied).
 #    Mimics servo_fsm_node.cpp: best "stop sign" box with conf >= 0.20 (max conf), 0.30 jump

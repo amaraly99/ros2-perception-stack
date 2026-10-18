@@ -1,0 +1,33 @@
+{
+  "_doc": "Supplementary 6 m start profile (2026-10-18, prompt 18B; PLAN_SSD_BLOCK.md, DEVIATIONS 17.83). Same scene, fx and tolerances as sim_geometry.json (the 20 m profile, which stays the default); only the start pose and the model hash differ. The start is the pose of pooled run s1 003 (yolo26n NPU) at its first frame inside 6.0 m (SSD_RANGE_17D.md step 5), set as the Simulink initial condition on the Windows side (18W: XML diff against a38a664c changed only the x, y, z ICs; the yaw string 2*pi-0.0460 is identical; fx 554 both cameras; StopTime inf). Used by exporting HIL_GEOM (and HIL_HELD_REF to config/held_reference_6m.json, SIM_MODEL_SHA256 to this model hash) before batch.sh; nothing reads this file by default.",
+  "fx": 554.0,
+  "model_sha256": "c27681cb4dbeaff7db2823006ef52a94a594d18857b3fda3ece920fe527820ff",
+  "target_xyz": [
+    35.1,
+    2.92,
+    3.08
+  ],
+  "start_xyz_yaw": [
+    29.138,
+    3.33,
+    3.613,
+    "2*pi-0.0460"
+  ],
+  "nontarget_signs_xyz": [
+    [
+      35.199,
+      -15.914,
+      3.054
+    ]
+  ],
+  "nontarget_signs_note": "as sim_geometry.json (17.73): the second stop sign 18.8 m right of the target; position INFERRED from fitted boxes. From the 6 m start it projects far outside the image (u about 1868 px, SSD_RANGE_17D.md step 5).",
+  "start_bearing_tol_deg": 5.0,
+  "smoke_final_dist_window_m": [
+    1.6,
+    2.8
+  ],
+  "smoke_final_dist_window_status": "PROVISIONAL, record-only, as sim_geometry.json (WORKING_RULES fixed decision): not moved for the 6 m start.",
+  "start_yaw_deg": 357.3636,
+  "start_tol_m": 0.1,
+  "start_yaw_tol_deg": 0.5
+}
