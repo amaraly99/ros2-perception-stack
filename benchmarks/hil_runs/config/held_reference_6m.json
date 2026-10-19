@@ -1,10 +1,17 @@
 {
- "_doc": "The fixed held render of the 6 m start profile (prompt 18B, 2026-10-18; PLAN_SSD_BLOCK.md, DEVIATIONS 17.83). Windows start_hold pauses at sim t = 0.30 (as the 20 m start). Two independent captures agree pixel for pixel: the Pi's gate-tool capture (hold_once.sh, stage6/run_18B/A/hold1) and 18W's separate MATLAB-side read of /sim/camera/image_raw, whose sha256 eee7abd9b8df45f67c526a1c71392640ca95d046579efff29494d47c41acae42 equals the Pi frame's after BGR to RGB channel swap and column-major (MATLAB memory layout) serialisation; the Pi raw bgr8 bytes give sha256 5229b002446fd6014de8cf16a1fbcef9d234353b140a84404062abd2c46e7500. Model c27681cb. Used only when HIL_HELD_REF names this file; the 20 m held_reference.json stays the default and is unchanged.",
+ "_doc": "The fixed held render of the 6 m start profile (prompt 18B, 2026-10-18; PLAN_SSD_BLOCK.md, DEVIATIONS 17.83). Windows start_hold pauses at sim t = 0.30 (as the 20 m start). Two independent captures agree pixel for pixel: the Pi's gate-tool capture (hold_once.sh, stage6/run_18B/A/hold1) and 18W's separate MATLAB-side read of /sim/camera/image_raw, whose sha256 eee7abd9b8df45f67c526a1c71392640ca95d046579efff29494d47c41acae42 equals the Pi frame's after BGR to RGB channel swap and column-major (MATLAB memory layout) serialisation; the Pi raw bgr8 bytes give sha256 5229b002446fd6014de8cf16a1fbcef9d234353b140a84404062abd2c46e7500. Model c27681cb. Used only when HIL_HELD_REF names this file; the 20 m held_reference.json stays the default and is unchanged. 17.84 (prompt 19A, 2026-10-19): accepted_renders lists the alternate stable settles of this start that the planning chat accepted under the 18E rule; the gate passes a final held render iff byte-identical to the primary or to a member (held_members.py). Every other profile has no accepted_renders and keeps the single-reference behaviour.",
  "sim_model_sha256": "c27681cb4dbeaff7db2823006ef52a94a594d18857b3fda3ece920fe527820ff",
  "hold_sim_t": 0.3,
  "render_sha1": "4192edbc4fec0b8674b5341ce7ba2a65c1eb347c",
  "inloop_frame_hash": 1096990245,
  "fixture_png": "fixtures/held_4192edbc.png",
+ "accepted_renders": [
+  {
+   "render_sha1": "3356996eae814c02d05810d1c4bf6594f16a47f2",
+   "fixture_png": "fixtures/held_3356996e.png",
+   "evidence": "Second stable settle of the 6 m hold: 18B run 005 (21 copies), the only non-reference settle in the 11 recorded holds of this start (18B step A, 18B runs 001 to 005, 18E holds 01 to 05); the reference settled again in every later hold. Accepted under the 18E rule (fixed Oct 18, before the re-run's data; R4 replaced by those 11 observations after repeated hold cycling crashed the renderer, planning chat Oct 19, DEVIATIONS 17.84). R1 phase correlation vs 4192edbc: 0.0039 px full frame, 0.0398 px sign crop (limit 0.25). R2: 1.885 pct of pixels differ, max amplitude 61 (limit 5 pct). R3 in-loop pixels, stop-sign box on both frames, all four configs: yolo26n cpu centre d 0.100 px, dw 0.1, dh 0.2, dconf 0.004; ssd cpu 0.141 px, 0.3, 0.0, 0.012; yolo26n npu 0.5 px, 0.0, 1.0, 0.024; ssd npu 0.0 px, 0.0, 0.0, 0.016; every conf on the same side of the pipeline's 0.20. Measured in stage6/run_18E/diag_3356996e and stage6/run_19A/npu."
+  }
+ ],
  "measured_in": "stage6/run_18B/A/hold1 (2026-10-18 22:46 UTC, 122 identical copies) against 18W's Windows-side capture; npu_reference from stage6/run_18B/B2/gate_6m_yolo26n_npu.json",
  "npu_reference": {
   "config": "yolo26n_npu",

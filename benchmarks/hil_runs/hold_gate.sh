@@ -2,7 +2,8 @@
 # hold_gate.sh <outdir>  — HOLD_GATE_CMD for one_run_hold_gated.sh (5D steps 5-6). Runs while held, before the stack boots.
 # 1) wait until the newest render has >= 20 identical consecutive copies (render_hash_logger, /tmp/r20_hash.log), max 90 s
 # 2) report every distinct render since the logger started, with first-seen time and copies
-# 3) 5Q: the final render must be the fixed held render (config/held_reference.json); any other render -> rc 1 (no resume)
+# 3) 5Q: the final render must be in the profile's accepted held-render set (config/held_reference*.json render_sha1
+#    plus any accepted_renders members; held_members.py, DEVIATIONS 17.84); any other render -> rc 1 (no resume)
 # 4) 5Q: gate_render.py on GATE_CONFIGS only (the run's own configuration, e.g. yolo26n_npu; "all" = the 22). Each NPU
 #    configuration costs one VDevice open, and the Hailo-10H on Pi-3 has failed after about 70 opens per boot (5Q, INFERRED).
 #    All 22 are gated once per session on the same render (hold_once.sh --gate all). fail -> rc 1 (no resume)
@@ -26,9 +27,8 @@ print(f"final render {r[-1]['sha1'][:8]}: first seen {r[-1]['first_s']} s after 
 PY
 echo "$FINAL" > "$O/held_final_sha1.txt"
 [ "${n:-0}" -ge 20 ] || { echo "hold_gate: final render reached only ${n:-0} identical copies in 90 s"; exit 1; }
-REF=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['render_sha1'])" "$HIL_HELD_REF")
-[ "$FINAL" = "$REF" ] || { echo "hold_gate: FAIL final held render $FINAL is not the reference $REF"; exit 1; }
-echo "hold_gate: final held render = reference ${REF:0:8}"
+python3 "$HIL_RUNS/held_members.py" accept "$HIL_HELD_REF" "$FINAL" \
+  || { echo "hold_gate: FAIL final held render $FINAL is not in the accepted set of $HIL_HELD_REF (17.84)"; exit 1; }
 python3 -c "import numpy as np,cv2,sys; a=np.fromfile(sys.argv[1],np.uint8).reshape(480,640,3); cv2.imwrite(sys.argv[2],a)" "/tmp/r20_renders/$FINAL.raw" "$O/held_final_render.png"
 GC=(); [ "$GATE_CONFIGS" = all ] || GC=(--configs $GATE_CONFIGS)
 python3 "$HIL_RUNS/gate_render.py" "$O/held_final_render.png" "$O/gate.json" "${GC[@]}" 2>"$O/gate.err" || exit 1

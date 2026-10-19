@@ -90,7 +90,20 @@ if [ -n "$POSTYAW" ] && [ -n "$PRE_YAW" ]; then
   DY=$(python3 -c "print(f'{abs((($POSTYAW)-($PRE_YAW)+180)%360-180):.2f}')" 2>/dev/null)
   echo "pose_match: pre_yaw=$PRE_YAW post_yaw=$POSTYAW dyaw=${DY}deg" | tee -a "$O/run.log" >> "$S/pose_match.log"
 fi
-"$HIL_MCAP_PY" "$HIL_RUNS/check_run.py" "$S" "$L" --pre-resume-dir "$O" --out-dir "$O/check" > "$O/check/${L}_check.txt" 2>&1; CRC=$?
+# 17.84: a run whose hold settled to an accepted ALTERNATE member (held_members.py) hands check_run.py a per-run
+# matched-reference file, so check_run.py stays byte-unchanged, its held_render_is_reference check passes on byte
+# identity to the matched member, and its held_reference_sha1 info key records that member as the run's covariate.
+# A profile without accepted_renders (the 20 m start) never takes the branch: the final render equals the primary
+# or the hold gate already failed the run, and in both cases check_run sees the profile file exactly as before.
+CHECK_HELD_REF="$HIL_HELD_REF"
+FINAL_SHA=$(cat "$O/held_final_sha1.txt" 2>/dev/null)
+PRIMARY_SHA=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['render_sha1'])" "$HIL_HELD_REF")
+if [ -n "$FINAL_SHA" ] && [ "$FINAL_SHA" != "$PRIMARY_SHA" ] \
+   && python3 "$HIL_RUNS/held_members.py" accept "$HIL_HELD_REF" "$FINAL_SHA" >> "$O/run.log" 2>&1; then
+  python3 "$HIL_RUNS/held_members.py" ref-json "$HIL_HELD_REF" "$FINAL_SHA" "$O/check/matched_held_reference.json" | tee -a "$O/run.log"
+  CHECK_HELD_REF="$O/check/matched_held_reference.json"
+fi
+HIL_HELD_REF="$CHECK_HELD_REF" "$HIL_MCAP_PY" "$HIL_RUNS/check_run.py" "$S" "$L" --pre-resume-dir "$O" --out-dir "$O/check" > "$O/check/${L}_check.txt" 2>&1; CRC=$?
 echo "check_rc=$CRC" | tee -a "$O/run.log"
 # 5R: Table 14 from the approach bag and from the stack bag over the window both cover; per bin the values must match.
 # Information for the report (consistency/consistency.json); it does not change the run result.

@@ -4,7 +4,7 @@
 # render (max 90 s) plus 5 s more -> save it -> stop, pub_stop -> logger down -> move the logger files into <outdir>.
 # Refuses an existing <outdir> (5J rule). Times are wall clock (UTC ns) from this host; "sim start" = the start_hold command.
 # 5Q: also the once-per-session gate of batch.sh. Checks, after the hold is released: the supervisor's t= at state=held is the
-# fixed hold time and the final render is the reference (config/held_reference.json); with --gate, gate_render.py on the final
+# fixed hold time and the final render is in the accepted set (held_members.py, 17.84); with --gate, gate_render.py on the final
 # render (in-loop pixels; "all" = the 22 configurations, 11 NPU opens). hold_summary.json "final" is now the last logged render
 # (it was the last render seen for the first time; the same in every 5J and 5Q hold).
 # exit: 0 ok, 20 outdir exists, 21 logger refused, 22 never held, 23 wrong hold time, 24 not the reference render, 25 gate failed
@@ -54,11 +54,12 @@ print(f"hold summary: first frame {out['first_frame_s_after_start_hold']} s afte
       "; ".join(f"{x['sha1'][:8]} at {x['first_s_after_start_hold']} s x{x['copies']}" for x in r))
 PY
 [ -n "$HELD" ] || { log "FAIL never reached state=held"; exit 22; }
-read -r WANT_T REF < <(python3 -c "import json,sys; j=json.load(open(sys.argv[1])); print(f\"{float(j['hold_sim_t']):.2f}\", j['render_sha1'])" "$HIL_HELD_REF")
+WANT_T=$(python3 -c "import json,sys; print(f\"{float(json.load(open(sys.argv[1]))['hold_sim_t']):.2f}\")" "$HIL_HELD_REF")
 GOT_T=$(echo "$HELD" | grep -oP '\bt=\K[0-9.]+')
 [ "${GOT_T:-x}" = "$WANT_T" ] || { log "FAIL hold time t=${GOT_T:-none}, expected $WANT_T"; exit 23; }
-[ "$FINAL" = "$REF" ] || { log "FAIL final render $FINAL is not the reference $REF"; exit 24; }
-log "hold ok: t=$GOT_T, final render = reference ${REF:0:8}"
+python3 "$HIL_RUNS/held_members.py" accept "$HIL_HELD_REF" "$FINAL" | tee -a "$O/hold.log"
+[ "${PIPESTATUS[0]}" -eq 0 ] || { log "FAIL final render $FINAL is not in the accepted set (17.84)"; exit 24; }
+log "hold ok: t=$GOT_T, final render ${FINAL:0:8} in the accepted set"
 if [ -n "$GATE" ]; then
   GC=(); [ "$GATE" = all ] || GC=(--configs $GATE)
   python3 "$HIL_RUNS/gate_render.py" "$O/final.png" "$O/gate.json" "${GC[@]}" > "$O/gate.out" 2>"$O/gate.err"; GRC=$?
