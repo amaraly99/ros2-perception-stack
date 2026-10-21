@@ -166,7 +166,18 @@ while IFS=$'\t' read -r -u 3 KEY MDL BK ROLE CFG5; do         # plan on fd 3: no
   case "$BK" in npu) P=A ;; cpu) P=B ;; *) stop "plan line $N: backend '$BK' is not npu or cpu" "$N" ;; esac
   CFG="ours_fx554_${P}_ibvs"; RD="$BD/${NNN}_${MDL}_${BK}_${P}_r${KEY}"
   if [ -n "${CFG5:-}" ]; then                                    # 14A: per-run stack config (5th column)
-    case "$CFG5" in "ours_fx554_${P}_ibvs"|"ours_fx554_${P}_ibvs_"*) ;; *) stop "plan line $N: stack config '$CFG5' is not a placement $P config" "$N" ;; esac
+    # 20B: Level 2 varies the controller and the SLAM arm, so a placement $P config is no longer
+    # always an ibvs one. The admissible names stay an explicit list (no wildcard over controllers):
+    # the Level 2 controllers are ibvs, proportional and h_vs, each optionally with a suffix naming
+    # the SLAM arm (e.g. ours_fx554_A_ibvs_stereo061_accurate). Nothing else is accepted, and the
+    # file must exist. This is a plan-admissibility check on the name, not a validity check on data:
+    # no run already scored changes, because every stored run used ours_fx554_<P>_ibvs.
+    case "$CFG5" in
+      "ours_fx554_${P}_ibvs"|"ours_fx554_${P}_ibvs_"*) ;;
+      "ours_fx554_${P}_proportional"|"ours_fx554_${P}_proportional_"*) ;;
+      "ours_fx554_${P}_h_vs"|"ours_fx554_${P}_h_vs_"*) ;;
+      *) stop "plan line $N: stack config '$CFG5' is not a placement $P Level 2 config" "$N" ;;
+    esac
     [ -f "$HIL_WT/config/hil/stack/$CFG5.yaml" ] || stop "plan line $N: no stack config $CFG5.yaml in $HIL_WT" "$N"
     CFG="$CFG5"
   fi

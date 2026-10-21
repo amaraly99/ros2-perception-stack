@@ -56,6 +56,15 @@ MP=$!
 # per-core utilization every 1 s + top 8 threads per 15 s (deviation from plan 1a; pinned to core 0)
 taskset -c 0 python3 "$HIL_HOST/level2_coresampler.py" "$OUT/${TAG}_cores.csv" "$OUT/${TAG}_topthreads.csv" &
 CP=$!
+# 20B: per-process memory (PSS, RSS, peak RSS from /proc) and the eth0 byte counters, every 2 s,
+# pinned to core 0 like the core sampler. The host-wide ${TAG}_mem.csv above stays exactly as it is,
+# so every stored run's memory record keeps its meaning; this adds the per-component figure the
+# Level 2 table needs. Only started when the caller asks (L2_PROCMEM=1), so a detector-sweep rerun
+# writes the same set of files as before.
+if [ "${L2_PROCMEM:-0}" = 1 ]; then
+  taskset -c 0 python3 "$HIL_HOST/level2_procmem.py" "$OUT/${TAG}_procmem.csv" "$OUT/${TAG}_link.csv" 2 "${L2_IFACE:-eth0}" &
+  PMP=$!
+fi
 
 # ── MATLAB orchestration v3: HOLD at the initial condition (DEVIATIONS 17.18) ──
 #   pub_start 20 -> start_hold -> poll for state=held -> PRE-RUN IC GUARD on the
@@ -72,7 +81,7 @@ ORCH_EXTRA="--no-matlab-ctl"
 r=$(hil pub_start "${L2_PUB_HZ:-20}"); echo "pub_start ${L2_PUB_HZ:-20}: $r" >> "$MLOG"
 if [ "$r" != ok ]; then
   echo "ORCH_FAILED pub_start reply '$r'" | tee "$OUT/${TAG}_ORCH_FAILED.txt" >> "$LOG"
-  kill "$TP" "$MP" "$CP" 2>/dev/null; wait "$TP" "$MP" "$CP" 2>/dev/null; exit 4
+  kill "$TP" "$MP" "$CP" ${PMP:-} 2>/dev/null; wait "$TP" "$MP" "$CP" ${PMP:-} 2>/dev/null; exit 4
 fi
 echo "start_hold: $(hil start_hold)" >> "$MLOG"
 
@@ -88,7 +97,7 @@ echo "after_start_hold (${i} s): ${HELD_LINE:-$(hil status)}" >> "$MLOG"
 if [ -z "$HELD_LINE" ]; then
   echo "ORCH_FAILED never reached state=held" | tee "$OUT/${TAG}_ORCH_FAILED.txt" >> "$LOG"
   hil stop >/dev/null; hil pub_stop >/dev/null
-  kill "$TP" "$MP" "$CP" 2>/dev/null; wait "$TP" "$MP" "$CP" 2>/dev/null; exit 4
+  kill "$TP" "$MP" "$CP" ${PMP:-} 2>/dev/null; wait "$TP" "$MP" "$CP" ${PMP:-} 2>/dev/null; exit 4
 fi
 echo "$HELD_LINE" > "$OUT/held_status.txt"
 
@@ -99,7 +108,7 @@ echo "hold_sim_t: got=${GOT_T:-none} want=$WANT_T" >> "$MLOG"
 if [ "${GOT_T:-x}" != "$WANT_T" ]; then
   echo "hold: FAIL sim time at hold t=${GOT_T:-none}, expected $WANT_T -> not resuming" >> "$LOG"
   hil stop >/dev/null; hil pub_stop >/dev/null
-  kill "$TP" "$MP" "$CP" 2>/dev/null; wait "$TP" "$MP" "$CP" 2>/dev/null
+  kill "$TP" "$MP" "$CP" ${PMP:-} 2>/dev/null; wait "$TP" "$MP" "$CP" ${PMP:-} 2>/dev/null
   exit 7   # 7 = held at the wrong sim time
 fi
 
@@ -111,7 +120,7 @@ echo "$(date -u +%FT%TZ) PRE_IC ${TAG} rc=$PRC err=${PRE_ERR} yaw=${PRE_YAW} raw
 if [ "$PRC" -ne 0 ]; then
   echo "pre_ic_guard: FAIL (err=${PRE_ERR} deg) -> aborting run before it costs anything" >> "$LOG"
   hil stop >/dev/null; hil pub_stop >/dev/null
-  kill "$TP" "$MP" "$CP" 2>/dev/null; wait "$TP" "$MP" "$CP" 2>/dev/null
+  kill "$TP" "$MP" "$CP" ${PMP:-} 2>/dev/null; wait "$TP" "$MP" "$CP" ${PMP:-} 2>/dev/null
   exit 5   # 5 = pre-run IC fault
 fi
 
@@ -125,7 +134,7 @@ if [ -n "${HOLD_GATE_CMD:-}" ]; then
   if [ "$HGRC" -ne 0 ]; then
     echo "hold_gate: FAIL (rc=$HGRC) -> not resuming" >> "$LOG"
     hil stop >/dev/null; hil pub_stop >/dev/null
-    kill "$TP" "$MP" "$CP" 2>/dev/null; wait "$TP" "$MP" "$CP" 2>/dev/null
+    kill "$TP" "$MP" "$CP" ${PMP:-} 2>/dev/null; wait "$TP" "$MP" "$CP" ${PMP:-} 2>/dev/null
     exit 6   # 6 = pre-resume gate failed
   fi
 fi
@@ -273,7 +282,7 @@ echo "pub_stop: $(hil pub_stop)" >> "$MLOG"
 echo "status_after: $(hil status)" >> "$MLOG"
 wait "$WP" 2>/dev/null; WRC=$?
 
-kill "$TP" "$MP" "$CP" 2>/dev/null; wait "$TP" "$MP" "$CP" 2>/dev/null
+kill "$TP" "$MP" "$CP" ${PMP:-} 2>/dev/null; wait "$TP" "$MP" "$CP" ${PMP:-} 2>/dev/null
 { echo "exit_rc: $RC"; echo "early_watch_rc: $WRC"; echo "end_utc: $(date -u +%FT%TZ)"; echo; } >> "$LOG"
 
 # ── 8I: the post-run IC guard (17.14) now runs in run_one.sh, not here. It reads the LAST pre-resume

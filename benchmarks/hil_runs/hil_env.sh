@@ -6,7 +6,7 @@ HIL_RUNS="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"                    # be
 : "${HIL_WT:=$HOME/amar_4490660}"                                            # pinned stack worktree, read only
 : "${HIL_AMAR_PIN:=449066089465aa713382e13c1d4f043f29be96ab}"                # its HEAD
 : "${HIL_PATCH:=$HIL_OURS/integration/ours_on_4490660.patch}"                # our stack on that HEAD, committed (5R: + ours_fx554_B_ibvs.yaml)
-: "${HIL_PATCH_SHA:=d27ca98d75ff564b589653ef5b7db2a37e3789071e5e8681cb67fdb6d9262ea3}"   # 2026-10-04b (e337034b) + that one file
+: "${HIL_PATCH_SHA:=18ff08edac454862a8cb2dd1f864dd9a7afc71aae9238896559b77895107c6b6}"   # 2026-10-04b (e337034b) + ours_fx554_B_ibvs.yaml (5R) + 20C: the Level 2 sessions 1-3 configs and the tracking-state bag line
 : "${HIL_CODE_COMMIT:=28bb28558166e768d504a407d3ae3fb57e85157a}"            # commit of the run code; batch.sh refuses a HEAD whose
                                                                              # hil_runs, scorer or integration/ differ from it
 : "${HIL_GEOM:=$HIL_RUNS/config/sim_geometry.json}"                         # sim geometry, read by every check
