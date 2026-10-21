@@ -60,6 +60,19 @@ The 16G outputs that the manuscript tables were pasted from: `S6/draft_tables_16
 figures in `~/reproduction/manuscript/draft_17D/new/Figures/`. Run names in a session 5a attempt repeat across attempts under the same batch
 basename, so a re-score of attempt 1 needs its own `<root>` (17D).
 
+## SLAM accuracy, Level 2 only (20C): two stages, because no one interpreter has both readers
+
+```
+~/venvs/mcap/bin/python benchmarks/hil_tools/slam_traj_export.py <run dir> --out <dir>   # stage 1: bag -> gt.tsv, slam.tsv, tracking_state.tsv
+python3 benchmarks/hil_tools/slam_ate.py --selftest                                      # stage 2: the three synthetic checks, all must pass first
+python3 benchmarks/hil_tools/slam_ate.py --gt <dir>/gt.tsv --slam <dir>/slam.tsv --label <run>
+```
+
+Umeyama alignment in Sim(3) (scale solved, mandatory for monocular) and SE(3), nearest-time association within 0.05 s on the bag log
+clock, end pads 0, 3 and 10. `evo` is not installed on Pi-3, so every ATE in a Level 2 table is labelled "our Sim(3) alignment, not
+evo" until one of Amar's own runs has been scored both ways side by side. Read-only on stored data; neither tool is run code (both sit
+outside the `HIL_CODE_COMMIT` guard) and neither can change any stored run's scoring.
+
 ## Which commit produced which data (VERIFIED from each batch.log, 17D)
 
 | batch | runs | HEAD at the run (ours) | HIL_CODE_COMMIT | stored check outputs scored at | re-scored for the tables at |
