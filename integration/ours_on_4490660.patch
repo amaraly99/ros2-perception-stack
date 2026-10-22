@@ -1236,6 +1236,85 @@ index 0000000000000000000000000000000000000000..445400a573e0ead5c0fef24be4264205
 +
 +init_gate:
 +  enabled: false
+diff --git a/config/hil/stack/ours_fx554_A_proportional_mono_accurate.yaml b/config/hil/stack/ours_fx554_A_proportional_mono_accurate.yaml
+new file mode 100644
+index 0000000000000000000000000000000000000000..265f8091b811ded98c40cdf8ece25f630dd93cb2
+--- /dev/null
++++ b/config/hil/stack/ours_fx554_A_proportional_mono_accurate.yaml
+@@ -0,0 +1,73 @@
++# ours_fx554_A_proportional_mono_accurate.yaml -- Ahmed's Level 2 cell C1 (exp/detector-accuracy), 21A.
++# Placement A: YOLO on the NPU, producer on core 1; OV2SLAM on cores 2,3; controller proportional.
++# ONE line differs from ours_fx554_A_ibvs_mono_accurate.yaml (cell S1): controller.type. Prompt 21A
++# ruling R1 puts the controller sweep on the MONO baseline, so C1 differs from S1 in the controller
++# only; the committed ours_fx554_A_proportional_stereo061.yaml differs from S1 in four places
++# (camera.stereo, the SLAM calibration path, the right-eye remap, controller.type) and cannot run on
++# model a38a664c at all. hil_servo_node is built in the pinned worktree (install/hil_servo).
++# The forward law is the same line as IBVS (proportional_controller.cpp:29-30 against
++# ibvs_controller.cpp:94, k_fwd 3.0 in both gains files). The other three channels differ in form:
++# IBVS takes vy, vz and wz from one pseudo-inverse solve through a fixed camera-to-body map
++# (ibvs_law.cpp:40-43), while the proportional controller uses a lateral gain
++# (proportional_controller.cpp:33, k_lat 1.5), a deadbanded vertical gain that never climbs
++# (:35-38, k_vz 1.5, vert_deadband 0.08) and wz literally 0.0 (:41).
++# The SLAM calibration path is S1's, unchanged: hil_sim_ov2slam_accurate.yaml, the ACCURATE extractor
++# profile at fx = fy = 554 with debug: 0 (VERIFIED :33,34,74). S1's own note on it, kept for the
++# record: the detector sweep co-loaded camera_calib/hil_sim_ov2slam.yaml, the same profile at
++# fx = fy = 1200 with debug: 1 (VERIFIED :67,68,108), a mis-calibrated mono OV2SLAM, harmless there
++# because the pose is unused and wrong for a SLAM row.
++# use_slam_pose / use_slam_depth stay off: on a SLAM row the arm is measured, never flown on.
++# Shared Simulink model from 2026-10-04 (sha256 b8ec8250...): the camera renders at fx = fy = 554,
++# start (5.13, 4.30, 10, 2*pi-0.0460). cam_fx 554 is set explicitly (same as bench_fsm.yaml) so the
++# run record shows it. Same as ours_fx1200_A_ibvs.yaml in every other line.
++# Bags (mode: record) carry /sim/drone_pose, /sim/target_pose and /yolo/detections for the
++# in-loop scorer, plus /bench/state for the mission metrics.
++mode: record
++
++network:
++  matlab_host_ip: 192.168.56.1
++  interface:      eth0
++  dds:            fastrtps
++  ros_domain_id:  0
++
++camera:
++  stamp_log: /tmp/sim_cam_stamps.csv
++
++detector:
++  type:     yolo
++  cpu:      "0-3"         # yolo_bridge: taskset -c 0-3 = all four Pi 5 cores, the same allowed set as
++                          # unpinned and the same prefix the detector sweep used (node_cores 0-3)
++  host_cpu: "1"
++  yolo:
++    model:         yolo26n            # models/model_registry.json id (run_stack_hil.sh --model overrides)
++    backend:       npu
++    models_dir:    /home/ahmed/ROS2-PROJECT-SPRING2026/models
++    confidence:    0.20
++    telemetry_csv: /tmp/yolo_telemetry.csv
++
++controller:
++  type: proportional
++  cpu:  "0-3"             # all four cores, equivalent to unpinned (an empty value is rejected by ros2 launch)
++  cam_fx: 554.0
++  use_slam_depth: false
++  use_slam_pose:  false
++
++slam:
++  enabled:           true
++  type:              ov2slam
++  image:             ros2_perception_stack
++  container_name:    slam_ov2slam
++  cpu:               "2,3"
++  startup_delay_sec: 5
++  restart:           unless-stopped
++  command:           "ros2 run ov2slam ov2slam_node /workspace/camera_calib/hil_sim_ov2slam_accurate.yaml"
++  topics:
++    image_in: /ovcam/image_raw
++    pose_out: /slam/pose
++  remap:
++    - "/ovcam/image_raw:=/ovcam/image_raw"
++    - "vo_pose:=/slam/pose"
++    - "slam_tracking_state:=/slam/tracking_state"
++
++init_gate:
++  enabled: false
 diff --git a/config/hil/stack/ours_fx554_A_proportional_stereo061.yaml b/config/hil/stack/ours_fx554_A_proportional_stereo061.yaml
 new file mode 100644
 index 0000000000000000000000000000000000000000..b164b5dddd556bde26646d16c63bf40bd9ff93f0
