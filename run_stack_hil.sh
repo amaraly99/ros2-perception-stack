@@ -192,6 +192,10 @@ YAML
         # to `[[ -n  ]]`, a syntax error, because the two `"` around an EMPTY
         # expansion just vanish). Computing the conditional out here, in normal
         # (non-nested) shell context, avoids the problem entirely.
+        # Diagnostic switch (off by default): SLAM_UNBUFFERED=1 writes the sidecar's console line by line,
+        # so its log is complete even when the process is stopped (block buffering loses the tail).
+        SLAM_STDBUF=""
+        [[ "${SLAM_UNBUFFERED:-0}" == "1" ]] && SLAM_STDBUF="stdbuf -oL -eL"
         SLAM_SETUP_SOURCE_CMD=":"
         [[ -n "${SLAM_SETUP_OVERLAY:-}" ]] && SLAM_SETUP_SOURCE_CMD="source ${SLAM_SETUP_OVERLAY}"
         if [[ "$MODE" == "benchmark" ]]; then
@@ -233,7 +237,7 @@ YAML
                 export ${DDS_ENV_VAR}
                 ${SLAM_TIMING_ENV}
                 export LD_LIBRARY_PATH=${SLAM_CYCL_DIR}:${SLAM_LD_PREFIX:+${SLAM_LD_PREFIX}:}/workspace/opencv/build/lib:\${LD_LIBRARY_PATH:-}
-                exec ${SLAM_CPU:+taskset -c ${SLAM_CPU}} ${SLAM_COMMAND} --ros-args ${SLAM_REMAPS}${SLAM_LOG_REDIRECT}
+                exec ${SLAM_STDBUF} ${SLAM_CPU:+taskset -c ${SLAM_CPU}} ${SLAM_COMMAND} --ros-args ${SLAM_REMAPS}${SLAM_LOG_REDIRECT}
             " || die "SLAM sidecar failed to start (is image '${SLAM_IMAGE}' present? name clash on '${SLAM_CONTAINER}'?)"
         if [[ "$MODE" == "benchmark" ]]; then
             log "SLAM sidecar started — log: docker logs ${SLAM_CONTAINER}  (persisted: ${RUNREL}/slam_sidecar.log)"
@@ -296,7 +300,28 @@ start_bag_recording() {
     [[ "$RECORDING_ON" == "true" ]] || return 0
 
     BAG_TOPICS="/cmd_vel /sim/drone_pose /sim/target_pose /sim/heartbeat /bench/state /yolo/detections"
-    [[ "$SLAM_ENABLED" == "true" ]] && BAG_TOPICS+=" ${SLAM_POSE_OUT:-/slam/pose} /tf /tf_static"
+    [[ "$SLAM_ENABLED" == "true" ]] && BAG_TOPICS+=" ${SLAM_POSE_OUT:-/slam/pose} /slam/tracking_state /tf /tf_static"
+    # Diagnostic switch (off by default): extra topics, e.g. EXTRA_BAG_TOPICS=/ovcam/image_raw records what SLAM sees.
+    [[ -n "${EXTRA_BAG_TOPICS:-}" ]] && BAG_TOPICS+=" ${EXTRA_BAG_TOPICS}"
+
+    # Record gate (benchmarks/slam_hil_bench.sh): with RECORD_GATE set, wait for that
+    # file before recording, as benchmarks/controller_hil_bench.sh does. The runner
+    # opens it, waits until the recorder has subscribed, then sends 'resume'.
+    # Unset = today's behaviour, no wait.
+    if [[ -n "${RECORD_GATE:-}" ]]; then
+        local gate_timeout="${RECORD_GATE_TIMEOUT:-120}" gi
+        echo "[bench] Run dir: ${RUNREL}"
+        echo "[bench] waiting for record gate ${RECORD_GATE} (max ${gate_timeout}s)"
+        for ((gi = 0; gi < gate_timeout * 10; gi++)); do
+            [[ -e "$RECORD_GATE" ]] && break
+            sleep 0.1
+        done
+        if [[ ! -e "$RECORD_GATE" ]]; then
+            echo "[bench] ERROR: record gate not opened within ${gate_timeout}s"
+            exit 1
+        fi
+        echo "[bench] record gate open"
+    fi
 
     log "Recording (mode=${MODE}) → ${RUNREL}/bag"
     log "  topics: ${BAG_TOPICS}"
@@ -310,6 +335,9 @@ start_bag_recording() {
             --qos-profile-overrides-path /workspace/config/hil/bench_bag_qos.yaml \
             ${BAG_TOPICS} > /workspace/${RUNREL}/bag_record.log 2>&1
     "
+    if [[ -n "${RECORD_GATE:-}" ]]; then
+        echo "[bench] recording - runner mode: the runner sends 'resume' once the recorder is subscribed"
+    fi
 }
 
 # ── load_config: parse NESTED config/hil/stack/<name>.yaml via parse_stack.py ─

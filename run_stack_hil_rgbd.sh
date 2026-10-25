@@ -305,7 +305,28 @@ start_bag_recording() {
     [[ "$RECORDING_ON" == "true" ]] || return 0
 
     BAG_TOPICS="/cmd_vel /sim/drone_pose /sim/target_pose /sim/heartbeat /bench/state /yolo/detections"
-    [[ "$SLAM_ENABLED" == "true" ]] && BAG_TOPICS+=" ${SLAM_POSE_OUT:-/slam/pose} /tf /tf_static"
+    [[ "$SLAM_ENABLED" == "true" ]] && BAG_TOPICS+=" ${SLAM_POSE_OUT:-/slam/pose} /slam/tracking_state /tf /tf_static"
+    # Diagnostic switch (off by default): extra topics, e.g. EXTRA_BAG_TOPICS=/ovcam/image_raw records what SLAM sees.
+    [[ -n "${EXTRA_BAG_TOPICS:-}" ]] && BAG_TOPICS+=" ${EXTRA_BAG_TOPICS}"
+
+    # Record gate (benchmarks/slam_hil_bench.sh): with RECORD_GATE set, wait for that
+    # file before recording, as benchmarks/controller_hil_bench.sh does. The runner
+    # opens it, waits until the recorder has subscribed, then sends 'resume'.
+    # Unset = today's behaviour, no wait.
+    if [[ -n "${RECORD_GATE:-}" ]]; then
+        local gate_timeout="${RECORD_GATE_TIMEOUT:-120}" gi
+        echo "[bench] Run dir: ${RUNREL}"
+        echo "[bench] waiting for record gate ${RECORD_GATE} (max ${gate_timeout}s)"
+        for ((gi = 0; gi < gate_timeout * 10; gi++)); do
+            [[ -e "$RECORD_GATE" ]] && break
+            sleep 0.1
+        done
+        if [[ ! -e "$RECORD_GATE" ]]; then
+            echo "[bench] ERROR: record gate not opened within ${gate_timeout}s"
+            exit 1
+        fi
+        echo "[bench] record gate open"
+    fi
 
     log "Recording (mode=${MODE}) → ${RUNREL}/bag"
     log "  topics: ${BAG_TOPICS}"
@@ -319,6 +340,9 @@ start_bag_recording() {
             --qos-profile-overrides-path /workspace/config/hil/bench_bag_qos.yaml \
             ${BAG_TOPICS} > /workspace/${RUNREL}/bag_record.log 2>&1
     "
+    if [[ -n "${RECORD_GATE:-}" ]]; then
+        echo "[bench] recording - runner mode: the runner sends 'resume' once the recorder is subscribed"
+    fi
 }
 
 # ── load_config: parse NESTED config/hil/stack/<name>.yaml via parse_stack.py ─

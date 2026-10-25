@@ -268,6 +268,26 @@ def ground_truth_speed(ground_truth):
     return grid, speed
 
 
+# Coverage rule (2026-10-24): the SLAM poses must span at least this fraction of the mission
+# window (first forward motion .. arrival). Before, 10-20 poses were enough, so a SLAM that
+# stopped early or started late could pass on a short stretch (one run: 24 poses, 1.9 % of the path).
+MIN_COVERAGE = 0.90
+MAX_POSE_GAP_S = 0.5
+
+
+def mission_coverage(slam, mission_start, arrival):
+    """(coverage fraction, longest gap in s) of the SLAM poses over [mission_start, arrival]."""
+    mission_s = max(arrival - mission_start, 1e-6)
+    inside = slam[(slam[:, 0] >= mission_start) & (slam[:, 0] <= arrival), 0]
+    if not len(inside):
+        return 0.0, float(mission_s)
+    # Gaps between consecutive poses, window edges included. A gap longer than MAX_POSE_GAP_S
+    # is a dropout (normal gaps are 0.05-0.16 s); its excess counts as uncovered time.
+    gaps = np.diff(np.r_[mission_start, inside, arrival])
+    dropout = float(np.clip(gaps - MAX_POSE_GAP_S, 0.0, None).sum())
+    return max(0.0, 1.0 - dropout / mission_s), float(gaps.max())
+
+
 def mission_start_time(ground_truth, fallback_time):
     """Time the drone first translates toward the sign (forward > 0.15 m).
 
@@ -331,6 +351,12 @@ def evaluate(run_dir, end_pad, evo_ape_bin=None):
     # Window start: exclude the init leg (see module docstring).
     score_start = max(first_pose_time, mission_start_time(ground_truth, first_pose_time))
 
+    coverage, max_gap = mission_coverage(slam, mission_start_time(ground_truth, first_pose_time), arrival)
+    if coverage < MIN_COVERAGE:
+        return {'error': 'SLAM covers only %.0f %% of the mission window (need %.0f %%)'
+                         % (100 * coverage, 100 * MIN_COVERAGE),
+                'coverage_pct': 100 * coverage, 'mission_max_gap_s': max_gap}
+
     out = {}
     workdir = Path(tempfile.mkdtemp(prefix='evo_'))
     try:
@@ -367,6 +393,8 @@ def evaluate(run_dir, end_pad, evo_ape_bin=None):
             'ape_std': reported['std'],
             'umeyama_scale': reported['scale'],
             'window_s': float(reported_end - score_start),
+            'coverage_pct': 100 * coverage,
+            'mission_max_gap_s': max_gap,
         })
 
         # RPE deliberately NOT computed here yet. It is a relative-POSE metric,
