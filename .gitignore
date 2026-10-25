@@ -227,3 +227,9 @@ src/orbslam2/install_rgbd/
 src/orbslam3/build_rgbd/
 src/orbslam3/install_rgbd/
 *.bak_*
+
+############################################################
+# Aggregated paper tables (small CSVs, tracked on purpose)
+############################################################
+!paper_data/
+!paper_data/**/*.csv

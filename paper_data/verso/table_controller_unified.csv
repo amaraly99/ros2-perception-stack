@@ -1,0 +1,4 @@
+controller,report,valid_runs,settle_s_mean,settle_s_sd,ss_err_m_mean,ss_err_m_sd,iae_m_s_mean,iae_m_s_sd,path_eff_mean,path_eff_sd,rms_cmd_m_s_mean,rms_cmd_m_s_sd,cpu_pct_of_one_core_mean,cpu_pct_of_one_core_sd,mem_mb_mean,mem_mb_sd
+ViSP IBVS,ctrl_unified_ibvs_20261018_165347,10/10,17.579,0.138,0.215,0.004,154.852,1.423,0.983,0.000,0.379,0.001,1.547,0.013,39.971,0.013
+Homography-based VS (h_vs),ctrl_unified_h_vs_20261018_172621,10/10,17.716,0.159,0.045,0.002,136.789,1.536,0.989,0.000,0.357,0.002,1.545,0.008,35.289,0.017
+Custom proportional controller,ctrl_controller_unified_proportional_20261017_194012,10/10,17.545,0.172,0.206,0.009,156.106,3.408,0.993,0.001,0.371,0.003,1.541,0.020,30.233,0.012
