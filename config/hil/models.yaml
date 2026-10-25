@@ -1,0 +1,16 @@
+# config/hil/models.yaml — what each Simulink model must contain. Start values come from
+# bench_geometry.START; focal length 554 unless an entry says otherwise.
+# The Pi is the source of truth: before run 1 the runner compares MATLAB's `model_info`
+# with this table (benchmarks/hilbench/model_check.py). MATLAB model name = file stem.
+# Stereo files store the right camera commented out (off); set_stereo(1) turns it on at load, so the
+# live check sees "on". 2026-10-18: Amar set the unified start in the baseline files themselves.
+# Word values are quoted: unquoted off / on are read as booleans by YAML.
+models:
+  mono:   {file: matlab/hil_closed_loop_unified.slx,      right_cam: "off", depth_port: "off"}
+  rgbd:   {file: matlab/hil_closed_loop_baseline_RGBD.slx, right_cam: "off", depth_port: "on"}
+  stereo:
+    "0.11": {file: matlab/hil_closed_loop_baseline_011.slx, right_cam: "on", right_y: -0.11, depth_port: "off"}
+    "0.36": {file: matlab/hil_closed_loop_baseline_036.slx, right_cam: "on", right_y: -0.36, depth_port: "off"}
+    "0.42": {file: matlab/hil_closed_loop_baseline_042.slx, right_cam: "on", right_y: -0.42, depth_port: "off"}
+    "0.54": {file: matlab/hil_closed_loop_baseline_054.slx, right_cam: "on", right_y: -0.54, depth_port: "off"}
+    "0.61": {file: matlab/hil_closed_loop_baseline_061.slx, right_cam: "on", right_y: -0.61, depth_port: "off"}

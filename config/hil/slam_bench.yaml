@@ -1,0 +1,45 @@
+# slam_bench.yaml - settings of the SLAM benchmark (benchmarks/slam_runner.py).
+# Sections: session, matlab, network, pi (common, same keys as ctrl_bench.yaml) and slam.
+# A command-line option wins over this file. Quote every word value.
+session:
+  tag: ""                  # REQUIRED: you choose it, the runner never invents one (empty = refused)
+  runs: 10                 # runs per arm
+  cooldown_s: 10.0
+  pace_guard: "stop"       # stop | warn | off
+  pace_min_ratio: 0.85
+
+matlab:
+  host: "192.168.1.201"
+  port: 55556
+  windows_user: "homie"
+  wait_s: 180
+  hold_timeout_s: 45
+
+network:
+  dds: "fastrtps"          # must match MATLAB
+  ros_domain_id: 0
+  wifi_min_pct: 90
+  check_windows_wifi: true
+
+pi:                        # Option A: no pinning, no governor change, no buffers change
+  boot_timeout_s: 120
+  controller_cores: "none"
+  runner_cores: "none"
+  cpu_governor: "leave"
+  net_buffers: "leave"
+
+slam:
+  camera_mode: "mono"      # mono | stereo | rgbd - one per session, matches the loaded .slx
+  stereo_baseline_m: null  # stereo only: 0.11 | 0.36 | 0.42 | 0.54 | 0.61
+  arms: []                 # [] = every arm file in config/hil/slam_arms/ that supports camera_mode
+  vx: 2.0                  # probe forward speed, m/s (SIX_VX_OVERRIDE)
+  cycles: 1                # whole cycles (SIX_CYCLES_OVERRIDE)
+  wavelength_m: 13.0       # SIX_LAMBDA_OVERRIDE; 1 x 13 m = the cruise from x 18.1 (after the 3 m init) to the stop 32.1
+  yaw_amp_deg: 0           # YAW_AMP_OVERRIDE
+  camera_yaw_offset_deg: 80  # wider view (2026-10-18): camera = bearing to the sign + 80 deg (the textured lot); 0 = face the sign
+  init_axis: "path"        # path = 3 m init leg along +x (sideways for the turned camera) | lateral = old -y leg
+  left_image: "rgb"        # image type MATLAB sends: rgb | mono
+  right_image: "rgb"
+  min_poses: 20            # fewer non-zero /slam/pose = no map
+  probe_timeout_s: 400
+  end_pad: 3               # scoring window padding, samples

@@ -34,7 +34,7 @@ Camera.height: 480
 Camera.fps: 20.0
 
 # Stereo baseline times fx
-Camera.bf: 60.94
+Camera.bf: 337.94
 
 # Color order (ignored: input is mono8)
 Camera.RGB: 0

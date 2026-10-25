@@ -17,7 +17,7 @@ Camera.k3: 0.0
 Camera.width: 640
 Camera.height: 480
 
-Camera.fps: 30.0
+Camera.fps: 20.0
 
 # Synthetic images are BGR
 Camera.RGB: 0

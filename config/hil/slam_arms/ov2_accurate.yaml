@@ -1,0 +1,9 @@
+# SLAM arm ov2_accurate. One stack config per camera mode (config/hil/stack/<value>.yaml).
+# Schema: benchmarks/hilbench/CONTRACT.md section 4.
+name: ov2_accurate
+slam_type: ov2slam
+ready_signal: timing_csv          # timing_csv | handshake_ack
+init_patience_s: 60        # the value of the nopin campaign (config/hil/matrix/only_*_nopin.yaml)
+stack:
+  mono: unified_ov2slam_accurate_mono
+  stereo: unified_ov2slam_accurate_stereo

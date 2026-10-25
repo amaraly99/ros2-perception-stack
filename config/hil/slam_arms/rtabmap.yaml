@@ -1,0 +1,9 @@
+# SLAM arm rtabmap. One stack config per camera mode (config/hil/stack/<value>.yaml).
+# Schema: benchmarks/hilbench/CONTRACT.md section 4.
+name: rtabmap
+slam_type: rtabmap
+ready_signal: timing_csv          # timing_csv | handshake_ack
+init_patience_s: 60        # the value of the nopin campaign (config/hil/matrix/only_*_nopin.yaml)
+stack:
+  stereo: unified_rtabmap_stereo
+  rgbd: unified_rtabmap_rgbd

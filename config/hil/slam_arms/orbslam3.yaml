@@ -1,0 +1,10 @@
+# SLAM arm orbslam3. One stack config per camera mode (config/hil/stack/<value>.yaml).
+# Schema: benchmarks/hilbench/CONTRACT.md section 4.
+name: orbslam3
+slam_type: orbslam3
+ready_signal: handshake_ack          # timing_csv | handshake_ack
+init_patience_s: 60        # the value of the nopin campaign (config/hil/matrix/only_*_nopin.yaml)
+stack:
+  mono: unified_orbslam3_mono
+  stereo: unified_orbslam3_stereo
+  rgbd: unified_orbslam3_rgbd
