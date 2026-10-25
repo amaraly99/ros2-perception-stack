@@ -31,7 +31,7 @@ function set_stereo(on)
 %
 % See also CHECK_STEREO_GEOMETRY, LIVE_CAMERA_VIEW_STEREO_LT.
 
-    MODEL = 'hil_closed_loop';
+    MODEL = getenv('HIL_MODEL'); if isempty(MODEL), MODEL = 'hil_closed_loop'; end   % unified sessions set HIL_MODEL
 
     % The right-eye blocks added in Step 2 of the stereo walkthrough.
     % write_depth_right is optional (only present if you enabled the camera's

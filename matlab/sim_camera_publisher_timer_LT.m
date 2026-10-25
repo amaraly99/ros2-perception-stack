@@ -57,8 +57,9 @@ end
 % with no frames, or a camera rendering into nothing, with no error anywhere.
 % By the time this script runs the model is loaded, so this is the right place to
 % catch it, and it is a hard error rather than a silent mismatch.
+cam_model_name = getenv('HIL_MODEL'); if isempty(cam_model_name), cam_model_name = 'hil_closed_loop'; end   % unified sessions set HIL_MODEL
 try
-    model_stereo = strcmp(get_param('hil_closed_loop/Simulation 3D Camera Right', ...
+    model_stereo = strcmp(get_param([cam_model_name '/Simulation 3D Camera Right'], ...
                                     'Commented'), 'off');
 catch
     model_stereo = false;   % block absent => stereo was never added to the model

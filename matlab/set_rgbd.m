@@ -21,7 +21,7 @@ function set_rgbd(on)
 %
 % See also HIL_ROS_INIT_LT_RGBD, SIM_CAMERA_PUBLISHER_TIMER_LT_RGBD.
 
-    MODEL = 'hil_closed_loop_baseline_RGBD';
+    MODEL = getenv('HIL_MODEL'); if isempty(MODEL), MODEL = 'hil_closed_loop_baseline_RGBD'; end   % unified sessions set HIL_MODEL
     CAM   = [MODEL '/Simulation 3D Camera'];
     DEPTH = [MODEL '/write_depth_left'];
 

@@ -89,6 +89,21 @@
 %   "pub_start [hz]"-> (re)start the camera publisher, callback state reset; hz optional
 %                      (default: last rate used, else 20)                                   reply: ok | error <msg>
 %   "pub_stop"      -> stop + delete the camera publisher timer                             reply: ok | error <msg>
+%   "probe_init <vx> <cycles> <lambda_m> <yaw_amp_deg>"     (SLAM benchmark, additive)
+%   "probe_mission <vx> <cycles> <lambda_m> <yaw_amp_deg>"
+%   "probe_scan <step_deg> <settle_s> <speed_mps> <unused>"  (look-around scan, slam_look_around.m)
+%   "probe_straight <vmax_mps> <with_init> <standoff_m> <unused>"  (system-like approach, slam_straight_approach.m)
+%   probe_init / probe_mission / probe_turn also take 6 numbers: + <cam_yaw_offset_deg> <init_along_path 0|1>
+%   (wider view, slam_traj_probe_wide.m). "probe_turn ..." hovers and turns the camera only.
+%                   -> ask the waiting loop of hil_session_start_slam(...) to fly the
+%                      trajectory probe (phase 'init' or 'mission'). Sets base variables
+%                      hilprobe_req and hilprobe_args, replies at once, never flies here.
+%                                                                       reply: ok | error busy | error no_loop | error bad_args
+%   "probe_status"  -> "probe_status state=idle|running|done invalid=0|1 maxtime_hit=<n>
+%                       dist_to_target_m=<m|nan> end_x=<m> end_y=<m> end_z=<m>"
+%   "model_info"    -> "model_info model=<name> x_ic=.. y_ic=.. z_ic=.. yaw_ic=.. fx_left=..
+%                       fx_right=..|none right_cam=on|off|absent right_y=..|none
+%                       depth_port=on|off left_image=rgb|mono right_image=rgb|mono"
 %   anything else   -> reply: error
 % A refused connection => supervisor not running => the Pi prompts the operator.
 
@@ -296,7 +311,27 @@ function supervisor_poll(serverSock, model)
                     assignin('base', 'hil_supervisor_state', 'stopped');
                     writer.println('ok');
                 otherwise
-                    if strncmp(cmd, 'pub_start', 9)
+                    if strncmp(cmd, 'probe_init', 10) || strncmp(cmd, 'probe_mission', 13) || strncmp(cmd, 'probe_scan', 10) || strncmp(cmd, 'probe_straight', 14) || strncmp(cmd, 'probe_turn', 10)
+                        % SLAM benchmark: only sets flags. The waiting loop of
+                        % hil_session_start_slam(...) flies the probe on the main thread.
+                        try
+                            writer.println(probe_request(cmd));
+                        catch pe
+                            writer.println(['error ' pe.message]);
+                        end
+                    elseif strcmp(cmd, 'probe_status')
+                        try
+                            writer.println(probe_status_line());
+                        catch pe
+                            writer.println(['error ' pe.message]);
+                        end
+                    elseif strcmp(cmd, 'model_info')
+                        try
+                            writer.println(model_info_line(model));
+                        catch pe
+                            writer.println(['error ' pe.message]);
+                        end
+                    elseif strncmp(cmd, 'pub_start', 9)
                         % "pub_start" or "pub_start <hz>"
                         try
                             hz = str2double(strtrim(cmd(10:end)));
@@ -306,7 +341,23 @@ function supervisor_poll(serverSock, model)
                                     hz = evalin('base', 'sim_cam_pub_hz');
                                 end
                             end
-                            hil_pub_control('start', hz);
+                            if evalin('base', "exist('RGBD_ON','var') && ~isempty(RGBD_ON) && RGBD_ON")
+                                % RGB-D session: hil_pub_control would replace the colour+depth
+                                % timer with a colour-only one. Re-create the RGB-D timer instead.
+                                % It has the same name, so 'pub_stop' and 'status' still work.
+                                hil_pub_control('stop');
+                                setenv('RGBD_PUBLISH_HZ', sprintf('%g', hz));
+                                assignin('base', 'sim_cam_pub_hz', hz);
+                                evalin('base', 'sim_camera_publisher_timer_LT_rgbd');
+                            elseif evalin('base', "exist('STEREO_ON','var') && ~isempty(STEREO_ON) && STEREO_ON")
+                                % Stereo session: hil_pub_control publishes the left eye only, so it
+                                % would silently drop the right eye. Re-create the stereo timer instead
+                                % (sim_camera_publisher_timer_LT, 20 Hz, same name: pub_stop/status work).
+                                hil_pub_control('stop');
+                                evalin('base', 'sim_camera_publisher_timer_LT');
+                            else
+                                hil_pub_control('start', hz);
+                            end
                             writer.println('ok');
                         catch pe
                             writer.println(['error ' pe.message]);
@@ -355,6 +406,107 @@ function line = status_line(model)
                        simst, t, st, pub, p.ntimers, p.hz, p.fresh, p.repeat, p.drop, pose);
     catch
         line = sprintf('status sim=%s t=%.2f state=%s pub=? timers=? hz=? fresh=? repeat=? drop=?%s', simst, t, st, pose);
+    end
+end
+
+function reply = probe_request(cmd)
+    % "probe_init|probe_mission <vx> <cycles> <lambda_m> <yaw_amp_deg>". Sets flags, never flies.
+    % hilprobe_loop is true while the waiting loop of hil_session_start_slam(...) runs.
+    parts = strsplit(strtrim(cmd));
+    what = parts{1}(7:end);                    % 'init' or 'mission'
+    vals = str2double(parts(2:end));
+    loop_on = false;
+    try, loop_on = logical(evalin('base', 'hilprobe_loop')); catch, end
+    if ~loop_on
+        reply = 'error no_loop';
+        return;
+    end
+    if ~(numel(vals) == 4 || numel(vals) == 6 || numel(vals) == 7) || any(isnan(vals))   % 6 = + <cam_yaw_offset_deg> <init_along_path 0|1>; 7 = + <yaw_ramp 0|1>
+        % The loop is up. The Pi sends a bare "probe_init" to test exactly this (answer: bad_args).
+        reply = 'error bad_args';
+        return;
+    end
+    if strcmp(base_text('hilprobe_state', 'idle'), 'running')
+        reply = 'error busy';
+        return;
+    end
+    try, evalin('base', 'clear init_result'); catch, end   % no result of an older probe
+    assignin('base', 'hilprobe_args', vals(:).');
+    assignin('base', 'hilprobe_state', 'running');         % running from now on: no gap for a status poll
+    assignin('base', 'hilprobe_req', what);
+    fprintf('[supervisor] probe %s requested: %s\n', what, num2str(vals));
+    reply = 'ok';
+end
+
+function line = probe_status_line()
+    % One line: state of the probe and the last result (init_result of the probe script).
+    st = base_text('hilprobe_state', 'idle');
+    inv = 0; mt = 0; dist = 'nan'; ex = 'nan'; ey = 'nan'; ez = 'nan';
+    try
+        if evalin('base', "exist('init_result','var')")
+            ir = evalin('base', 'init_result');
+            inv = double(logical(ir.invalid));
+            mt = double(ir.maxtime_hit);
+            if isfinite(ir.dist_to_target_m), dist = sprintf('%.3f', ir.dist_to_target_m); end
+            ex = sprintf('%.2f', ir.end_pos(1)); ey = sprintf('%.2f', ir.end_pos(2)); ez = sprintf('%.2f', ir.end_pos(3));
+        end
+    catch
+    end
+    line = sprintf('probe_status state=%s invalid=%d maxtime_hit=%d dist_to_target_m=%s end_x=%s end_y=%s end_z=%s', ...
+                   st, inv, mt, dist, ex, ey, ez);
+end
+
+function line = model_info_line(model)
+    % What the loaded model really contains, for the Pi's model check. Reads only.
+    ic = {'x_integrator', 'y_integrator', 'z_integrator', 'yaw_integrator'};
+    v = nan(1, 4);
+    for i = 1:4
+        try
+            s = get_param([model '/' ic{i}], 'InitialCondition');
+            v(i) = double(evalin('base', s));
+        catch
+        end
+    end
+    cam_l = [model '/Simulation 3D Camera'];
+    cam_r = [model '/Simulation 3D Camera Right'];
+    fx_left = 'none'; fx_right = 'none'; right_cam = 'absent'; right_y = 'none'; depth_port = 'off';
+    try, fx_left = sprintf('%.9g', first_num(get_param(cam_l, 'FocalLength'))); catch, end
+    try, depth_port = get_param(cam_l, 'DepthOutportEnabled'); catch, end
+    try
+        right_cam = get_param(cam_r, 'Commented');           % 'on' = commented out = camera off
+        if strcmp(right_cam, 'on'), right_cam = 'off'; else, right_cam = 'on'; end
+        fx_right = sprintf('%.9g', first_num(get_param(cam_r, 'FocalLength')));
+        mo = str2num(get_param(cam_r, 'tmountOffset')); %#ok<ST2NM>
+        right_y = sprintf('%.9g', mo(2));
+    catch
+    end
+    left_image = lower(strtrim(getenv('CAM_LEFT_IMAGE')));
+    right_image = lower(strtrim(getenv('CAM_RIGHT_IMAGE')));
+    if isempty(left_image), left_image = 'rgb'; end
+    if isempty(right_image), right_image = 'rgb'; end
+    try   % the RGB-D publisher chooses its colour type with its own variable
+        if evalin('base', "exist('RGBD_ON','var') && ~isempty(RGBD_ON) && RGBD_ON") && strcmp(getenv('RGBD_COLOUR_MONO'), '1')
+            left_image = 'mono';
+        end
+    catch
+    end
+    line = sprintf(['model_info model=%s x_ic=%.9g y_ic=%.9g z_ic=%.9g yaw_ic=%.9g fx_left=%s fx_right=%s ' ...
+                    'right_cam=%s right_y=%s depth_port=%s left_image=%s right_image=%s'], ...
+                   model, v(1), v(2), v(3), v(4), fx_left, fx_right, right_cam, right_y, depth_port, left_image, right_image);
+end
+
+function x = first_num(s)
+    a = str2num(s); %#ok<ST2NM>
+    x = a(1);
+end
+
+function s = base_text(name, default)
+    s = default;
+    try
+        if evalin('base', sprintf("exist('%s','var')", name))
+            s = evalin('base', name);
+        end
+    catch
     end
 end
 
