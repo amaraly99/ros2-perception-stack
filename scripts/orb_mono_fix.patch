@@ -1,0 +1,48 @@
+diff -ruN a/src/orbslam2/src/Initializer.cc b/src/orbslam2/src/Initializer.cc
+--- a/src/orbslam2/src/Initializer.cc	2026-10-25 20:34:12.220329823 +0400
++++ b/src/orbslam2/src/Initializer.cc	2026-10-25 20:34:12.248329753 +0400
+@@ -119,7 +119,7 @@
+     float RH = SH/(SH+SF);
+ 
+     // Try to reconstruct from homography or fundamental depending on the ratio (0.40-0.45)
+-    if(RH>0.40)
++    if(RH>0.50)
+         return ReconstructH(vbMatchesInliersH,H,mK,R21,t21,vP3D,vbTriangulated,1.0,50);
+     else //if(pF_HF>0.6)
+         return ReconstructF(vbMatchesInliersF,F,mK,R21,t21,vP3D,vbTriangulated,1.0,50);
+diff -ruN a/src/orbslam2/src/LocalMapping.cc b/src/orbslam2/src/LocalMapping.cc
+--- a/src/orbslam2/src/LocalMapping.cc	2026-10-25 20:34:12.236329783 +0400
++++ b/src/orbslam2/src/LocalMapping.cc	2026-10-25 20:34:12.252329743 +0400
+@@ -342,7 +342,7 @@
+             cosParallaxStereo = min(cosParallaxStereo1,cosParallaxStereo2);
+ 
+             cv::Mat x3D;
+-            if(cosParallaxRays<cosParallaxStereo && cosParallaxRays>0 && (bStereo1 || bStereo2 || cosParallaxRays<0.9998))
++            if(cosParallaxRays<cosParallaxStereo && cosParallaxRays>0 && (bStereo1 || bStereo2 || cosParallaxRays<0.9987))
+             {
+                 // Linear Triangulation Method
+                 cv::Mat A(4,4,CV_32F);
+diff -ruN a/src/orbslam2/src/Tracking.cc b/src/orbslam2/src/Tracking.cc
+--- a/src/orbslam2/src/Tracking.cc	2026-10-25 20:34:12.228329803 +0400
++++ b/src/orbslam2/src/Tracking.cc	2026-10-25 20:34:12.248329753 +0400
+@@ -699,7 +699,7 @@
+     float medianDepth = pKFini->ComputeSceneMedianDepth(2);
+     float invMedianDepth = 1.0f/medianDepth;
+ 
+-    if(medianDepth<0 || pKFcur->TrackedMapPoints(1)<100)
++    if(medianDepth<0 || pKFcur->TrackedMapPoints(1)<50)
+     {
+         cout << "Wrong initialization, reseting..." << endl;
+         Reset();
+diff -ruN a/src/orbslam3/orb_slam3/src/LocalMapping.cc b/src/orbslam3/orb_slam3/src/LocalMapping.cc
+--- a/src/orbslam3/orb_slam3/src/LocalMapping.cc	2026-10-25 20:34:12.244329763 +0400
++++ b/src/orbslam3/orb_slam3/src/LocalMapping.cc	2026-10-25 20:34:12.252329743 +0400
+@@ -582,7 +582,7 @@
+             bool goodProj = false;
+             bool bPointStereo = false;
+             if(cosParallaxRays<cosParallaxStereo && cosParallaxRays>0 && (bStereo1 || bStereo2 ||
+-                                                                          (cosParallaxRays<0.9996 && mbInertial) || (cosParallaxRays<0.9998 && !mbInertial)))
++                                                                          (cosParallaxRays<0.9996 && mbInertial) || (cosParallaxRays<0.9987 && !mbInertial)))
+             {
+                 goodProj = GeometricTools::Triangulate(xn1, xn2, eigTcw1, eigTcw2, x3D);
+                 if(!goodProj)
