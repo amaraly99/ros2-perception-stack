@@ -1,0 +1,595 @@
+<?xml version="1.0" encoding="utf-8"?>
+<System>
+  <P Name="Location">[0, -8, 1920, 1032]</P>
+  <P Name="ReportName">simulink-default.rpt</P>
+  <P Name="SIDHighWatermark">46</P>
+  <Block BlockType="Clock" Name="Clock" SID="30">
+    <P Name="Position">[-140, -60, -120, -40]</P>
+    <P Name="ZOrder">100000</P>
+  </Block>
+  <Block BlockType="Demux" Name="Demux" SID="19">
+    <PortCounts in="1" out="5"/>
+    <P Name="Position">[95, 185, 135, 335]</P>
+    <P Name="ZOrder">100000</P>
+    <P Name="Outputs">5</P>
+  </Block>
+  <Block BlockType="SubSystem" Name="MATLAB Function1" SID="13">
+    <PortCounts in="1"/>
+    <P Name="Position">[925, 215, 995, 265]</P>
+    <P Name="ZOrder">100000</P>
+    <P Name="LibrarySourceProduct" Ref="bdmxdata:LibrarySourceProduct_13"/>
+    <P Name="ErrorFcn">Stateflow.Translate.translate</P>
+    <P Name="PermitHierarchicalResolution">ExplicitOnly</P>
+    <P Name="TreatAsAtomicUnit">on</P>
+    <P Name="SFBlockType">MATLAB Function</P>
+    <P Name="ContentPreviewEnabled">on</P>
+    <System Ref="system_13"/>
+  </Block>
+  <Block BlockType="Saturate" Name="Saturation" SID="28">
+    <P Name="Position">[470, 130, 500, 160]</P>
+    <P Name="ZOrder">100000</P>
+    <P Name="UpperLimit">80</P>
+    <P Name="LowerLimit">0</P>
+  </Block>
+  <Block BlockType="Scope" Name="Scope" SID="32">
+    <PortCounts in="5"/>
+    <P Name="Position">[280, -86, 335, 16]</P>
+    <P Name="ZOrder">100000</P>
+    <P Name="GraphicalSettings">{&quot;Style&quot;:{&quot;BackgroundColor&quot;:[0.12941176470588237,0.12941176470588237,0.12941176470588237],&quot;AxesColor&quot;:[0.07058823529411765,0.07058823529411765,0.07058823529411765],&quot;LabelsColor&quot;:[0.8509803921568627,0.8509803921568627,0.8509803921568627],&quot;PreserveColors&quot;:false,&quot;Visible&quot;:[true,true,true,true,true,true,true],&quot;LineStyle&quot;:[&quot;-&quot;,&quot;-&quot;,&quot;-&quot;,&quot;-&quot;,&quot;-&quot;,&quot;-&quot;,&quot;-&quot;],&quot;LineWidth&quot;:[1.5,1.5,1.5,1.5,1.5,1.5,1.5],&quot;BarWidth&quot;:[0.9,0.9,0.9,0.9,0.9,0.9,0.9],&quot;LineColor&quot;:[[1,0.9098039215686274,0.39215686274509803],[0.14901960784313725,0.5490196078431373,0.8666666666666667],[0.9607843137254902,0.4666666666666667,0.1607843137254902],[0.28627450980392155,0.8588235294117647,0.25098039215686274],[0.7529411764705882,0.3607843137254902,0.984313725490196],[0.4235294117647059,0.9568627450980393,1],[0.9490196078431372,0.403921568627451,0.7725490196078432]],&quot;LineFaceAlpha&quot;:[1,1,1,1,1,1,1],&quot;LineEdgeAlpha&quot;:[1,1,1,1,1,1,1],&quot;Marker&quot;:[&quot;none&quot;,&quot;none&quot;,&quot;none&quot;,&quot;none&quot;,&quot;none&quot;,&quot;none&quot;,&quot;none&quot;],&quot;FontSize&quot;:8.5,&quot;ChannelNames&quot;:&quot;&quot;,&quot;DefaultLegendLabel&quot;:[&quot;Demux/1&quot;,&quot;Demux/2&quot;,&quot;Demux/3&quot;,&quot;Demux/4&quot;,&quot;Demux/5&quot;],&quot;PlotType&quot;:&quot;Auto&quot;,&quot;NumLinesForDisplays&quot;:[-5],&quot;OffsetView&quot;:true,&quot;LineLabels&quot;:[&quot;Demux/1&quot;,&quot;Demux/2&quot;,&quot;Demux/3&quot;,&quot;Demux/4&quot;,&quot;Demux/5&quot;,&quot;Channel 6&quot;,&quot;Channel 7&quot;],&quot;MinimizeControls&quot;:false,&quot;LineCache&quot;:null,&quot;SerializedNumLines&quot;:[5]},&quot;MeasurementChannel&quot;:0,&quot;AxesScalingProperties&quot;:{&quot;AxesScaling&quot;:&quot;Manual&quot;,&quot;ExpandOnly&quot;:true,&quot;AxesScalingNumUpdates&quot;:10,&quot;ScaleAxesLimitsAtStop&quot;:false,&quot;YAxisDataRange&quot;:80,&quot;AlignYAxis&quot;:&quot;Center&quot;,&quot;AutoScaleXAxisLimits&quot;:false,&quot;XAxisDataRange&quot;:100,&quot;AlignXAxis&quot;:&quot;Center&quot;},&quot;DisplayProperties&quot;:{&quot;DisplayLayoutDimensions&quot;:[1,1],&quot;DisplayPropertyDefaults&quot;:{&quot;MaxYLimMag&quot;:1,&quot;MaxYLimReal&quot;:6.575835089247221,&quot;MinYLimMag&quot;:0,&quot;MinYLimReal&quot;:-9.1502660334993,&quot;PlotAsMagnitudePhase&quot;:false,&quot;ShowGrid&quot;:true,&quot;ShowLegend&quot;:true,&quot;Title&quot;:&quot;%&lt;SignalLabel&gt;&quot;,&quot;YLabel&quot;:&quot;&quot;},&quot;DisplayContentCache&quot;:{&quot;Title&quot;:&quot;&quot;,&quot;LinePropertiesCache&quot;:{},&quot;UserDefinedChannelNames&quot;:{},&quot;PlotMagPhase&quot;:0},&quot;SerializedDisplays&quot;:[{&quot;Title&quot;:&quot;%&lt;SignalLabel&gt;&quot;,&quot;LinePropertiesCache&quot;:{},&quot;UserDefinedChannelNames&quot;:{},&quot;PlotMagPhase&quot;:0,&quot;MaxYLimMag&quot;:1,&quot;MaxYLimReal&quot;:6.575835089247221,&quot;MinYLimMag&quot;:0,&quot;MinYLimReal&quot;:-9.1502660334993,&quot;PlotAsMagnitudePhase&quot;:false,&quot;ShowGrid&quot;:true,&quot;ShowLegend&quot;:true,&quot;YLabel&quot;:&quot;&quot;,&quot;NumLines&quot;:-5,&quot;ShowContent&quot;:1,&quot;Placement&quot;:0}],&quot;ColorOrder&quot;:[&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;]}}</P>
+    <P Name="WindowPosition">[131.000000,139.000000,698.000000,599.000000,]</P>
+    <P Name="ScopeFrameLocation">window</P>
+    <P Name="WasSavedAsWebScope">on</P>
+    <P Name="Floating">off</P>
+    <P Name="MultipleDisplayCache">[{&quot;MaxYLimMag&quot;:1,&quot;MaxYLimReal&quot;:6.5758350892472208,&quot;MinYLimMag&quot;:0,&quot;MinYLimReal&quot;:-9.1502660334993,&quot;PlotAsMagnitudePhase&quot;:false,&quot;ShowGrid&quot;:true,&quot;ShowLegend&quot;:true,&quot;Title&quot;:&quot;%&lt;SignalLabel&gt;&quot;,&quot;YLabel&quot;:&quot;&quot;}]</P>
+    <P Name="NumInputPorts">5</P>
+    <P Name="LayoutDimensionsString">[1,1]</P>
+    <P Name="ShowLegend">on</P>
+    <P Name="ActiveDisplayYMinimum">-9.1502660334993</P>
+    <P Name="ActiveDisplayYMaximum">6.5758350892472208</P>
+  </Block>
+  <Block BlockType="Reference" Name="Simulation 3D Camera" SID="2">
+    <PortCounts out="1"/>
+    <P Name="Position">[665, 190, 870, 290]</P>
+    <P Name="ZOrder">100000</P>
+    <P Name="HideAutomaticName">off</P>
+    <P Name="Priority">1</P>
+    <P Name="LibrarySourceBlock">uavsim3dlib/Simulation 3D Camera</P>
+    <P Name="LibraryVersion">12.10</P>
+    <P Name="SourceBlock">sim3dcameralib/Simulation 3D Camera</P>
+    <P Name="SourceType">Simulation 3D Camera</P>
+    <InstanceData>
+      <P Name="RTWMemSecFuncInitTerm">Inherit from model</P>
+      <P Name="RTWMemSecFuncExecute">Inherit from model</P>
+      <P Name="RTWMemSecDataConstants">Inherit from model</P>
+      <P Name="RTWMemSecDataInternal">Inherit from model</P>
+      <P Name="RTWMemSecDataParameters">Inherit from model</P>
+      <P Name="ContentPreviewEnabled">on</P>
+      <P Name="sensorTag">Sim3dSensor�</P>
+      <P Name="sensorId">1</P>
+      <P Name="sensorName">Sim3dSensor�</P>
+      <P Name="vehTagList">{&apos;Custom ...&apos;;&apos;Quadrotor1&apos;;&apos;Scene Origin&apos;}</P>
+      <P Name="vehTag">Quadrotor1</P>
+      <P Name="CoordinateSystem">ISO8855</P>
+      <P Name="mountLoc">Origin</P>
+      <P Name="offsetFlag">on</P>
+      <P Name="tmountOffset">[0.2, 0, 0.2]</P>
+      <P Name="extTmount">off</P>
+      <P Name="rmountOffset">[0, 5, 0]</P>
+      <P Name="extRmount">off</P>
+      <P Name="FocalLength">[554, 554]</P>
+      <P Name="OpticalCenter">[320, 240]</P>
+      <P Name="ImageSize">[480, 640]</P>
+      <P Name="RadialDistortion">[0, 0]</P>
+      <P Name="TangentialDistortion">[0, 0]</P>
+      <P Name="SensorSkew">0</P>
+      <P Name="VisualizeFieldOfView">off</P>
+      <P Name="FieldOfViewRange">61</P>
+      <P Name="DepthOutportEnabled">off</P>
+      <P Name="SemanticOutportEnabled">off</P>
+      <P Name="TransformOutportEnabled">off</P>
+      <P Name="SampleTime">-1</P>
+      <P Name="mountPoint">[0.2 0 0.2]</P>
+      <P Name="mountOrientation">[0 5 0]</P>
+      <P Name="aMode">4</P>
+      <P Name="ID">1</P>
+    </InstanceData>
+  </Block>
+  <Block BlockType="Reference" Name="Simulation 3D Camera Right" SID="44">
+    <PortCounts out="2"/>
+    <P Name="Position">[665, 340, 870, 440]</P>
+    <P Name="ZOrder">100000</P>
+    <P Name="HideAutomaticName">off</P>
+    <P Name="Priority">1</P>
+    <P Name="Commented">on</P>
+    <P Name="LibrarySourceBlock">uavsim3dlib/Simulation 3D Camera</P>
+    <P Name="LibraryVersion">12.10</P>
+    <P Name="SourceBlock">sim3dcameralib/Simulation 3D Camera</P>
+    <P Name="SourceType">Simulation 3D Camera</P>
+    <InstanceData>
+      <P Name="RTWMemSecFuncInitTerm">Inherit from model</P>
+      <P Name="RTWMemSecFuncExecute">Inherit from model</P>
+      <P Name="RTWMemSecDataConstants">Inherit from model</P>
+      <P Name="RTWMemSecDataInternal">Inherit from model</P>
+      <P Name="RTWMemSecDataParameters">Inherit from model</P>
+      <P Name="ContentPreviewEnabled">on</P>
+      <P Name="sensorTag">Sim3dSensor�</P>
+      <P Name="sensorId">2</P>
+      <P Name="sensorName">Sim3dSensor�</P>
+      <P Name="vehTagList">{&apos;Custom ...&apos;;&apos;Quadrotor1&apos;;&apos;Scene Origin&apos;}</P>
+      <P Name="vehTag">Quadrotor1</P>
+      <P Name="CoordinateSystem">ISO8855</P>
+      <P Name="mountLoc">Origin</P>
+      <P Name="offsetFlag">on</P>
+      <P Name="tmountOffset">[0.2, -0.11, 0.2]</P>
+      <P Name="extTmount">off</P>
+      <P Name="rmountOffset">[0, 5, 0]</P>
+      <P Name="extRmount">off</P>
+      <P Name="FocalLength">[554, 554]</P>
+      <P Name="OpticalCenter">[320, 240]</P>
+      <P Name="ImageSize">[480, 640]</P>
+      <P Name="RadialDistortion">[0, 0]</P>
+      <P Name="TangentialDistortion">[0, 0]</P>
+      <P Name="SensorSkew">0</P>
+      <P Name="VisualizeFieldOfView">off</P>
+      <P Name="FieldOfViewRange">61</P>
+      <P Name="DepthOutportEnabled">on</P>
+      <P Name="SemanticOutportEnabled">off</P>
+      <P Name="TransformOutportEnabled">off</P>
+      <P Name="SampleTime">-1</P>
+      <P Name="mountPoint">[0.2 -0.11 0.2]</P>
+      <P Name="mountOrientation">[0 5 0]</P>
+      <P Name="aMode">4</P>
+      <P Name="ID">2</P>
+    </InstanceData>
+  </Block>
+  <Block BlockType="Reference" Name="Simulation 3D Scene Configuration" SID="1">
+    <PortCounts/>
+    <P Name="Position">[642, -103, 847, -3]</P>
+    <P Name="ZOrder">100000</P>
+    <P Name="HideAutomaticName">off</P>
+    <P Name="Priority">0</P>
+    <P Name="LibrarySourceBlock">uavsim3dlib/Simulation 3D Scene Configuration</P>
+    <P Name="LibraryVersion">12.26</P>
+    <P Name="SourceBlock">sim3dlib/Simulation 3D Scene Configuration</P>
+    <P Name="SourceType">Simulation 3D Scene Configuration</P>
+    <InstanceData>
+      <P Name="RTWMemSecFuncInitTerm">Inherit from model</P>
+      <P Name="RTWMemSecFuncExecute">Inherit from model</P>
+      <P Name="RTWMemSecDataConstants">Inherit from model</P>
+      <P Name="RTWMemSecDataInternal">Inherit from model</P>
+      <P Name="RTWMemSecDataParameters">Inherit from model</P>
+      <P Name="ContentPreviewEnabled">on</P>
+      <P Name="ProjectFormat">Default Scenes</P>
+      <P Name="SceneDesc">Large parking lot</P>
+      <P Name="ProjectName">C:\Program Files\MATLAB\R2026a\toolbox\shared\sim3d_projects\automotive_project_windows\UE\WindowsNoEditor\VehicleSimulation.exe</P>
+      <P Name="ScenePath">/Game/Maps/USCityBlock</P>
+      <P Name="EnableOpenDRIVE">off</P>
+      <P Name="vehTagList">{&apos;Custom&apos;;&apos;Quadrotor1&apos;;&apos;Scene Origin&apos;}</P>
+      <P Name="vehTag">Quadrotor1</P>
+      <P Name="AttachedCameraRelativeTranslation">[0 0 0]</P>
+      <P Name="FreeCameraDefaultInitialTranslation">[-6, 0, 2]</P>
+      <P Name="AttachedCameraRelativeRotation">[0 0 0]</P>
+      <P Name="FreeCameraDefaultInitialRotation">[0, -15, 0]</P>
+      <P Name="ViewpointName">Custom</P>
+      <P Name="FreeCameraInitialTranslation">[0, 0, 0]</P>
+      <P Name="FreeCameraInitialRotation">[0, 0, 0]</P>
+      <P Name="OpVisEn">off</P>
+      <P Name="Ts">1/20</P>
+      <P Name="EnableWindow">on</P>
+      <P Name="EnableRemoteAccess">off</P>
+      <P Name="SimulationMode">CoSimulation</P>
+      <P Name="SimulateUsing">Interpreted execution</P>
+      <P Name="EnableAnimationRecording">off</P>
+      <P Name="OverrideDefaultRecording">off</P>
+      <P Name="AnimationRecordingFileName">sim3dAnimation.mat</P>
+      <P Name="AnimationRecordingInterval">[0 inf]</P>
+      <P Name="EnableWeather">off</P>
+      <P Name="SunAzimuth">90</P>
+      <P Name="SunAltitude">40.0</P>
+      <P Name="EnableGeospatialSun">off</P>
+      <P Name="Latitude">0</P>
+      <P Name="Longitude">0</P>
+      <P Name="Date">2023-01-01</P>
+      <P Name="Time">10:30:00</P>
+      <P Name="GeoTimeZone">-5.0</P>
+      <P Name="SunDaylightSaving">off</P>
+      <P Name="wind">1</P>
+      <P Name="clouds">10</P>
+      <P Name="EnableVolumetricClouds">off</P>
+      <P Name="CloudCoverage">0</P>
+      <P Name="CloudAltitude">6</P>
+      <P Name="fog">0</P>
+      <P Name="rain">0</P>
+      <P Name="RaindropsEffect">off</P>
+      <P Name="SnowDensity">0</P>
+      <P Name="EnableGeospatial">off</P>
+      <P Name="TilesetSource">Earth terrain</P>
+      <P Name="UseTrueOrigin">off</P>
+      <P Name="OriginHeight">200</P>
+      <P Name="OriginLatitude">40.744652</P>
+      <P Name="OriginLongitude">-73.988864</P>
+      <P Name="MapStyle">Aerial</P>
+      <P Name="AdditionalAssetIDs">[]</P>
+      <P Name="UseAdvancedSunSky">off</P>
+      <P Name="SolarTime">11</P>
+      <P Name="TimeZone">-5</P>
+      <P Name="Day">21</P>
+      <P Name="Month">9</P>
+      <P Name="Year">2022</P>
+      <P Name="UseDaylightSavingTime">on</P>
+      <P Name="DSTStartDay">10</P>
+      <P Name="DSTStartMonth">3</P>
+      <P Name="DSTEndDay">3</P>
+      <P Name="DSTEndMonth">11</P>
+      <P Name="DSTSwitchHour">2</P>
+      <P Name="sensorTag">MainCamera1</P>
+      <P Name="sensorId">1</P>
+      <P Name="sensorName">MainCamera1</P>
+      <P Name="mountLoc">Origin</P>
+      <P Name="offsetFlag">off</P>
+      <P Name="tmountOffset">[0, 0, 0]</P>
+      <P Name="rmountOffset">[0, 0, 0]</P>
+      <P Name="HorizontalResolution">1280</P>
+      <P Name="VerticalResolution">720</P>
+      <P Name="HorizontalFOV">60</P>
+      <P Name="mountPoint">[0 0 0]</P>
+      <P Name="mountOrientation">[0 0 0]</P>
+      <P Name="aMode">4</P>
+      <P Name="ID">1</P>
+      <P Name="GeoTrigger">Inactive</P>
+      <P Name="ViewNameList">{&apos;Custom&apos;}</P>
+      <P Name="ViewTranslationList">{&apos;[0 0 0]&apos;}</P>
+      <P Name="ViewRotationList">{&apos;[0 0 0]&apos;}</P>
+    </InstanceData>
+  </Block>
+  <Block BlockType="Reference" Name="Simulation 3D UAV Vehicle" SID="3">
+    <PortCounts in="2"/>
+    <P Name="Position">[665, 46, 870, 144]</P>
+    <P Name="ZOrder">100000</P>
+    <P Name="Priority">-1</P>
+    <P Name="LibraryVersion">12.0</P>
+    <P Name="SourceBlock">uavsim3dlib/Simulation 3D UAV Vehicle</P>
+    <P Name="SourceType">Simulation 3D UAV Vehicle</P>
+    <InstanceData>
+      <P Name="RTWMemSecFuncInitTerm">Inherit from model</P>
+      <P Name="RTWMemSecFuncExecute">Inherit from model</P>
+      <P Name="RTWMemSecDataConstants">Inherit from model</P>
+      <P Name="RTWMemSecDataInternal">Inherit from model</P>
+      <P Name="RTWMemSecDataParameters">Inherit from model</P>
+      <P Name="ContentPreviewEnabled">on</P>
+      <P Name="Mesh">Quadrotor</P>
+      <P Name="MeshPath">/MathWorksUAVContent/UAVs/HexaRotorUAV/HexaRotor.HexaRotor</P>
+      <P Name="Color">Black</P>
+      <P Name="ActorName">Quadrotor1</P>
+      <P Name="UseGlobalFrame">off</P>
+      <P Name="InitialTranslation">[0 0 0]</P>
+      <P Name="InitialRotation">[0 0 0]</P>
+      <P Name="InitialTranslationGlobal">[0 0 0]</P>
+      <P Name="InitialGeoOrigin">[0 0 0]</P>
+      <P Name="InitialRotationGlobal">[0 0 0]</P>
+      <P Name="SampleTime">-1</P>
+      <P Name="ActorType">SimulinkVehicle</P>
+      <P Name="ID">C</P>
+      <P Name="aMode">4</P>
+      <P Name="ActorTag">Quadrotor1</P>
+    </InstanceData>
+  </Block>
+  <Block BlockType="Terminator" Name="Terminator" SID="41">
+    <P Name="Position">[135, 410, 155, 430]</P>
+    <P Name="ZOrder">100000</P>
+  </Block>
+  <Block BlockType="Integrator" Name="pitch_integrator" SID="34">
+    <PortCounts in="1" out="1"/>
+    <P Name="Position">[390, 275, 420, 305]</P>
+    <P Name="ZOrder">100000</P>
+  </Block>
+  <Block BlockType="MATLABFcn" Name="read_cmdvel_live_interp.m" SID="31">
+    <PortCounts in="1" out="1"/>
+    <P Name="Position">[-20, 245, 50, 275]</P>
+    <P Name="ZOrder">100000</P>
+    <P Name="MATLABFcn">read_cmdvel_live_interp(u(1), u(2), u(3), u(4), u(5), u(6))</P>
+  </Block>
+  <Block BlockType="Constant" Name="roll_const" SID="24">
+    <P Name="Position">[390, 325, 420, 355]</P>
+    <P Name="ZOrder">100000</P>
+    <P Name="Value">0</P>
+  </Block>
+  <Block BlockType="Mux" Name="rotation_mux" SID="27">
+    <PortCounts in="3" out="1"/>
+    <P Name="Position">[545, 212, 595, 368]</P>
+    <P Name="ZOrder">100000</P>
+    <P Name="Inputs">3</P>
+    <P Name="DisplayOption">bar</P>
+  </Block>
+  <Block BlockType="Mux" Name="sim/pose" SID="39">
+    <PortCounts in="6" out="1"/>
+    <P Name="Position">[20, -74, 75, 174]</P>
+    <P Name="ZOrder">100000</P>
+    <P Name="Inputs">6</P>
+    <P Name="DisplayOption">bar</P>
+  </Block>
+  <Block BlockType="SubSystem" Name="sim_clock_writer" SID="40">
+    <PortCounts in="1" out="1"/>
+    <P Name="Position">[-20, 397, 50, 443]</P>
+    <P Name="ZOrder">100000</P>
+    <P Name="LibrarySourceProduct" Ref="bdmxdata:LibrarySourceProduct_40"/>
+    <P Name="ErrorFcn">Stateflow.Translate.translate</P>
+    <P Name="PermitHierarchicalResolution">ExplicitOnly</P>
+    <P Name="TreatAsAtomicUnit">on</P>
+    <P Name="SFBlockType">MATLAB Function</P>
+    <P Name="ContentPreviewEnabled">on</P>
+    <PortProperties>
+      <Port Type="out" Index="1">
+        <P Name="PropagatedSignals">y</P>
+      </Port>
+    </PortProperties>
+    <System Ref="system_40"/>
+  </Block>
+  <Block BlockType="Mux" Name="translation_mux" SID="26">
+    <PortCounts in="3" out="1"/>
+    <P Name="Position">[545, 8, 595, 172]</P>
+    <P Name="ZOrder">100000</P>
+    <P Name="Inputs">3</P>
+    <P Name="DisplayOption">bar</P>
+  </Block>
+  <Block BlockType="SubSystem" Name="write_depth_right" SID="46">
+    <PortCounts in="1"/>
+    <P Name="Position">[960, 415, 1030, 465]</P>
+    <P Name="ZOrder">100000</P>
+    <P Name="Commented">on</P>
+    <P Name="LibrarySourceProduct" Ref="bdmxdata:LibrarySourceProduct_46"/>
+    <P Name="ErrorFcn">Stateflow.Translate.translate</P>
+    <P Name="PermitHierarchicalResolution">ExplicitOnly</P>
+    <P Name="TreatAsAtomicUnit">on</P>
+    <P Name="SFBlockType">MATLAB Function</P>
+    <P Name="ContentPreviewEnabled">on</P>
+    <System Ref="system_46"/>
+  </Block>
+  <Block BlockType="SubSystem" Name="write_frame_right" SID="45">
+    <PortCounts in="1"/>
+    <P Name="Position">[960, 325, 1030, 375]</P>
+    <P Name="ZOrder">100000</P>
+    <P Name="Commented">on</P>
+    <P Name="LibrarySourceProduct" Ref="bdmxdata:LibrarySourceProduct_45"/>
+    <P Name="ErrorFcn">Stateflow.Translate.translate</P>
+    <P Name="PermitHierarchicalResolution">ExplicitOnly</P>
+    <P Name="TreatAsAtomicUnit">on</P>
+    <P Name="SFBlockType">MATLAB Function</P>
+    <P Name="ContentPreviewEnabled">on</P>
+    <System Ref="system_45"/>
+  </Block>
+  <Block BlockType="Integrator" Name="x_integrator" SID="20">
+    <PortCounts in="1" out="1"/>
+    <P Name="Position">[395, 20, 425, 50]</P>
+    <P Name="ZOrder">100000</P>
+    <P Name="InitialCondition">15.12</P>
+  </Block>
+  <Block BlockType="Integrator" Name="y_integrator" SID="33">
+    <PortCounts in="1" out="1"/>
+    <P Name="Position">[395, 75, 425, 105]</P>
+    <P Name="ZOrder">100000</P>
+    <P Name="InitialCondition">3.84</P>
+  </Block>
+  <Block BlockType="Integrator" Name="yaw_integrator" SID="21">
+    <PortCounts in="1" out="1"/>
+    <P Name="Position">[390, 225, 420, 255]</P>
+    <P Name="ZOrder">100000</P>
+    <P Name="InitialCondition">2*pi-0.0460</P>
+  </Block>
+  <Block BlockType="Integrator" Name="z_integrator" SID="22">
+    <PortCounts in="1" out="1"/>
+    <P Name="Position">[395, 130, 425, 160]</P>
+    <P Name="ZOrder">100000</P>
+    <P Name="InitialCondition">7.5</P>
+  </Block>
+  <Line>
+    <P Name="ZOrder">6</P>
+    <P Name="Src">2#out:1</P>
+    <P Name="Dst">13#in:1</P>
+  </Line>
+  <Line>
+    <P Name="ZOrder">47</P>
+    <P Name="Src">19#out:1</P>
+    <P Name="Points">[22, 0; 0, -165]</P>
+    <Branch>
+      <P Name="ZOrder">95</P>
+      <P Name="Points">[0, -110]</P>
+      <P Name="Dst">32#in:1</P>
+    </Branch>
+    <Branch>
+      <P Name="ZOrder">84</P>
+      <P Name="Dst">20#in:1</P>
+    </Branch>
+  </Line>
+  <Line>
+    <P Name="ZOrder">46</P>
+    <P Name="Src">19#out:2</P>
+    <P Name="Points">[40, 0; 0, -140]</P>
+    <Branch>
+      <P Name="ZOrder">102</P>
+      <P Name="Points">[0, -145]</P>
+      <P Name="Dst">32#in:2</P>
+    </Branch>
+    <Branch>
+      <P Name="ZOrder">87</P>
+      <P Name="Dst">33#in:1</P>
+    </Branch>
+  </Line>
+  <Line>
+    <P Name="ZOrder">82</P>
+    <P Name="Src">33#out:1</P>
+    <P Name="Points">[44, 0]</P>
+    <Branch>
+      <P Name="ZOrder">175</P>
+      <P Name="Points">[0, -21; -213, 0; 0, -161; -286, 0; 0, 162]</P>
+      <P Name="Dst">39#in:4</P>
+    </Branch>
+    <Branch>
+      <P Name="ZOrder">174</P>
+      <P Name="Dst">26#in:2</P>
+    </Branch>
+  </Line>
+  <Line>
+    <P Name="ZOrder">18</P>
+    <P Name="Src">26#out:1</P>
+    <P Name="Points">[30, 0; 0, -20]</P>
+    <P Name="Dst">3#in:1</P>
+  </Line>
+  <Line>
+    <P Name="ZOrder">103</P>
+    <P Name="Src">34#out:1</P>
+    <P Name="Points">[54, 0]</P>
+    <Branch>
+      <P Name="ZOrder">152</P>
+      <P Name="Points">[0, 88; -568, 0; 0, -388]</P>
+      <P Name="Dst">39#in:2</P>
+    </Branch>
+    <Branch>
+      <P Name="ZOrder">151</P>
+      <P Name="Dst">27#in:2</P>
+    </Branch>
+  </Line>
+  <Line>
+    <P Name="ZOrder">22</P>
+    <P Name="Src">27#out:1</P>
+    <P Name="Points">[20, 0; 0, -170]</P>
+    <P Name="Dst">3#in:2</P>
+  </Line>
+  <Line>
+    <P Name="ZOrder">27</P>
+    <P Name="Src">31#out:1</P>
+    <P Name="Dst">19#in:1</P>
+  </Line>
+  <Line>
+    <P Name="ZOrder">33</P>
+    <P Name="Src">21#out:1</P>
+    <P Name="Points">[53, 0]</P>
+    <Branch>
+      <P Name="ZOrder">179</P>
+      <P Name="Points">[0, -28; -320, 0; 0, 137; -225, 0; 0, -199]</P>
+      <P Name="Dst">39#in:6</P>
+    </Branch>
+    <Branch>
+      <P Name="ZOrder">178</P>
+      <P Name="Dst">27#in:1</P>
+    </Branch>
+  </Line>
+  <Line>
+    <P Name="ZOrder">34</P>
+    <P Name="Src">24#out:1</P>
+    <P Name="Dst">27#in:3</P>
+  </Line>
+  <Line>
+    <P Name="ZOrder">35</P>
+    <P Name="Src">19#out:3</P>
+    <P Name="Points">[61, 0; 0, -115]</P>
+    <Branch>
+      <P Name="ZOrder">101</P>
+      <P Name="Points">[0, -180]</P>
+      <P Name="Dst">32#in:3</P>
+    </Branch>
+    <Branch>
+      <P Name="ZOrder">88</P>
+      <P Name="Dst">22#in:1</P>
+    </Branch>
+  </Line>
+  <Line>
+    <P Name="ZOrder">78</P>
+    <P Name="Src">28#out:1</P>
+    <P Name="Points">[13, 0]</P>
+    <Branch>
+      <P Name="ZOrder">177</P>
+      <P Name="Points">[0, -246; -533, 0; 0, 211]</P>
+      <P Name="Dst">39#in:5</P>
+    </Branch>
+    <Branch>
+      <P Name="ZOrder">176</P>
+      <P Name="Dst">26#in:3</P>
+    </Branch>
+  </Line>
+  <Line>
+    <P Name="ZOrder">76</P>
+    <P Name="Src">22#out:1</P>
+    <P Name="Dst">28#in:1</P>
+  </Line>
+  <Line>
+    <P Name="ZOrder">80</P>
+    <P Name="Src">20#out:1</P>
+    <P Name="Points">[41, 0]</P>
+    <Branch>
+      <P Name="ZOrder">173</P>
+      <P Name="Points">[0, -145; -475, 0; 0, 140]</P>
+      <P Name="Dst">39#in:3</P>
+    </Branch>
+    <Branch>
+      <P Name="ZOrder">172</P>
+      <P Name="Dst">26#in:1</P>
+    </Branch>
+  </Line>
+  <Line>
+    <P Name="ZOrder">104</P>
+    <P Name="Src">19#out:4</P>
+    <P Name="Points">[82, 0]</P>
+    <Branch>
+      <P Name="ZOrder">107</P>
+      <P Name="Points">[0, -305]</P>
+      <P Name="Dst">32#in:4</P>
+    </Branch>
+    <Branch>
+      <P Name="ZOrder">106</P>
+      <P Name="Dst">34#in:1</P>
+    </Branch>
+  </Line>
+  <Line>
+    <P Name="ZOrder">105</P>
+    <P Name="Src">19#out:5</P>
+    <P Name="Points">[102, 0]</P>
+    <Branch>
+      <P Name="ZOrder">112</P>
+      <P Name="Points">[0, -315]</P>
+      <P Name="Dst">32#in:5</P>
+    </Branch>
+    <Branch>
+      <P Name="ZOrder">111</P>
+      <P Name="Points">[70, 0; 0, -80]</P>
+      <P Name="Dst">21#in:1</P>
+    </Branch>
+  </Line>
+  <Line>
+    <P Name="ZOrder">150</P>
+    <P Name="Src">30#out:1</P>
+    <P Name="Points">[11, 0]</P>
+    <Branch>
+      <P Name="ZOrder">207</P>
+      <P Name="Points">[0, 470]</P>
+      <P Name="Dst">40#in:1</P>
+    </Branch>
+    <Branch>
+      <P Name="ZOrder">206</P>
+      <P Name="Dst">39#in:1</P>
+    </Branch>
+  </Line>
+  <Line>
+    <P Name="ZOrder">153</P>
+    <P Name="Src">39#out:1</P>
+    <P Name="Points">[5, 0; 0, 160; -129, 0; 0, 50]</P>
+    <P Name="Dst">31#in:1</P>
+  </Line>
+  <Line>
+    <P Name="ZOrder">205</P>
+    <P Name="Src">40#out:1</P>
+    <P Name="Dst">41#in:1</P>
+  </Line>
+  <Line>
+    <P Name="ZOrder">211</P>
+    <P Name="Src">44#out:1</P>
+    <P Name="Points">[40, 0; 0, -15]</P>
+    <P Name="Dst">45#in:1</P>
+  </Line>
+  <Line>
+    <P Name="ZOrder">212</P>
+    <P Name="Src">44#out:2</P>
+    <P Name="Points">[22, 0; 0, 25]</P>
+    <P Name="Dst">46#in:1</P>
+  </Line>
+</System>

@@ -1,0 +1,460 @@
+[heldstart] mode rgbd, model hil_closed_loop_baseline_RGBD, from C:\Users\Ahmed\sim_25A\matlab
+set_rgbd: RGB-D ON, model hil_closed_loop_baseline_RGBD (left depth -> /sim/camera/depth/image_raw).
+  Next: run hil_ros_init_LT_rgbd, start hil_closed_loop_baseline_RGBD, run sim_camera_publisher_timer_LT_rgbd.
+=== HIL ROS init (LT) starting ===
+ROS OK
+Stereo OFF — mono only on /sim/camera/image_raw
+State publisher (LT) started at 20 Hz on /sim/pitch_angle, /sim/drone_pose, /sim/heartbeat
+/vo_pose subscriber active — sim_vo_pose updated when SLAM is running
+=== LT Init complete. Open Simulink, run sim, then run sim_camera_publisher_timer_LT.m ===
+RGB-D ON: depth on /sim/camera/depth/image_raw (16UC1 mm)
+=== RGB-D init complete. Start hil_closed_loop_baseline_RGBD, then run sim_camera_publisher_timer_LT_rgbd ===
+[supervisor] model "hil_closed_loop_baseline_RGBD" loaded
+[supervisor] polling port 55556 every 0.2 s (non-blocking state machine)
+[supervisor] command line is FREE (press Enter to see >>). Stop: stop_hil_supervisor
+[supervisor] received: "start_hold"
+[supervisor] start issued — waiting for new frames (up to 30 s)
+[supervisor] HELD at sim 0.30 s, 0.4 s after start, at initial condition. Waiting for "resume"
+[heldstart] start_hold: held after 17.3 s
+[supervisor] received: "pub_start 20"
+sim_cam_pub_timer_LT started at 20 Hz, RGB-D, colour encoding bgr8
+  colour: /sim/camera/image_raw
+  depth:  /sim/camera/depth/image_raw  (16UC1 mm, same stamp)
+  Stop:     stop(sim_cam_pub_timer_LT)
+  Counters: sim_cam_pub_count_LT  sim_cam_pub_count_depth_LT  sim_cam_drop_count_LT  sim_cam_nodepth_count_LT
+[supervisor] received: "status"
+[heldstart] status sim=paused t=0.30 state=held pub=on timers=1 hz=20 fresh=1 repeat=NaN drop=3 yaw=357.36 x=15.12 y=3.84 z=7.50
+[heldstart] pose x 15.12 y 3.84 z 7.50 yaw 357.36 deg, 20.00 m from the frozen sign (35.1, 2.92)
+[heldstart] READY: rgbd held at the 20 m start. The Pi releases it with "resume".
+[25W] label rgbd  model hil_closed_loop_baseline_RGBD  2026-10-25 16:16:17
+[25W] pwd C:\Users\Ahmed\sim_25A\matlab
+[25W] env RMW=rmw_fastrtps_cpp DOMAIN=0 FASTRTPS_DEFAULT_PROFILES_FILE=[] CAM_LEFT_IMAGE=rgb CAM_RIGHT_IMAGE=rgb
+[25W] which hil_ros_init_LT: C:\Users\Ahmed\sim_25A\matlab\hil_ros_init_LT.m
+[25W] which hil_ros_init_LT_rgbd: C:\Users\Ahmed\sim_25A\matlab\hil_ros_init_LT_rgbd.m
+[25W] which hil_run_supervisor: C:\Users\Ahmed\sim_25A\matlab\hil_run_supervisor.m
+[25W] which hil_pub_control: C:\Users\Ahmed\sim_25A\matlab\hil_pub_control.m
+[25W] which hil_publish_frame: C:\Users\Ahmed\sim_25A\matlab\hil_publish_frame.m
+[25W] which read_cmdvel_live_interp: C:\Users\Ahmed\sim_25A\matlab\read_cmdvel_live_interp.m
+[25W] which sim_camera_publisher_timer_LT: C:\Users\Ahmed\sim_25A\matlab\sim_camera_publisher_timer_LT.m
+[25W] which sim_camera_publisher_timer_LT_rgbd: C:\Users\Ahmed\sim_25A\matlab\sim_camera_publisher_timer_LT_rgbd.m
+[25W] which set_stereo: C:\Users\Ahmed\sim_25A\matlab\set_stereo.m
+[25W] which set_rgbd: C:\Users\Ahmed\sim_25A\matlab\set_rgbd.m
+[25W] which hil_closed_loop_baseline_RGBD: C:\Users\Ahmed\sim_25A\matlab\hil_closed_loop_baseline_RGBD.slx
+[25W] Simulation 3D Camera: Commented=off FocalLength=[554, 554] ImageSize=[480, 640] OpticalCenter=[320, 240] tmountOffset=[0.2, 0, 0.2] rmountOffset=[0, 5, 0] DepthOutportEnabled=on SampleTime=-1
+[25W] Simulation 3D Camera Right: Commented=on FocalLength=[554, 554] ImageSize=[480, 640] OpticalCenter=[320, 240] tmountOffset=[0.2, -0.11, 0.2] rmountOffset=[0, 5, 0] DepthOutportEnabled=on SampleTime=-1
+[25W] write_depth_left: Commented=off
+[25W] write_frame_right: Commented=on
+[25W] write_depth_right: Commented=on
+[25W] x_integrator InitialCondition=15.12
+[25W] y_integrator InitialCondition=3.84
+[25W] z_integrator InitialCondition=7.5
+[25W] yaw_integrator InitialCondition=2*pi-0.0460
+[25W] SimulationMode=accelerator FixedStep=1/20 StopTime=inf EnablePacing=on PacingRate=1
+[supervisor] received: "model_info"
+[25W] model_info: model_info model=hil_closed_loop_baseline_RGBD x_ic=15.12 y_ic=3.84 z_ic=7.5 yaw_ic=6.23718531 fx_left=554 fx_right=554 right_cam=off right_y=-0.11 depth_port=on left_image=rgb right_image=rgb
+[supervisor] received: "status"
+[25W] status: status sim=paused t=0.30 state=held pub=on timers=1 hz=20 fresh=1 repeat=NaN drop=11 yaw=357.36 x=15.12 y=3.84 z=7.50
+[supervisor] received: "probe_init 0.5 1 1 0"
+[25W] probe_init 0.5 1 1 0: error no_loop
+[25W] STEREO_ON=0 RGBD_ON=1 cam_pub_right=0 depth_pub=1
+[25W] timer pitch_pub_timer_LT Running=on Period=0.0500
+[25W] timer hil_supervisor_timer Running=on Period=0.2000
+[25W] timer timer-3 Running=on Period=0.0200
+[25W] timer sim_cam_pub_timer_LT Running=on Period=0.0500
+[25W] rgbd_hold1 latest_frame uint8 [480 640 3] sha256 3b26f93339d90d73f5e22f305a949801a45e8e0d924fdd138d5ec88e39b1b4de
+[25W] rgbd_hold1 latest_depth_left double [480 640] valid 46.1% min 14.47 median 19.62 max 58.68 m, centre 1000.00 m, sky(1000) 53.9%
+[25W] --- part A: 30 s held, counters only
+[25W] t=   1.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=0 D=1 drop=24
+[25W] t=   2.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=0 D=1 drop=44
+[cam-LT] published: 1  (+1 in 3.0s = 0.3 Hz)  C=1 D=1 nodepth=0
+[25W] t=   3.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=0 D=1 drop=64
+[25W] t=   4.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=0 D=1 drop=83
+[25W] t=   5.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=0 D=1 drop=103
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  C=1 D=1 nodepth=0
+[25W] t=   6.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=0 D=1 drop=123
+[25W] t=   7.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=0 D=1 drop=143
+[25W] t=   8.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=0 D=1 drop=163
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  C=1 D=1 nodepth=0
+[25W] t=   9.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=0 D=1 drop=183
+[25W] t=  10.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=0 D=1 drop=203
+[25W] t=  11.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=0 D=1 drop=223
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  C=1 D=1 nodepth=0
+[25W] t=  12.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=0 D=1 drop=243
+[25W] t=  13.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=0 D=1 drop=263
+[25W] t=  14.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=0 D=1 drop=283
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  C=1 D=1 nodepth=0
+[25W] t=  15.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=0 D=1 drop=302
+[25W] t=  16.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=0 D=1 drop=322
+[25W] t=  17.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=0 D=1 drop=342
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  C=1 D=1 nodepth=0
+[25W] t=  18.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=0 D=1 drop=362
+[25W] t=  19.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=0 D=1 drop=382
+[25W] t=  20.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=0 D=1 drop=402
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  C=1 D=1 nodepth=0
+[25W] t=  21.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=0 D=1 drop=422
+[25W] t=  22.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=0 D=1 drop=441
+[25W] t=  23.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=0 D=1 drop=461
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  C=1 D=1 nodepth=0
+[25W] t=  24.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=0 D=1 drop=481
+[25W] t=  25.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=0 D=1 drop=501
+[25W] t=  26.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=0 D=1 drop=521
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  C=1 D=1 nodepth=0
+[25W] t=  27.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=0 D=1 drop=541
+[25W] t=  28.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=0 D=1 drop=561
+[25W] t=  29.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=0 D=1 drop=580
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  C=1 D=1 nodepth=0
+[25W] t=  30.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=0 D=1 drop=600
+[25W] t=  31.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=0 D=1 drop=620
+[25W] A: 30.1 s, status {paused}, state {held}, simt 0.30..0.30, max |dx dy dz| [0 0 0] m, max |dyaw| 0.0000 rad, sign distance 20.001..20.001 m, z 7.500
+[25W] A: send rate L 0.00 Hz, R 0.00 Hz, D 0.00 Hz (sends 0 0 0), drops +596; HELD_AT_START=1
+[25W] ros2 topic list:
+/cmd_vel
+/parameter_events
+/rosout
+/sim/camera/depth/image_raw
+/sim/camera/image_raw
+/sim/drone_pose
+/sim/heartbeat
+/sim/pitch_angle
+/sim/target_pose
+/vo_pose
+
+[25W] --- part B1: node /check_25W subscribes (best effort) to the three image topics
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  C=1 D=1 nodepth=0
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  C=1 D=1 nodepth=0
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  C=1 D=1 nodepth=0
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  C=1 D=1 nodepth=0
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  C=1 D=1 nodepth=0
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  C=1 D=1 nodepth=0
+[25W] B1 15 s in the same hold: received [0 0 0], sent L+0 R+0 D+0
+[25W]   /sim/camera/image_raw: 0 msgs, last 
+[25W]   /sim/camera/right/image_raw: 0 msgs, last 
+[25W]   /sim/camera/depth/image_raw: 0 msgs, last 
+[25W] --- part B2: the Pi's per-run sequence into a second hold
+[supervisor] received: "stop"
+[25W] stop: ok
+[supervisor] received: "pub_stop"
+[pub] stopped, 1 timer(s) deleted
+[25W] pub_stop: ok
+[supervisor] received: "pub_start 20"
+sim_cam_pub_timer_LT started at 20 Hz, RGB-D, colour encoding bgr8
+  colour: /sim/camera/image_raw
+  depth:  /sim/camera/depth/image_raw  (16UC1 mm, same stamp)
+  Stop:     stop(sim_cam_pub_timer_LT)
+  Counters: sim_cam_pub_count_LT  sim_cam_pub_count_depth_LT  sim_cam_drop_count_LT  sim_cam_nodepth_count_LT
+[cam-LT] published: 0  (+0 in 4.0s = 0.0 Hz)  C=0 D=0 nodepth=0
+[25W] pub_start 20: ok
+[supervisor] received: "start_hold"
+[25W] start_hold: ok
+[cam-LT] published: 0  (+0 in 3.0s = 0.0 Hz)  C=0 D=0 nodepth=0
+[supervisor] start issued — waiting for new frames (up to 30 s)
+[cam-LT] published: 0  (+0 in 8.2s = 0.0 Hz)  C=0 D=0 nodepth=0
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 1] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 1] 
+[supervisor] HELD at sim 0.30 s, 0.4 s after start, at initial condition. Waiting for "resume"
+[25W] second hold: state held after 11.6 s, received so far [3 0 3]
+[cam-LT] published: 5  (+5 in 3.0s = 1.7 Hz)  C=5 D=5 nodepth=0
+[cam-LT] published: 5  (+0 in 3.0s = 0.0 Hz)  C=5 D=5 nodepth=0
+[cam-LT] published: 5  (+0 in 3.0s = 0.0 Hz)  C=5 D=5 nodepth=0
+[cam-LT] published: 5  (+0 in 3.0s = 0.0 Hz)  C=5 D=5 nodepth=0
+[cam-LT] published: 5  (+0 in 3.0s = 0.0 Hz)  C=5 D=5 nodepth=0
+[cam-LT] published: 5  (+0 in 3.0s = 0.0 Hz)  C=5 D=5 nodepth=0
+[cam-LT] published: 5  (+0 in 3.0s = 0.0 Hz)  C=5 D=5 nodepth=0
+[cam-LT] published: 5  (+0 in 3.0s = 0.0 Hz)  C=5 D=5 nodepth=0
+[25W] t=  64.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=5 R=0 D=5 drop=110
+[25W] t=  89.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=5 R=0 D=5 drop=606
+[25W] B2 (25 s after the second hold): 25.1 s, status {paused}, state {held}, simt 0.30..0.30, max |dx dy dz| [0 0 0] m, max |dyaw| 0.0000 rad, sign distance 20.001..20.001 m, z 7.500
+[25W] B2 (25 s after the second hold): send rate L 0.00 Hz, R 0.00 Hz, D 0.00 Hz (sends 0 0 0), drops +496; HELD_AT_START=1
+[25W] B2 from pub_start to end: received [3 0 3], sent L+4 R+0 D+4
+[25W]   /sim/camera/image_raw: 3 msgs, last 640x480 bgr8 step 1920 frame_id "camera" stamp 0.250000000
+[25W]   /sim/camera/right/image_raw: 0 msgs, last 
+[25W]   /sim/camera/depth/image_raw: 3 msgs, last 640x480 16UC1 step 1280 frame_id "camera" stamp 0.250000000
+[25W] rgbd_hold2 latest_frame uint8 [480 640 3] sha256 3b26f93339d90d73f5e22f305a949801a45e8e0d924fdd138d5ec88e39b1b4de
+[25W] rgbd_hold2 latest_depth_left double [480 640] valid 46.1% min 14.47 median 19.62 max 58.68 m, centre 1000.00 m, sky(1000) 53.9%
+[25W] --- teardown
+[supervisor] received: "stop"
+[25W] stop: ok
+[supervisor] received: "pub_stop"
+[pub] stopped, 1 timer(s) deleted
+[25W] pub_stop: ok
+[supervisor] poll timer stopped.
+[supervisor] socket closed, port freed.
+[25W] TEARDOWN: model loaded=0, timers left=0, port 55556 free=1
+[25W] DONE rgbd after 91 s
+[heldstart] mode mono, model hil_closed_loop_unified, from C:\Users\Ahmed\sim_25A\matlab
+=== HIL ROS init (LT) starting ===
+ROS OK
+Stereo OFF — mono only on /sim/camera/image_raw
+State publisher (LT) started at 20 Hz on /sim/pitch_angle, /sim/drone_pose, /sim/heartbeat
+/vo_pose subscriber active — sim_vo_pose updated when SLAM is running
+=== LT Init complete. Open Simulink, run sim, then run sim_camera_publisher_timer_LT.m ===
+[supervisor] model "hil_closed_loop_unified" loaded
+[supervisor] polling port 55556 every 0.2 s (non-blocking state machine)
+[supervisor] command line is FREE (press Enter to see >>). Stop: stop_hil_supervisor
+[supervisor] received: "pub_start 20"
+[pub] started at 20 Hz (callback state reset)
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[supervisor] received: "start_hold"
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[supervisor] start issued — waiting for new frames (up to 30 s)
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=0 repeat=0 uniq=0)  <-- no new frames (about to throttle)
+[cam-LT] first new frame 15.6 s after pub_start — publishing
+[supervisor] HELD at sim 0.30 s, 0.4 s after start, at initial condition. Waiting for "resume"
+[heldstart] start_hold: held after 15.8 s
+[supervisor] received: "status"
+[heldstart] status sim=paused t=0.30 state=held pub=on timers=1 hz=20 fresh=11 repeat=0 drop=2 yaw=357.36 x=15.12 y=3.84 z=7.50
+[heldstart] pose x 15.12 y 3.84 z 7.50 yaw 357.36 deg, 20.00 m from the frozen sign (35.1, 2.92)
+[heldstart] READY: mono held at the 20 m start. The Pi releases it with "resume".
+[25W] label mono_after_switch  model hil_closed_loop_unified  2026-10-25 16:18:12
+[25W] pwd C:\Users\Ahmed\sim_25A\matlab
+[25W] env RMW=rmw_fastrtps_cpp DOMAIN=0 FASTRTPS_DEFAULT_PROFILES_FILE=[] CAM_LEFT_IMAGE=rgb CAM_RIGHT_IMAGE=rgb
+[25W] which hil_ros_init_LT: C:\Users\Ahmed\sim_25A\matlab\hil_ros_init_LT.m
+[25W] which hil_ros_init_LT_rgbd: C:\Users\Ahmed\sim_25A\matlab\hil_ros_init_LT_rgbd.m
+[25W] which hil_run_supervisor: C:\Users\Ahmed\sim_25A\matlab\hil_run_supervisor.m
+[25W] which hil_pub_control: C:\Users\Ahmed\sim_25A\matlab\hil_pub_control.m
+[25W] which hil_publish_frame: C:\Users\Ahmed\sim_25A\matlab\hil_publish_frame.m
+[25W] which read_cmdvel_live_interp: C:\Users\Ahmed\sim_25A\matlab\read_cmdvel_live_interp.m
+[25W] which sim_camera_publisher_timer_LT: C:\Users\Ahmed\sim_25A\matlab\sim_camera_publisher_timer_LT.m
+[25W] which sim_camera_publisher_timer_LT_rgbd: C:\Users\Ahmed\sim_25A\matlab\sim_camera_publisher_timer_LT_rgbd.m
+[25W] which set_stereo: C:\Users\Ahmed\sim_25A\matlab\set_stereo.m
+[25W] which set_rgbd: C:\Users\Ahmed\sim_25A\matlab\set_rgbd.m
+[25W] which hil_closed_loop_unified: C:\Users\Ahmed\sim_25A\matlab\hil_closed_loop_unified.slx
+[25W] Simulation 3D Camera: Commented=off FocalLength=[554, 554] ImageSize=[480, 640] OpticalCenter=[320, 240] tmountOffset=[0.2, 0, 0.2] rmountOffset=[0, 5, 0] DepthOutportEnabled=off SampleTime=-1
+[25W] Simulation 3D Camera Right: Commented=on FocalLength=[554, 554] ImageSize=[480, 640] OpticalCenter=[320, 240] tmountOffset=[0.2, -0.11, 0.2] rmountOffset=[0, 5, 0] DepthOutportEnabled=on SampleTime=-1
+[25W] write_depth_left: Commented=n/a (Invalid Simulink object name: 'hil_closed_loop_unified/write_depth_left'.)
+[25W] write_frame_right: Commented=on
+[25W] write_depth_right: Commented=on
+[25W] x_integrator InitialCondition=15.12
+[25W] y_integrator InitialCondition=3.84
+[25W] z_integrator InitialCondition=7.5
+[25W] yaw_integrator InitialCondition=2*pi-0.0460
+[25W] SimulationMode=accelerator FixedStep=1/20 StopTime=inf EnablePacing=on PacingRate=1
+[supervisor] received: "model_info"
+[25W] model_info: model_info model=hil_closed_loop_unified x_ic=15.12 y_ic=3.84 z_ic=7.5 yaw_ic=6.23718531 fx_left=554 fx_right=554 right_cam=off right_y=-0.11 depth_port=off left_image=rgb right_image=rgb
+[supervisor] received: "status"
+[25W] status: status sim=paused t=0.30 state=held pub=on timers=1 hz=20 fresh=19 repeat=0 drop=2 yaw=357.36 x=15.12 y=3.84 z=7.50
+[supervisor] received: "probe_init 0.5 1 1 0"
+[25W] probe_init 0.5 1 1 0: error no_loop
+[25W] STEREO_ON=0 RGBD_ON=[] cam_pub_right=0 depth_pub=0
+[25W] timer pitch_pub_timer_LT Running=on Period=0.0500
+[25W] timer hil_supervisor_timer Running=on Period=0.2000
+[25W] timer sim_cam_pub_timer_LT Running=on Period=0.0500
+[25W] timer timer-4 Running=on Period=0.0200
+[25W] mono_after_switch_hold1 latest_frame uint8 [480 640 3] sha256 5a4e833d798add9feff895e49040a9e42cd4bb7301abfd547ab0d0652d89b91b
+[25W] --- part A: 30 s held, counters only
+[25W] t=   0.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=28 R=0 D=0 drop=2
+[25W] t=   1.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=48 R=0 D=0 drop=2
+[cam-LT] 19.4 Hz sent, 1.6 Hz NEW  (fresh=59 repeat=0 uniq=5)
+[25W] t=   2.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=68 R=0 D=0 drop=2
+[25W] t=   3.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=88 R=0 D=0 drop=2
+[cam-LT] WARNING: frames valid but IDENTICAL for 5 s — sim frozen? (3D window closed?)
+[25W] t=   4.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=108 R=0 D=0 drop=2
+[cam-LT] 20.1 Hz sent, 0.0 Hz NEW  (fresh=120 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[25W] t=   5.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=127 R=0 D=0 drop=2
+[25W] t=   6.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=147 R=0 D=0 drop=2
+[cam-LT] WARNING: frames valid but IDENTICAL for 8 s — sim frozen? (3D window closed?)
+[25W] t=   7.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=167 R=0 D=0 drop=2
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=180 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[25W] t=   8.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=187 R=0 D=0 drop=2
+[25W] t=   9.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=207 R=0 D=0 drop=2
+[cam-LT] WARNING: frames valid but IDENTICAL for 11 s — sim frozen? (3D window closed?)
+[25W] t=  10.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=227 R=0 D=0 drop=2
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=240 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[25W] t=  11.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=247 R=0 D=0 drop=2
+[25W] t=  12.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=266 R=0 D=0 drop=2
+[cam-LT] WARNING: frames valid but IDENTICAL for 14 s — sim frozen? (3D window closed?)
+[25W] t=  13.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=286 R=0 D=0 drop=2
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=300 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[25W] t=  14.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=306 R=0 D=0 drop=2
+[25W] t=  15.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=326 R=0 D=0 drop=2
+[cam-LT] WARNING: frames valid but IDENTICAL for 17 s — sim frozen? (3D window closed?)
+[25W] t=  16.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=346 R=0 D=0 drop=2
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=360 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[25W] t=  17.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=366 R=0 D=0 drop=2
+[25W] t=  18.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=386 R=0 D=0 drop=2
+[cam-LT] WARNING: frames valid but IDENTICAL for 20 s — sim frozen? (3D window closed?)
+[25W] t=  19.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=406 R=0 D=0 drop=2
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=420 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[25W] t=  20.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=426 R=0 D=0 drop=2
+[25W] t=  21.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=446 R=0 D=0 drop=2
+[cam-LT] WARNING: frames valid but IDENTICAL for 23 s — sim frozen? (3D window closed?)
+[25W] t=  22.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=465 R=0 D=0 drop=2
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=480 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[25W] t=  23.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=485 R=0 D=0 drop=2
+[25W] t=  24.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=505 R=0 D=0 drop=2
+[cam-LT] WARNING: frames valid but IDENTICAL for 26 s — sim frozen? (3D window closed?)
+[25W] t=  25.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=525 R=0 D=0 drop=2
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=540 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[25W] t=  26.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=545 R=0 D=0 drop=2
+[25W] t=  27.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=565 R=0 D=0 drop=2
+[cam-LT] WARNING: frames valid but IDENTICAL for 29 s — sim frozen? (3D window closed?)
+[25W] t=  28.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=585 R=0 D=0 drop=2
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=600 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[25W] t=  29.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=604 R=0 D=0 drop=2
+[25W] t=  30.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=624 R=0 D=0 drop=2
+[25W] A: 30.1 s, status {paused}, state {held}, simt 0.30..0.30, max |dx dy dz| [0 0 0] m, max |dyaw| 0.0000 rad, sign distance 20.001..20.001 m, z 7.500
+[25W] A: send rate L 19.83 Hz, R 0.00 Hz, D 0.00 Hz (sends 596 0 0), drops +0; HELD_AT_START=1
+[25W] ros2 topic list:
+/cmd_vel
+/parameter_events
+/rosout
+/sim/camera/image_raw
+/sim/drone_pose
+/sim/heartbeat
+/sim/pitch_angle
+/sim/target_pose
+/vo_pose
+
+[25W] DONE mono_after_switch after 31 s
+[25W] SESSION END OK (mono left running and held)
+[cam-LT] WARNING: frames valid but IDENTICAL for 33 s — sim frozen? (3D window closed?)
+[cam-LT] 14.0 Hz sent, 0.0 Hz NEW  (fresh=646 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 36 s — sim frozen? (3D window closed?)
+[cam-LT] 19.3 Hz sent, 0.0 Hz NEW  (fresh=705 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 39 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=765 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 42 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=825 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 45 s — sim frozen? (3D window closed?)
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=885 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 48 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=945 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 51 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=1005 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 54 s — sim frozen? (3D window closed?)
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=1065 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 57 s — sim frozen? (3D window closed?)
+[cam-LT] 19.7 Hz sent, 0.0 Hz NEW  (fresh=1125 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 60 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=1185 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 63 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=1245 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 66 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=1305 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 69 s — sim frozen? (3D window closed?)
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=1365 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 72 s — sim frozen? (3D window closed?)
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=1425 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 75 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=1485 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 78 s — sim frozen? (3D window closed?)
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=1545 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 81 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=1605 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 84 s — sim frozen? (3D window closed?)
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=1665 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 87 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=1725 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 90 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=1785 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 93 s — sim frozen? (3D window closed?)
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=1845 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[supervisor] received: "status"
+[supervisor] received: "stop"
+[supervisor] received: "pub_stop"
+[pub] stopped, 1 timer(s) deleted
+[supervisor] received: "status"
+[Warning: You are deleting one or more running timer objects. MATLAB has automatically stopped them before deletion.] 
+[Warning: You are deleting one or more running timer objects. MATLAB has automatically stopped them before deletion.] 

@@ -1,0 +1,259 @@
+label fu_rgbd  model hil_closed_loop_baseline_RGBD  2026-10-25 19:53:15
+pwd C:\Users\Ahmed\sim_25W\matlab
+env RMW=rmw_fastrtps_cpp DOMAIN=0 FASTRTPS_DEFAULT_PROFILES_FILE=[] CAM_LEFT_IMAGE=rgb CAM_RIGHT_IMAGE=rgb RGBD_DROP_DUP_STAMPS=[]
+which hil_ros_init_LT: C:\Users\Ahmed\sim_25W\matlab\hil_ros_init_LT.m
+which hil_ros_init_LT_rgbd: C:\Users\Ahmed\sim_25W\matlab\hil_ros_init_LT_rgbd.m
+which hil_run_supervisor: C:\Users\Ahmed\sim_25W\matlab\hil_run_supervisor.m
+which hil_pub_control: C:\Users\Ahmed\sim_25W\matlab\hil_pub_control.m
+which hil_publish_frame: C:\Users\Ahmed\sim_25W\matlab\hil_publish_frame.m
+which read_cmdvel_live_interp: C:\Users\Ahmed\sim_25W\matlab\read_cmdvel_live_interp.m
+which sim_camera_publisher_timer_LT: C:\Users\Ahmed\sim_25W\matlab\sim_camera_publisher_timer_LT.m
+which sim_camera_publisher_timer_LT_rgbd: C:\Users\Ahmed\sim_25W\matlab\sim_camera_publisher_timer_LT_rgbd.m
+which set_stereo: C:\Users\Ahmed\sim_25W\matlab\set_stereo.m
+which set_rgbd: C:\Users\Ahmed\sim_25W\matlab\set_rgbd.m
+which hil_closed_loop_baseline_RGBD: C:\Users\Ahmed\sim_25W\matlab\hil_closed_loop_baseline_RGBD.slx
+Simulation 3D Camera: Commented=off FocalLength=[554, 554] ImageSize=[480, 640] OpticalCenter=[320, 240] tmountOffset=[0.2, 0, 0.2] rmountOffset=[0, 5, 0] DepthOutportEnabled=on SampleTime=-1
+Simulation 3D Camera Right: Commented=on FocalLength=[554, 554] ImageSize=[480, 640] OpticalCenter=[320, 240] tmountOffset=[0.2, -0.11, 0.2] rmountOffset=[0, 5, 0] DepthOutportEnabled=on SampleTime=-1
+write_depth_left: Commented=off
+write_frame_right: Commented=on
+write_depth_right: Commented=on
+x_integrator InitialCondition=15.12
+y_integrator InitialCondition=3.84
+z_integrator InitialCondition=7.5
+yaw_integrator InitialCondition=2*pi-0.0460
+SimulationMode=accelerator FixedStep=1/20 StopTime=inf EnablePacing=on PacingRate=1
+model_info: model_info model=hil_closed_loop_baseline_RGBD x_ic=15.12 y_ic=3.84 z_ic=7.5 yaw_ic=6.23718531 fx_left=554 fx_right=554 right_cam=off right_y=-0.11 depth_port=on left_image=rgb right_image=rgb
+status: status sim=paused t=0.30 state=held pub=on timers=1 hz=20 fresh=12 repeat=NaN drop=0 yaw=357.36 x=15.12 y=3.84 z=7.50
+probe_init 0.5 1 1 0: error no_loop
+STEREO_ON=0 RGBD_ON=1 cam_pub_right=0 depth_pub=1
+timer pitch_pub_timer_LT Running=on Period=0.0500
+timer hil_supervisor_timer Running=on Period=0.2000
+timer timer-3 Running=on Period=0.0200
+timer sim_cam_pub_timer_LT Running=on Period=0.0500
+fu_rgbd_hold1 latest_frame uint8 [480 640 3] sha256 3b26f93339d90d73f5e22f305a949801a45e8e0d924fdd138d5ec88e39b1b4de
+fu_rgbd_hold1 latest_depth_left double [480 640] valid 46.1% min 14.47 median 19.62 max 58.68 m, centre 1000.00 m, sky(1000) 53.9%
+--- part A: 180 s held, counters only
+t=   1.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=24 R=0 D=24 drop=0
+t=   2.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=44 R=0 D=44 drop=0
+t=   3.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=64 R=0 D=64 drop=0
+t=   4.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=84 R=0 D=84 drop=0
+t=   5.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=103 R=0 D=103 drop=0
+t=   6.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=123 R=0 D=123 drop=0
+t=   7.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=143 R=0 D=143 drop=0
+t=   8.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=163 R=0 D=163 drop=0
+t=   9.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=183 R=0 D=183 drop=0
+t=  10.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=203 R=0 D=203 drop=0
+t=  11.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=223 R=0 D=223 drop=0
+t=  12.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=243 R=0 D=243 drop=0
+t=  13.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=262 R=0 D=262 drop=0
+t=  14.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=282 R=0 D=282 drop=0
+t=  15.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=302 R=0 D=302 drop=0
+t=  16.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=322 R=0 D=322 drop=0
+t=  17.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=342 R=0 D=342 drop=0
+t=  18.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=362 R=0 D=362 drop=0
+t=  19.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=382 R=0 D=382 drop=0
+t=  20.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=402 R=0 D=402 drop=0
+t=  21.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=422 R=0 D=422 drop=0
+t=  22.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=442 R=0 D=442 drop=0
+t=  23.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=462 R=0 D=462 drop=0
+t=  24.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=481 R=0 D=481 drop=0
+t=  25.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=501 R=0 D=501 drop=0
+t=  26.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=520 R=0 D=520 drop=0
+t=  27.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=540 R=0 D=540 drop=0
+t=  28.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=560 R=0 D=560 drop=0
+t=  29.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=580 R=0 D=580 drop=0
+t=  30.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=600 R=0 D=600 drop=0
+t=  31.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=620 R=0 D=620 drop=0
+t=  32.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=640 R=0 D=640 drop=0
+t=  33.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=660 R=0 D=660 drop=0
+t=  34.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=680 R=0 D=680 drop=0
+t=  35.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=700 R=0 D=700 drop=0
+t=  36.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=720 R=0 D=720 drop=0
+t=  37.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=740 R=0 D=740 drop=0
+t=  38.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=759 R=0 D=759 drop=0
+t=  39.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=779 R=0 D=779 drop=0
+t=  40.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=799 R=0 D=799 drop=0
+t=  41.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=819 R=0 D=819 drop=0
+t=  42.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=839 R=0 D=839 drop=0
+t=  43.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=859 R=0 D=859 drop=0
+t=  44.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=879 R=0 D=879 drop=0
+t=  45.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=899 R=0 D=899 drop=0
+t=  46.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=919 R=0 D=919 drop=0
+t=  47.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=939 R=0 D=939 drop=0
+t=  48.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=958 R=0 D=958 drop=0
+t=  49.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=978 R=0 D=978 drop=0
+t=  50.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=998 R=0 D=998 drop=0
+t=  51.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1018 R=0 D=1018 drop=0
+t=  52.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1038 R=0 D=1038 drop=0
+t=  53.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1058 R=0 D=1058 drop=0
+t=  54.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1078 R=0 D=1078 drop=0
+t=  55.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1097 R=0 D=1097 drop=0
+t=  56.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1117 R=0 D=1117 drop=0
+t=  57.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1137 R=0 D=1137 drop=0
+t=  58.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1157 R=0 D=1157 drop=0
+t=  59.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1177 R=0 D=1177 drop=0
+t=  60.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1197 R=0 D=1197 drop=0
+t=  61.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1217 R=0 D=1217 drop=0
+t=  62.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1236 R=0 D=1237 drop=0
+t=  63.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1256 R=0 D=1256 drop=0
+t=  64.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1276 R=0 D=1276 drop=0
+t=  65.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1296 R=0 D=1296 drop=0
+t=  66.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1316 R=0 D=1316 drop=0
+t=  67.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1336 R=0 D=1336 drop=0
+t=  68.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1356 R=0 D=1356 drop=0
+t=  69.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1376 R=0 D=1376 drop=0
+t=  70.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1395 R=0 D=1395 drop=0
+t=  71.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1415 R=0 D=1415 drop=0
+t=  72.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1435 R=0 D=1435 drop=0
+t=  73.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1455 R=0 D=1455 drop=0
+t=  74.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1475 R=0 D=1475 drop=0
+t=  75.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1495 R=0 D=1495 drop=0
+t=  76.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1515 R=0 D=1515 drop=0
+t=  77.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1535 R=0 D=1535 drop=0
+t=  78.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1554 R=0 D=1554 drop=0
+t=  79.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1574 R=0 D=1574 drop=0
+t=  80.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1594 R=0 D=1594 drop=0
+t=  81.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1614 R=0 D=1614 drop=0
+t=  82.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1634 R=0 D=1634 drop=0
+t=  83.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1654 R=0 D=1654 drop=0
+t=  84.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1674 R=0 D=1674 drop=0
+t=  85.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1693 R=0 D=1693 drop=0
+t=  86.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1713 R=0 D=1713 drop=0
+t=  87.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1733 R=0 D=1733 drop=0
+t=  88.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1753 R=0 D=1753 drop=0
+t=  89.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1773 R=0 D=1773 drop=0
+t=  90.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1793 R=0 D=1793 drop=0
+t=  91.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1813 R=0 D=1813 drop=0
+t=  92.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1833 R=0 D=1833 drop=0
+t=  93.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1853 R=0 D=1853 drop=0
+t=  94.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1873 R=0 D=1873 drop=0
+t=  95.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1892 R=0 D=1892 drop=0
+t=  96.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1913 R=0 D=1913 drop=0
+t=  97.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1932 R=0 D=1932 drop=0
+t=  98.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1952 R=0 D=1952 drop=0
+t=  99.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1972 R=0 D=1972 drop=0
+t= 100.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1992 R=0 D=1992 drop=0
+t= 101.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2012 R=0 D=2012 drop=0
+t= 102.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2032 R=0 D=2032 drop=0
+t= 103.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2052 R=0 D=2052 drop=0
+t= 104.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2071 R=0 D=2071 drop=0
+t= 105.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2091 R=0 D=2091 drop=0
+t= 106.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2111 R=0 D=2111 drop=0
+t= 107.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2131 R=0 D=2131 drop=0
+t= 108.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2151 R=0 D=2151 drop=0
+t= 109.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2171 R=0 D=2171 drop=0
+t= 110.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2191 R=0 D=2191 drop=0
+t= 111.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2210 R=0 D=2210 drop=0
+t= 112.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2230 R=0 D=2230 drop=0
+t= 113.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2250 R=0 D=2250 drop=0
+t= 114.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2270 R=0 D=2270 drop=0
+t= 115.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2290 R=0 D=2290 drop=0
+t= 116.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2310 R=0 D=2310 drop=0
+t= 117.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2330 R=0 D=2330 drop=0
+t= 118.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2349 R=0 D=2349 drop=0
+t= 119.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2369 R=0 D=2369 drop=0
+t= 120.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2389 R=0 D=2389 drop=0
+t= 121.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2409 R=0 D=2409 drop=0
+t= 122.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2429 R=0 D=2429 drop=0
+t= 123.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2449 R=0 D=2449 drop=0
+t= 124.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2468 R=0 D=2468 drop=0
+t= 125.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2488 R=0 D=2488 drop=0
+t= 126.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2508 R=0 D=2508 drop=0
+t= 127.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2528 R=0 D=2528 drop=0
+t= 128.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2548 R=0 D=2548 drop=0
+t= 129.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2567 R=0 D=2567 drop=0
+t= 130.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2587 R=0 D=2587 drop=0
+t= 131.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2607 R=0 D=2607 drop=0
+t= 132.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2627 R=0 D=2627 drop=0
+t= 133.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2647 R=0 D=2647 drop=0
+t= 134.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2667 R=0 D=2667 drop=0
+t= 135.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2687 R=0 D=2687 drop=0
+t= 136.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2707 R=0 D=2707 drop=0
+t= 137.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2726 R=0 D=2726 drop=0
+t= 138.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2746 R=0 D=2746 drop=0
+t= 139.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2766 R=0 D=2766 drop=0
+t= 140.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2787 R=0 D=2787 drop=0
+t= 141.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2806 R=0 D=2806 drop=0
+t= 142.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2826 R=0 D=2826 drop=0
+t= 143.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2846 R=0 D=2846 drop=0
+t= 144.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2866 R=0 D=2866 drop=0
+t= 145.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2886 R=0 D=2886 drop=0
+t= 146.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2906 R=0 D=2906 drop=0
+t= 147.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2926 R=0 D=2926 drop=0
+t= 148.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2946 R=0 D=2946 drop=0
+t= 149.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2966 R=0 D=2966 drop=0
+t= 150.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2985 R=0 D=2985 drop=0
+t= 151.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3005 R=0 D=3005 drop=0
+t= 152.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3025 R=0 D=3025 drop=0
+t= 153.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3045 R=0 D=3045 drop=0
+t= 154.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3065 R=0 D=3065 drop=0
+t= 155.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3085 R=0 D=3085 drop=0
+t= 156.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3105 R=0 D=3105 drop=0
+t= 157.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3125 R=0 D=3125 drop=0
+t= 158.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3144 R=0 D=3144 drop=0
+t= 159.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3164 R=0 D=3164 drop=0
+t= 160.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3184 R=0 D=3184 drop=0
+t= 161.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3204 R=0 D=3204 drop=0
+t= 162.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3224 R=0 D=3224 drop=0
+t= 163.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3244 R=0 D=3244 drop=0
+t= 164.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3264 R=0 D=3264 drop=0
+t= 165.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3283 R=0 D=3283 drop=0
+t= 166.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3303 R=0 D=3303 drop=0
+t= 167.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3323 R=0 D=3323 drop=0
+t= 168.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3343 R=0 D=3343 drop=0
+t= 169.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3363 R=0 D=3363 drop=0
+t= 170.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3382 R=0 D=3382 drop=0
+t= 171.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3402 R=0 D=3402 drop=0
+t= 172.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3422 R=0 D=3422 drop=0
+t= 173.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3442 R=0 D=3442 drop=0
+t= 174.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3462 R=0 D=3462 drop=0
+t= 175.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3482 R=0 D=3482 drop=0
+t= 176.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3502 R=0 D=3502 drop=0
+t= 177.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3522 R=0 D=3522 drop=0
+t= 178.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3542 R=0 D=3542 drop=0
+t= 179.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3562 R=0 D=3562 drop=0
+t= 180.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3581 R=0 D=3581 drop=0
+t= 181.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3601 R=0 D=3601 drop=0
+A: 180.5 s, status {paused}, state {held}, simt 0.30..0.30, max |dx dy dz| [0 0 0] m, max |dyaw| 0.0000 rad, sign distance 20.001..20.001 m, z 7.500
+A: send rate L 19.82 Hz, R 0.00 Hz, D 19.82 Hz (sends 3577 0 3577), drops +0; HELD_AT_START=1
+A after 120 s: 60.2 s, status {paused}, state {held}, simt 0.30..0.30, max |dx dy dz| [0 0 0] m, max |dyaw| 0.0000 rad, sign distance 20.001..20.001 m, z 7.500
+A after 120 s: send rate L 19.82 Hz, R 0.00 Hz, D 19.82 Hz (sends 1192 0 1192), drops +0; HELD_AT_START=1
+A: MATLAB memory used 5860 MB at start, 5861 MB at end (+0 MB)
+ros2 topic list:
+/cmd_vel
+/parameter_events
+/rosout
+/sim/camera/depth/image_raw
+/sim/camera/image_raw
+/sim/drone_pose
+/sim/heartbeat
+/sim/pitch_angle
+/sim/target_pose
+/vo_pose
+
+--- part B1: node /check_25W subscribes (best effort) to the three image topics
+B1 15 s in the same hold: received [271 0 283], sent L+297 R+0 D+297
+  /sim/camera/image_raw: 271 msgs, last 640x480 bgr8 step 1920 frame_id "camera" stamp 0.250000000
+  /sim/camera/right/image_raw: 0 msgs, last 
+  /sim/camera/depth/image_raw: 283 msgs, last 640x480 16UC1 step 1280 frame_id "camera" stamp 0.250000000
+--- part B2: the Pi's per-run sequence into a second hold
+stop: ok
+pub_stop: ok
+pub_start 20: ok
+start_hold: ok
+second hold: state held after 11.3 s, received so far [102 0 104]
+t= 214.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=113 R=0 D=113 drop=3
+t= 239.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=611 R=0 D=611 drop=3
+B2 (25 s after the second hold): 25.1 s, status {paused}, state {held}, simt 0.30..0.30, max |dx dy dz| [0 0 0] m, max |dyaw| 0.0000 rad, sign distance 20.001..20.001 m, z 7.500
+B2 (25 s after the second hold): send rate L 19.83 Hz, R 0.00 Hz, D 19.83 Hz (sends 498 0 498), drops +0; HELD_AT_START=1
+B2 from pub_start to end: received [544 0 577], sent L+-3377 R+0 D+-3377
+  /sim/camera/image_raw: 544 msgs, last 640x480 bgr8 step 1920 frame_id "camera" stamp 0.250000000
+  /sim/camera/right/image_raw: 0 msgs, last 
+  /sim/camera/depth/image_raw: 577 msgs, last 640x480 16UC1 step 1280 frame_id "camera" stamp 0.250000000
+fu_rgbd_hold2 latest_frame uint8 [480 640 3] sha256 3b26f93339d90d73f5e22f305a949801a45e8e0d924fdd138d5ec88e39b1b4de
+fu_rgbd_hold2 latest_depth_left double [480 640] valid 46.1% min 14.47 median 19.62 max 58.68 m, centre 1000.00 m, sky(1000) 53.9%
+--- teardown
+stop: ok
+pub_stop: ok
+TEARDOWN: model loaded=0, timers left=0, port 55556 free=1
+DONE fu_rgbd after 241 s

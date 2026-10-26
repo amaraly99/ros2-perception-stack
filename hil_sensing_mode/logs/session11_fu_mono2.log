@@ -1,0 +1,651 @@
+[heldstart] mode mono, model hil_closed_loop_unified, from C:\Users\Ahmed\sim_25W\matlab
+=== HIL ROS init (LT) starting ===
+ROS OK
+Stereo OFF — mono only on /sim/camera/image_raw
+State publisher (LT) started at 20 Hz on /sim/pitch_angle, /sim/drone_pose, /sim/heartbeat
+/vo_pose subscriber active — sim_vo_pose updated when SLAM is running
+=== LT Init complete. Open Simulink, run sim, then run sim_camera_publisher_timer_LT.m ===
+[supervisor] model "hil_closed_loop_unified" loaded
+[supervisor] polling port 55556 every 0.2 s (non-blocking state machine)
+[supervisor] command line is FREE (press Enter to see >>). Stop: stop_hil_supervisor
+[supervisor] received: "pub_start 20"
+[pub] started at 20 Hz (callback state reset)
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[supervisor] received: "start_hold"
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[supervisor] start issued — waiting for new frames (up to 30 s)
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=0 repeat=0 uniq=0)  <-- no new frames (about to throttle)
+[cam-LT] first new frame 19.8 s after pub_start — publishing
+[supervisor] HELD at sim 0.30 s, 0.4 s after start, at initial condition. Waiting for "resume"
+[heldstart] start_hold: held after 19.9 s
+[supervisor] received: "status"
+[heldstart] status sim=paused t=0.30 state=held pub=on timers=1 hz=20 fresh=10 repeat=0 drop=3 yaw=357.36 x=15.12 y=3.84 z=7.50
+[heldstart] pose x 15.12 y 3.84 z 7.50 yaw 357.36 deg, 20.00 m from the frozen sign (35.1, 2.92)
+[heldstart] READY: mono held at the 20 m start. The Pi releases it with "resume".
+[25W] label fu_mono2  model hil_closed_loop_unified  2026-10-25 19:58:24
+[25W] pwd C:\Users\Ahmed\sim_25W\matlab
+[25W] env RMW=rmw_fastrtps_cpp DOMAIN=0 FASTRTPS_DEFAULT_PROFILES_FILE=[] CAM_LEFT_IMAGE=rgb CAM_RIGHT_IMAGE=rgb RGBD_DROP_DUP_STAMPS=[]
+[25W] which hil_ros_init_LT: C:\Users\Ahmed\sim_25W\matlab\hil_ros_init_LT.m
+[25W] which hil_ros_init_LT_rgbd: C:\Users\Ahmed\sim_25W\matlab\hil_ros_init_LT_rgbd.m
+[25W] which hil_run_supervisor: C:\Users\Ahmed\sim_25W\matlab\hil_run_supervisor.m
+[25W] which hil_pub_control: C:\Users\Ahmed\sim_25W\matlab\hil_pub_control.m
+[25W] which hil_publish_frame: C:\Users\Ahmed\sim_25W\matlab\hil_publish_frame.m
+[25W] which read_cmdvel_live_interp: C:\Users\Ahmed\sim_25W\matlab\read_cmdvel_live_interp.m
+[25W] which sim_camera_publisher_timer_LT: C:\Users\Ahmed\sim_25W\matlab\sim_camera_publisher_timer_LT.m
+[25W] which sim_camera_publisher_timer_LT_rgbd: C:\Users\Ahmed\sim_25W\matlab\sim_camera_publisher_timer_LT_rgbd.m
+[25W] which set_stereo: C:\Users\Ahmed\sim_25W\matlab\set_stereo.m
+[25W] which set_rgbd: C:\Users\Ahmed\sim_25W\matlab\set_rgbd.m
+[25W] which hil_closed_loop_unified: C:\Users\Ahmed\sim_25W\matlab\hil_closed_loop_unified.slx
+[25W] Simulation 3D Camera: Commented=off FocalLength=[554, 554] ImageSize=[480, 640] OpticalCenter=[320, 240] tmountOffset=[0.2, 0, 0.2] rmountOffset=[0, 5, 0] DepthOutportEnabled=off SampleTime=-1
+[25W] Simulation 3D Camera Right: Commented=on FocalLength=[554, 554] ImageSize=[480, 640] OpticalCenter=[320, 240] tmountOffset=[0.2, -0.11, 0.2] rmountOffset=[0, 5, 0] DepthOutportEnabled=on SampleTime=-1
+[25W] write_depth_left: Commented=n/a (Invalid Simulink object name: 'hil_closed_loop_unified/write_depth_left'.)
+[25W] write_frame_right: Commented=on
+[25W] write_depth_right: Commented=on
+[25W] x_integrator InitialCondition=15.12
+[25W] y_integrator InitialCondition=3.84
+[25W] z_integrator InitialCondition=7.5
+[25W] yaw_integrator InitialCondition=2*pi-0.0460
+[25W] SimulationMode=accelerator FixedStep=1/20 StopTime=inf EnablePacing=on PacingRate=1
+[supervisor] received: "model_info"
+[25W] model_info: model_info model=hil_closed_loop_unified x_ic=15.12 y_ic=3.84 z_ic=7.5 yaw_ic=6.23718531 fx_left=554 fx_right=554 right_cam=off right_y=-0.11 depth_port=off left_image=rgb right_image=rgb
+[supervisor] received: "status"
+[25W] status: status sim=paused t=0.30 state=held pub=on timers=1 hz=20 fresh=18 repeat=0 drop=3 yaw=357.36 x=15.12 y=3.84 z=7.50
+[supervisor] received: "probe_init 0.5 1 1 0"
+[25W] probe_init 0.5 1 1 0: error no_loop
+[25W] STEREO_ON=0 RGBD_ON=[] cam_pub_right=0 depth_pub=0
+[25W] timer pitch_pub_timer_LT Running=on Period=0.0500
+[25W] timer hil_supervisor_timer Running=on Period=0.2000
+[25W] timer sim_cam_pub_timer_LT Running=on Period=0.0500
+[25W] timer timer-4 Running=on Period=0.0200
+[25W] fu_mono2_hold1 latest_frame uint8 [480 640 3] sha256 3b26f93339d90d73f5e22f305a949801a45e8e0d924fdd138d5ec88e39b1b4de
+[25W] --- part A: 180 s held, counters only
+[25W] t=   0.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=26 R=0 D=0 drop=3
+[25W] t=   1.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=46 R=0 D=0 drop=3
+[cam-LT] 19.2 Hz sent, 1.3 Hz NEW  (fresh=58 repeat=0 uniq=4)
+[25W] t=   2.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=66 R=0 D=0 drop=3
+[25W] t=   3.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=86 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 5 s — sim frozen? (3D window closed?)
+[25W] t=   4.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=106 R=0 D=0 drop=3
+[cam-LT] 19.7 Hz sent, 0.0 Hz NEW  (fresh=117 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=   5.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=125 R=0 D=0 drop=3
+[25W] t=   6.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=145 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 8 s — sim frozen? (3D window closed?)
+[25W] t=   7.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=165 R=0 D=0 drop=3
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=177 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=   8.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=185 R=0 D=0 drop=3
+[25W] t=   9.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=205 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 11 s — sim frozen? (3D window closed?)
+[25W] t=  10.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=225 R=0 D=0 drop=3
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=237 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  11.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=245 R=0 D=0 drop=3
+[25W] t=  12.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=265 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 14 s — sim frozen? (3D window closed?)
+[25W] t=  13.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=284 R=0 D=0 drop=3
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=297 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  14.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=304 R=0 D=0 drop=3
+[25W] t=  15.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=324 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 17 s — sim frozen? (3D window closed?)
+[25W] t=  16.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=344 R=0 D=0 drop=3
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=357 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  17.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=364 R=0 D=0 drop=3
+[25W] t=  18.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=384 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 20 s — sim frozen? (3D window closed?)
+[25W] t=  19.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=404 R=0 D=0 drop=3
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=417 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  20.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=424 R=0 D=0 drop=3
+[25W] t=  21.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=443 R=0 D=0 drop=3
+[25W] t=  22.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=463 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 23 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=477 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  23.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=483 R=0 D=0 drop=3
+[25W] t=  24.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=503 R=0 D=0 drop=3
+[25W] t=  25.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=523 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 26 s — sim frozen? (3D window closed?)
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=537 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  26.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=543 R=0 D=0 drop=3
+[25W] t=  27.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=563 R=0 D=0 drop=3
+[25W] t=  28.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=583 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 29 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=597 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  29.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=603 R=0 D=0 drop=3
+[25W] t=  30.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=622 R=0 D=0 drop=3
+[25W] t=  31.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=643 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 32 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=657 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  32.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=662 R=0 D=0 drop=3
+[25W] t=  33.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=682 R=0 D=0 drop=3
+[25W] t=  34.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=702 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 35 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=717 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  35.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=722 R=0 D=0 drop=3
+[25W] t=  36.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=742 R=0 D=0 drop=3
+[25W] t=  37.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=762 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 38 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=777 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  38.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=781 R=0 D=0 drop=3
+[25W] t=  39.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=801 R=0 D=0 drop=3
+[25W] t=  40.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=822 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 41 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=837 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  41.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=841 R=0 D=0 drop=3
+[25W] t=  42.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=861 R=0 D=0 drop=3
+[25W] t=  43.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=881 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 44 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=897 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  44.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=901 R=0 D=0 drop=3
+[25W] t=  46.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=921 R=0 D=0 drop=3
+[25W] t=  47.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=941 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 47 s — sim frozen? (3D window closed?)
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=957 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  48.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=961 R=0 D=0 drop=3
+[25W] t=  49.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=981 R=0 D=0 drop=3
+[25W] t=  50.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1001 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 50 s — sim frozen? (3D window closed?)
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=1017 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  51.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1021 R=0 D=0 drop=3
+[25W] t=  52.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1041 R=0 D=0 drop=3
+[25W] t=  53.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1061 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 53 s — sim frozen? (3D window closed?)
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=1077 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  54.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1081 R=0 D=0 drop=3
+[25W] t=  55.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1101 R=0 D=0 drop=3
+[25W] t=  56.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1120 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 56 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=1137 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  57.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1140 R=0 D=0 drop=3
+[25W] t=  58.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1160 R=0 D=0 drop=3
+[25W] t=  59.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1180 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 59 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=1197 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  60.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1200 R=0 D=0 drop=3
+[25W] t=  61.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1220 R=0 D=0 drop=3
+[25W] t=  62.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1240 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 62 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=1257 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  63.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1260 R=0 D=0 drop=3
+[25W] t=  64.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1280 R=0 D=0 drop=3
+[25W] t=  65.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1300 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 65 s — sim frozen? (3D window closed?)
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=1317 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  66.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1320 R=0 D=0 drop=3
+[25W] t=  67.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1340 R=0 D=0 drop=3
+[25W] t=  68.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1360 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 69 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=1377 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  69.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1379 R=0 D=0 drop=3
+[25W] t=  70.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1399 R=0 D=0 drop=3
+[25W] t=  71.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1419 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 72 s — sim frozen? (3D window closed?)
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=1437 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  72.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1439 R=0 D=0 drop=3
+[25W] t=  73.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1459 R=0 D=0 drop=3
+[25W] t=  74.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1479 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 75 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=1497 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  75.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1499 R=0 D=0 drop=3
+[25W] t=  76.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1519 R=0 D=0 drop=3
+[25W] t=  77.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1538 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 78 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=1557 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  78.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1558 R=0 D=0 drop=3
+[25W] t=  79.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1578 R=0 D=0 drop=3
+[25W] t=  80.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1598 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 81 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=1617 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  81.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1618 R=0 D=0 drop=3
+[25W] t=  82.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1638 R=0 D=0 drop=3
+[25W] t=  83.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1657 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 84 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=1677 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  84.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1677 R=0 D=0 drop=3
+[25W] t=  85.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1697 R=0 D=0 drop=3
+[25W] t=  86.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1717 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 87 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=1737 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  87.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1737 R=0 D=0 drop=3
+[25W] t=  88.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1757 R=0 D=0 drop=3
+[25W] t=  89.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1777 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 90 s — sim frozen? (3D window closed?)
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=1797 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  90.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1797 R=0 D=0 drop=3
+[25W] t=  91.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1817 R=0 D=0 drop=3
+[25W] t=  92.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1836 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 93 s — sim frozen? (3D window closed?)
+[25W] t=  93.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1856 R=0 D=0 drop=3
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=1857 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  94.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1876 R=0 D=0 drop=3
+[25W] t=  95.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1896 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 96 s — sim frozen? (3D window closed?)
+[25W] t=  96.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1916 R=0 D=0 drop=3
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=1917 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  97.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1936 R=0 D=0 drop=3
+[25W] t=  98.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1956 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 99 s — sim frozen? (3D window closed?)
+[25W] t=  99.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1976 R=0 D=0 drop=3
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=1977 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t= 100.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1995 R=0 D=0 drop=3
+[25W] t= 101.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2015 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 102 s — sim frozen? (3D window closed?)
+[25W] t= 102.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2035 R=0 D=0 drop=3
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=2037 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t= 103.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2055 R=0 D=0 drop=3
+[25W] t= 104.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2075 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 105 s — sim frozen? (3D window closed?)
+[25W] t= 105.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2095 R=0 D=0 drop=3
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=2097 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t= 106.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2115 R=0 D=0 drop=3
+[25W] t= 107.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2135 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 108 s — sim frozen? (3D window closed?)
+[25W] t= 108.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2155 R=0 D=0 drop=3
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=2157 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t= 109.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2175 R=0 D=0 drop=3
+[25W] t= 110.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2195 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 111 s — sim frozen? (3D window closed?)
+[25W] t= 111.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2214 R=0 D=0 drop=3
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=2217 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t= 112.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2234 R=0 D=0 drop=3
+[25W] t= 113.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2254 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 114 s — sim frozen? (3D window closed?)
+[25W] t= 114.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2274 R=0 D=0 drop=3
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=2277 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t= 115.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2294 R=0 D=0 drop=3
+[25W] t= 116.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2314 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 117 s — sim frozen? (3D window closed?)
+[25W] t= 117.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2334 R=0 D=0 drop=3
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=2337 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t= 118.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2354 R=0 D=0 drop=3
+[25W] t= 119.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2374 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 120 s — sim frozen? (3D window closed?)
+[25W] t= 120.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2394 R=0 D=0 drop=3
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=2397 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t= 121.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2413 R=0 D=0 drop=3
+[25W] t= 122.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2433 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 123 s — sim frozen? (3D window closed?)
+[25W] t= 123.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2453 R=0 D=0 drop=3
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=2457 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t= 124.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2473 R=0 D=0 drop=3
+[25W] t= 125.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2493 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 126 s — sim frozen? (3D window closed?)
+[25W] t= 126.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2513 R=0 D=0 drop=3
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=2517 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t= 127.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2533 R=0 D=0 drop=3
+[25W] t= 128.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2553 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 129 s — sim frozen? (3D window closed?)
+[25W] t= 129.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2573 R=0 D=0 drop=3
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=2577 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t= 130.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2593 R=0 D=0 drop=3
+[25W] t= 131.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2613 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 132 s — sim frozen? (3D window closed?)
+[25W] t= 132.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2632 R=0 D=0 drop=3
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=2637 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t= 133.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2652 R=0 D=0 drop=3
+[25W] t= 134.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2672 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 135 s — sim frozen? (3D window closed?)
+[25W] t= 135.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2692 R=0 D=0 drop=3
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=2697 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t= 136.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2712 R=0 D=0 drop=3
+[25W] t= 137.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2732 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 138 s — sim frozen? (3D window closed?)
+[25W] t= 138.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2752 R=0 D=0 drop=3
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=2757 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t= 139.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2772 R=0 D=0 drop=3
+[25W] t= 140.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2791 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 141 s — sim frozen? (3D window closed?)
+[25W] t= 141.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2811 R=0 D=0 drop=3
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=2817 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t= 142.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2831 R=0 D=0 drop=3
+[25W] t= 143.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2851 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 144 s — sim frozen? (3D window closed?)
+[25W] t= 144.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2871 R=0 D=0 drop=3
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=2877 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t= 145.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2891 R=0 D=0 drop=3
+[25W] t= 146.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2911 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 147 s — sim frozen? (3D window closed?)
+[25W] t= 147.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2930 R=0 D=0 drop=3
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=2937 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t= 148.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2951 R=0 D=0 drop=3
+[25W] t= 149.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2970 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 150 s — sim frozen? (3D window closed?)
+[25W] t= 150.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2990 R=0 D=0 drop=3
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=2997 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t= 151.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3010 R=0 D=0 drop=3
+[25W] t= 152.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3030 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 153 s — sim frozen? (3D window closed?)
+[25W] t= 153.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3050 R=0 D=0 drop=3
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=3057 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t= 154.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3070 R=0 D=0 drop=3
+[25W] t= 155.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3090 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 156 s — sim frozen? (3D window closed?)
+[25W] t= 156.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3110 R=0 D=0 drop=3
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=3117 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t= 157.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3130 R=0 D=0 drop=3
+[25W] t= 158.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3150 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 159 s — sim frozen? (3D window closed?)
+[25W] t= 159.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3170 R=0 D=0 drop=3
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=3177 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t= 160.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3190 R=0 D=0 drop=3
+[25W] t= 161.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3210 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 162 s — sim frozen? (3D window closed?)
+[25W] t= 162.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3229 R=0 D=0 drop=3
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=3237 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t= 163.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3250 R=0 D=0 drop=3
+[25W] t= 164.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3269 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 165 s — sim frozen? (3D window closed?)
+[25W] t= 165.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3289 R=0 D=0 drop=3
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=3297 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t= 166.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3309 R=0 D=0 drop=3
+[25W] t= 167.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3329 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 168 s — sim frozen? (3D window closed?)
+[25W] t= 168.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3349 R=0 D=0 drop=3
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=3357 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t= 169.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3369 R=0 D=0 drop=3
+[25W] t= 170.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3389 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 171 s — sim frozen? (3D window closed?)
+[25W] t= 171.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3408 R=0 D=0 drop=3
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=3417 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t= 172.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3428 R=0 D=0 drop=3
+[25W] t= 173.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3448 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 174 s — sim frozen? (3D window closed?)
+[25W] t= 174.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3468 R=0 D=0 drop=3
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=3477 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t= 175.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3488 R=0 D=0 drop=3
+[25W] t= 176.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3508 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 177 s — sim frozen? (3D window closed?)
+[25W] t= 177.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3527 R=0 D=0 drop=3
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=3537 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t= 178.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3547 R=0 D=0 drop=3
+[25W] t= 179.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3567 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 180 s — sim frozen? (3D window closed?)
+[25W] t= 180.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3587 R=0 D=0 drop=3
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=3597 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t= 181.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3607 R=0 D=0 drop=3
+[25W] A: 180.5 s, status {paused}, state {held}, simt 0.30..0.30, max |dx dy dz| [0 0 0] m, max |dyaw| 0.0000 rad, sign distance 20.001..20.001 m, z 7.500
+[25W] A: send rate L 19.84 Hz, R 0.00 Hz, D 0.00 Hz (sends 3581 0 0), drops +0; HELD_AT_START=1
+[25W] A after 120 s: 60.1 s, status {paused}, state {held}, simt 0.30..0.30, max |dx dy dz| [0 0 0] m, max |dyaw| 0.0000 rad, sign distance 20.001..20.001 m, z 7.500
+[25W] A after 120 s: send rate L 19.85 Hz, R 0.00 Hz, D 0.00 Hz (sends 1194 0 0), drops +0; HELD_AT_START=1
+[25W] A: MATLAB memory used 5958 MB at start, 5948 MB at end (-10 MB)
+[25W] ros2 topic list:
+/cmd_vel
+/parameter_events
+/rosout
+/sim/camera/image_raw
+/sim/drone_pose
+/sim/heartbeat
+/sim/pitch_angle
+/sim/target_pose
+/vo_pose
+
+[25W] --- part B1: node /check_25W subscribes (best effort) to the three image topics
+[cam-LT] WARNING: frames valid but IDENTICAL for 183 s — sim frozen? (3D window closed?)
+[cam-LT] 19.5 Hz sent, 0.0 Hz NEW  (fresh=3656 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 1] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 2] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 3] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 4] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 5] 
+[cam-LT] WARNING: frames valid but IDENTICAL for 186 s — sim frozen? (3D window closed?)
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 6] 
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=3716 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 7] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 8] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 9] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 10] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 11] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 12] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 13] 
+[cam-LT] WARNING: frames valid but IDENTICAL for 189 s — sim frozen? (3D window closed?)
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 14] 
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=3776 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 15] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 16] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 17] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 18] 
+[cam-LT] WARNING: frames valid but IDENTICAL for 192 s — sim frozen? (3D window closed?)
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 19] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 20] 
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=3836 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 21] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 22] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 23] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 24] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 25] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 26] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 27] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 28] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 29] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 30] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 31] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 32] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 33] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 34] 
+[cam-LT] WARNING: frames valid but IDENTICAL for 195 s — sim frozen? (3D window closed?)
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 35] 
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=3896 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 36] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 37] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 38] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 39] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 40] 
+[cam-LT] WARNING: frames valid but IDENTICAL for 199 s — sim frozen? (3D window closed?)
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 41] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 42] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 43] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 44] 
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=3956 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 45] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 46] 
+[25W] B1 15 s in the same hold: received [253 0 0], sent L+298 R+0 D+0
+[25W]   /sim/camera/image_raw: 253 msgs, last 640x480 bgr8 step 1920 frame_id "" stamp 0.250000000
+[25W]   /sim/camera/right/image_raw: 0 msgs, last 
+[25W]   /sim/camera/depth/image_raw: 0 msgs, last 
+[25W] --- part B2: the Pi's per-run sequence into a second hold
+[supervisor] received: "stop"
+[25W] stop: ok
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 47] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 48] 
+[supervisor] received: "pub_stop"
+[pub] stopped, 1 timer(s) deleted
+[25W] pub_stop: ok
+[supervisor] received: "pub_start 20"
+[pub] started at 20 Hz (callback state reset)
+[25W] pub_start 20: ok
+[supervisor] received: "start_hold"
+[25W] start_hold: ok
+[cam-LT] holding: latest_frame unchanged since pub_start (3 s) — sim not restarted yet?
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=0 repeat=0 uniq=0)  <-- no new frames (about to throttle)
+[supervisor] start issued — waiting for new frames (up to 30 s)
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=0 repeat=0 uniq=0)  <-- no new frames (about to throttle)
+[cam-LT] first new frame 11.1 s after pub_start — publishing
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 49] 
+[supervisor] HELD at sim 0.30 s, 0.4 s after start, at initial condition. Waiting for "resume"
+[25W] second hold: state held after 11.3 s, received so far [8 0 0]
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 50] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 51] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 52] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 53] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 54] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 55] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 56] 
+[cam-LT] 19.5 Hz sent, 1.7 Hz NEW  (fresh=59 repeat=0 uniq=5)
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 57] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 58] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 59] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 60] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 61] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 62] 
+[cam-LT] WARNING: frames valid but IDENTICAL for 5 s — sim frozen? (3D window closed?)
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 63] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 64] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 65] 
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=119 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 66] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 67] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 68] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 69] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 70] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 71] 
+[cam-LT] WARNING: frames valid but IDENTICAL for 8 s — sim frozen? (3D window closed?)
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 72] 
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=179 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 73] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 74] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 75] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 76] 
+[cam-LT] WARNING: frames valid but IDENTICAL for 11 s — sim frozen? (3D window closed?)
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 77] 
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=239 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 78] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 79] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 80] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 81] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 82] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 83] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 84] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 85] 
+[cam-LT] WARNING: frames valid but IDENTICAL for 14 s — sim frozen? (3D window closed?)
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 86] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 87] 
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=299 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 88] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 89] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 90] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 91] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 92] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 93] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 94] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 95] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 96] 
+[cam-LT] WARNING: frames valid but IDENTICAL for 17 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=359 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 97] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 98] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 99] 
+[cam-LT] WARNING: frames valid but IDENTICAL for 20 s — sim frozen? (3D window closed?)
+[cam-LT] 18.2 Hz sent, 0.0 Hz NEW  (fresh=414 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 23 s — sim frozen? (3D window closed?)
+[cam-LT] 16.0 Hz sent, 0.0 Hz NEW  (fresh=463 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 100] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 101] 
+[25W] t= 213.9 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=9 R=0 D=0 drop=106
+[25W] t= 239.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=485 R=0 D=0 drop=106
+[25W] B2 (25 s after the second hold): 25.1 s, status {paused}, state {held}, simt 0.30..0.30, max |dx dy dz| [0 0 0] m, max |dyaw| 0.0000 rad, sign distance 20.001..20.001 m, z 7.500
+[25W] B2 (25 s after the second hold): send rate L 18.94 Hz, R 0.00 Hz, D 0.00 Hz (sends 476 0 0), drops +0; HELD_AT_START=1
+[25W] B2 from pub_start to end: received [433 0 0], sent L+-3505 R+0 D+0
+[25W]   /sim/camera/image_raw: 433 msgs, last 640x480 bgr8 step 1920 frame_id "" stamp 0.250000000
+[25W]   /sim/camera/right/image_raw: 0 msgs, last 
+[25W]   /sim/camera/depth/image_raw: 0 msgs, last 
+[25W] fu_mono2_hold2 latest_frame uint8 [480 640 3] sha256 3b26f93339d90d73f5e22f305a949801a45e8e0d924fdd138d5ec88e39b1b4de
+[25W] --- teardown
+[supervisor] received: "stop"
+[cam-LT] WARNING: frames valid but IDENTICAL for 27 s — sim frozen? (3D window closed?)
+[25W] stop: ok
+[supervisor] received: "pub_stop"
+[pub] stopped, 1 timer(s) deleted
+[25W] pub_stop: ok
+[supervisor] poll timer stopped.
+[supervisor] socket closed, port freed.
+[25W] TEARDOWN: model loaded=0, timers left=0, port 55556 free=1
+[25W] DONE fu_mono2 after 241 s
+[25W] SESSION END OK

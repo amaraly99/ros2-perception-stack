@@ -1,0 +1,27 @@
+{
+    "GraphicalInterface":{
+        "ExternalFileReferences":[
+            {
+                "Path":"$bdroot\/Simulation 3D Camera",
+                "Reference":"sim3dcameralib\/Simulation 3D Camera",
+                "SID":"2",
+                "Type":"LIBRARY_BLOCK"
+            },
+            {
+                "Path":"$bdroot\/Simulation 3D Scene Configuration",
+                "Reference":"sim3dlib\/Simulation 3D Scene Configuration",
+                "SID":"1",
+                "Type":"LIBRARY_BLOCK"
+            },
+            {
+                "Path":"$bdroot\/Simulation 3D UAV Vehicle",
+                "Reference":"uavsim3dlib\/Simulation 3D UAV Vehicle",
+                "SID":"3",
+                "Type":"LIBRARY_BLOCK"
+            }
+        ],
+        "PreCompExecutionDomainType":"Unset",
+        "SimulinkSubDomainType":"Simulink",
+        "SolverName":"ode1"
+    }
+}

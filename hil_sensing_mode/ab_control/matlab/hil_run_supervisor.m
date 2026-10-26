@@ -1,0 +1,548 @@
+% hil_run_supervisor.m — lets the Pi start/stop the Simulink HIL simulation
+% over a plain TCP socket, so automated experiment sweeps can reset the drone
+% to its initial position between configuration runs.
+%
+% Uses Java sockets (java.net.ServerSocket) — NO Instrument Control Toolbox.
+%
+% TWO CRITICAL DESIGN RULES (learned the hard way):
+%
+%  (1) NEVER BLOCK INSIDE THE TIMER CALLBACK.
+%      The poll timer can fire re-entrantly from INSIDE the Simulink 3D engine's
+%      own step (sim3d.io/Subscriber/receive -> Simulation3DEngine/stepImpl).
+%      If the callback then blocks waiting for the model to stop, the sim step it
+%      is nested inside can never finish, so the model can never stop -> deadlock,
+%      and the sim dies. Therefore the restart is a NON-BLOCKING state machine:
+%      we request 'stop', return immediately, and issue 'start' on a LATER poll
+%      once the model actually reports 'stopped'.
+%
+%  (2) The poll uses a 10 ms accept timeout so the main thread is never held long
+%      enough to starve the 20 Hz camera publisher timer.
+%
+% HOW THE DRONE RESETS: a Simulink 'start' re-applies every initial condition
+% (drone pose, integrators, scene state) — same as pressing Stop+Run.
+%
+% v3 (PROPOSED 2026-09-23, NOT YET APPLIED) — the initial-condition fault.
+%   Observed: under 'full' orchestration the Pi issues 'start', then waits for
+%   state=live, then boots the ROS stack, then opens the bag. The model is
+%   therefore RUNNING AND UNSUPERVISED for roughly 8-20 s before the controller
+%   exists. In 6 of 10 pilot runs on 2026-09-23 the drone had left its initial
+%   condition by the time the first pose was recorded: yaw 306-402 deg against
+%   the yaw_integrator IC of 2*pi (= 360 deg), and position 10-20 m downrange of
+%   the x/y/z ICs (-15, 10, 10). Every one of those runs then flew a heading that
+%   put the target outside the camera's 14.93 deg half-FOV, and none of them
+%   tracked the sign. The four runs that started at exactly 2*pi all did.
+%   (Those pilot runs used the old fx 1200 model. Since 2026-10-04 the shared
+%   model has fx 554, half-FOV 30.0 deg, and ICs x=15.12 y=3.84 z=7.5,
+%   yaw=2*pi-0.0460 (357.36 deg), 20 m from the frozen sign. See SIM_PARAMS.md.
+%   The 'status' yaw is reported in 0..360 style, so 357.36, not -2.64.)
+%
+%   NOT the cause (checked, 2026-09-23): a latched /cmd_vel. The last /cmd_vel of
+%   every pilot run has angular.z = 0.000 exactly, so the next run cannot be
+%   inheriting a yaw rate through base-workspace sim_cmdvel. The model's
+%   LoadInitialState and SaveFinalState are both 'off', so state is not carried
+%   through that path either.
+%
+%   Remaining explanation, and what v3 fixes: the drone moves during the
+%   unsupervised pre-roll, driven by whatever the booting controller publishes
+%   before anything is recording. v3 removes the pre-roll instead of trying to
+%   characterise it:
+%     (a) 'start_hold' + 'resume' let the Pi hold the model at its ICs until the
+%         stack is live, so every run begins integrating from the same state.
+%     (b) 'start' now zeroes base-workspace sim_cmdvel and bumps sim_cmdvel_ver,
+%         so a stale command cannot drive the drone even if one is ever present.
+%         Cheap and defensive; it is not the observed cause.
+%     (c) 'status' now reports the drone's pose, so the Pi can check the initial
+%         condition over the existing protocol instead of reading a bag.
+%     (d) 2026-10-05: the hold lands on a fixed sim step. Before, the pause was
+%         issued by this 0.2 s poll on the first changed frame, so it landed
+%         anywhere from sim 0.10 to 0.40 s. Now 'start_hold' sets base-workspace
+%         sim_hold_at = HOLD_AT_S before 'start', and read_cmdvel_live_interp.m,
+%         which runs on every model step, pauses the model when the sim clock
+%         reaches it. 'start', 'stop' and 'resume' clear sim_hold_at, so a plain
+%         'start' never pauses. For a hold, latest_frame is cleared before
+%         'start', and the supervisor reports 'held' once the model is paused
+%         and latest_frame holds a frame from this run that is not all black.
+%         (Comparing with the frame before 'start' does not work: two holds at
+%         the same sim time render the same frame, which read as 'frozen'.)
+%
+% SETUP (run AFTER the normal HIL session is already streaming ~20 Hz):
+%   1. clear all + your 3x setenv(...)
+%   2. run hil_ros_init_LT             (wait for "=== LT Init complete ===")
+%   3. open + RUN hil_closed_loop.slx  (wait for latest_frame in workspace)
+%   4. run sim_camera_publisher_timer_LT  (confirm ~20 Hz on the Pi FIRST)
+%   5. run hil_run_supervisor          (returns to prompt; keeps polling)
+%
+%   NOTE: the ">>" prompt is free after step 5 — it is just buried under the
+%   continuous [cam-LT] / [cmdvel] output. Press Enter to see it. To stop:
+%       stop_hil_supervisor
+%
+% PROTOCOL (one line per command, TCP port 55556; reply is one line):
+%   "start"         -> stop model if running, then restart it (fresh initial conditions)   reply: ok
+%   "start_hold"    -> like "start", but PAUSE the model at sim time HOLD_AT_S (0.25 s), so
+%                      the drone sits at its initial conditions until "resume". See (d).   reply: ok
+%   "resume"        -> release a "start_hold" (no-op if the model is not paused)            reply: ok
+%   "stop"          -> stop the model                                                       reply: ok
+%   "status"        -> "status sim=<SimulationStatus> t=<sim time s> state=<supervisor state>
+%                       pub=<on|off> timers=<n> hz=<PUBLISH_HZ> fresh=<n> repeat=<n> drop=<n>
+%                       yaw=<deg> x=<m> y=<m> z=<m>"   (v3: pose added for the Pi's IC guard)
+%                      supervisor state: restarting|verifying|live|held|frozen|stopped|idle
+%   "pub_start [hz]"-> (re)start the camera publisher, callback state reset; hz optional
+%                      (default: last rate used, else 20)                                   reply: ok | error <msg>
+%   "pub_stop"      -> stop + delete the camera publisher timer                             reply: ok | error <msg>
+%   "probe_init <vx> <cycles> <lambda_m> <yaw_amp_deg>"     (SLAM benchmark, additive)
+%   "probe_mission <vx> <cycles> <lambda_m> <yaw_amp_deg>"
+%   "probe_scan <step_deg> <settle_s> <speed_mps> <unused>"  (look-around scan, slam_look_around.m)
+%   "probe_straight <vmax_mps> <with_init> <standoff_m> <unused>"  (system-like approach, slam_straight_approach.m)
+%   probe_init / probe_mission / probe_turn also take 6 numbers: + <cam_yaw_offset_deg> <init_along_path 0|1>
+%   (wider view, slam_traj_probe_wide.m). "probe_turn ..." hovers and turns the camera only.
+%                   -> ask the waiting loop of hil_session_start_slam(...) to fly the
+%                      trajectory probe (phase 'init' or 'mission'). Sets base variables
+%                      hilprobe_req and hilprobe_args, replies at once, never flies here.
+%                                                                       reply: ok | error busy | error no_loop | error bad_args
+%   "probe_status"  -> "probe_status state=idle|running|done invalid=0|1 maxtime_hit=<n>
+%                       dist_to_target_m=<m|nan> end_x=<m> end_y=<m> end_z=<m>"
+%   "model_info"    -> "model_info model=<name> x_ic=.. y_ic=.. z_ic=.. yaw_ic=.. fx_left=..
+%                       fx_right=..|none right_cam=on|off|absent right_y=..|none
+%                       depth_port=on|off left_image=rgb|mono right_image=rgb|mono"
+%   anything else   -> reply: error
+% A refused connection => supervisor not running => the Pi prompts the operator.
+
+% Model to control: env HIL_MODEL (set by hil_session_start.m), else 'hil_closed_loop' as before.
+MODEL_NAME = getenv('HIL_MODEL');
+if isempty(MODEL_NAME), MODEL_NAME = 'hil_closed_loop'; end
+PORT = 55556;
+
+if strcmp(MODEL_NAME, 'CHANGE_ME_TO_YOUR_MODEL_NAME')
+    error('hil_run_supervisor: edit MODEL_NAME at the top of this script first.');
+end
+
+load_system(MODEL_NAME);
+
+% Clean up any previous supervisor (timer + socket) so re-running is safe.
+stop_hil_supervisor();
+
+serverSock = java.net.ServerSocket(PORT);
+serverSock.setSoTimeout(10);   % 10 ms — never starves the camera timer
+assignin('base', 'hil_supervisor_sock', serverSock);
+
+supTimer = timer( ...
+    'Name',          'hil_supervisor_timer', ...
+    'Period',        0.2, ...
+    'ExecutionMode', 'fixedRate', ...
+    'BusyMode',      'drop', ...
+    'TimerFcn',      @(~,~) supervisor_poll(serverSock, MODEL_NAME), ...
+    'ErrorFcn',      @(~,e) fprintf('[supervisor-err] %s\n', e.message));
+assignin('base', 'hil_supervisor_timer_obj', supTimer);
+start(supTimer);
+
+fprintf('[supervisor] model "%s" loaded\n', MODEL_NAME);
+fprintf('[supervisor] polling port %d every 0.2 s (non-blocking state machine)\n', PORT);
+fprintf('[supervisor] command line is FREE (press Enter to see >>). Stop: stop_hil_supervisor\n');
+
+% ─────────────────────────────────────────────────────────────────────────
+function supervisor_poll(serverSock, model)
+    % NON-BLOCKING. Each call does at most one quick action and returns, so it
+    % can safely fire even while nested inside a Simulink step.
+    SETTLE_POLLS = 25;    % 25 x 0.2 s = ~5 s between 'stopped' and 'start'
+    VERIFY_POLLS = 150;   % 150 x 0.2 s = ~30 s allowed for new frames after 'start'
+                          % Was 100 (~20 s). The first 'start' after a MATLAB
+                          % relaunch delivered its first new frame ~17 s in, i.e.
+                          % inside the old budget but close to it; later starts
+                          % take ~8 s. The Pi waits up to 45 s, so 30 s here still
+                          % fails before the Pi's own timeout.
+    HOLD_AT_S = 0.25;     % sim time of a 'start_hold' pause; a multiple of the 1/20 s step
+    persistent restartPending settlePolls verifyPolls lastCs tStart holdPending
+    if isempty(restartPending), restartPending = false; end
+    if isempty(settlePolls),    settlePolls    = 0;     end
+    if isempty(verifyPolls),    verifyPolls    = -1;    end   % -1 = not verifying
+    if isempty(lastCs),         lastCs         = [];    end
+    if isempty(holdPending),    holdPending    = false; end   % v3: pause once live
+
+    % (A) Advance a pending restart without ever waiting.
+    %     Once the model reports 'stopped' we let the Simulation 3D engine
+    %     settle for SETTLE_POLLS polls (~5 s) before issuing 'start'. Firing
+    %     'start' too soon can race the sim3d viewer teardown, which makes the
+    %     3D window close without reopening. Non-blocking: just count polls.
+    if restartPending
+        if strcmp(get_param(model, 'SimulationStatus'), 'stopped')
+            settlePolls = settlePolls + 1;
+            if settlePolls >= SETTLE_POLLS
+                % v3: clear any stale velocity command before the drone can
+                % integrate it. Defensive -- see the v3 note at the top.
+                zero_cmdvel();
+                % (d): a hold pauses inside the model step at HOLD_AT_S.
+                if holdPending
+                    assignin('base', 'sim_hold_at', HOLD_AT_S);
+                    assignin('base', 'latest_frame', []);   % any frame at the hold is from this run
+                else
+                    clear_hold_at();
+                end
+                set_param(model, 'SimulationCommand', 'start');
+                restartPending = false;
+                settlePolls = 0;
+                verifyPolls = 0;                 % start watching latest_frame
+                lastCs = frame_checksum();
+                tStart = tic;
+                assignin('base', 'hil_supervisor_state', 'verifying');
+                fprintf('[supervisor] start issued — waiting for new frames (up to %.0f s)\n', VERIFY_POLLS * 0.2);
+            end
+        end
+        % else: model is still stopping; we'll check again on the next poll.
+    end
+
+    % (A2) After a restart, the model only counts as running once latest_frame
+    %      changes. One checksum per poll, never waits.
+    if verifyPolls >= 0
+        verifyPolls = verifyPolls + 1;
+        cs = frame_checksum();
+        simst = get_param(model, 'SimulationStatus');
+        if holdPending && strcmp(simst, 'paused')
+            % (d): read_cmdvel_live_interp paused the model at HOLD_AT_S. It only
+            % counts as held if this run wrote a frame (latest_frame was cleared
+            % before 'start') and the frame is not all black.
+            if ~isempty(cs) && cs > 0
+                assignin('base', 'hil_supervisor_state', 'held');
+                fprintf('[supervisor] HELD at sim %.2f s, %.1f s after start, at initial condition. Waiting for "resume"\n', ...
+                        get_param(model, 'SimulationTime'), toc(tStart));
+            else
+                assignin('base', 'hil_supervisor_state', 'frozen');
+                fprintf(2, ['[supervisor] WARNING: paused at sim %.2f s but this run wrote no frame, ' ...
+                            'or only a black one. This hold is FROZEN.\n'], get_param(model, 'SimulationTime'));
+            end
+            holdPending = false;
+            verifyPolls = -1;
+        elseif holdPending && strcmp(simst, 'running') && ...
+                get_param(model, 'SimulationTime') > HOLD_AT_S + 0.5
+            % The step-side pause did not fire (an old read_cmdvel_live_interp.m on
+            % the path?). Fall back to the old poll-side pause, at a later step.
+            clear_hold_at();
+            try
+                set_param(model, 'SimulationCommand', 'pause');
+                assignin('base', 'hil_supervisor_state', 'held');
+                fprintf(2, ['[supervisor] WARNING: the model did not pause itself at sim %.2f s; ' ...
+                            'paused from the supervisor instead, at a later step.\n'], HOLD_AT_S);
+            catch he
+                fprintf(2, '[supervisor] pause failed (%s); continuing unheld\n', he.message);
+                assignin('base', 'hil_supervisor_state', 'live');
+            end
+            holdPending = false;
+            verifyPolls = -1;
+        elseif ~holdPending && ~isempty(cs) && ~isempty(lastCs) && cs ~= lastCs && ...
+                strcmp(simst, 'running')
+            fprintf('[supervisor] LIVE: new frames %.1f s after start — drone at initial pose\n', toc(tStart));
+            assignin('base', 'hil_supervisor_state', 'live');
+            verifyPolls = -1;
+        elseif verifyPolls >= VERIFY_POLLS
+            clear_hold_at();
+            fprintf(2, ['[supervisor] WARNING: NO NEW FRAMES %.0f s after start (status=%s). ' ...
+                        'The 3D window has probably closed; this run will be FROZEN.\n'], ...
+                    toc(tStart), get_param(model, 'SimulationStatus'));
+            assignin('base', 'hil_supervisor_state', 'frozen');
+            holdPending = false;
+            verifyPolls = -1;
+        end
+        if ~isempty(cs), lastCs = cs; end
+    end
+
+    % (B) Check the socket for a new command (blocks at most 10 ms).
+    try
+        conn = serverSock.accept();
+    catch
+        return;   % SocketTimeout — nothing waiting this tick
+    end
+    try
+        reader = java.io.BufferedReader( ...
+                    java.io.InputStreamReader(conn.getInputStream()));
+        writer = java.io.PrintWriter(conn.getOutputStream(), true);
+        line = reader.readLine();
+        if ~isempty(line)
+            cmd = strtrim(char(line));
+            fprintf('[supervisor] received: "%s"\n', cmd);
+            switch cmd
+                case {'start', 'start_hold'}
+                    % Request stop now (async, returns immediately). The actual
+                    % 'start' is issued in a LATER poll once the model reports
+                    % 'stopped' — see block (A). Never block here.
+                    if ~strcmp(get_param(model, 'SimulationStatus'), 'stopped')
+                        set_param(model, 'SimulationCommand', 'stop');
+                    end
+                    restartPending = true;
+                    settlePolls = 0;
+                    verifyPolls = -1;                    % cancel any earlier verification
+                    % 'start_hold' pauses the model at HOLD_AT_S, so the drone
+                    % waits at its ICs until the Pi says 'resume'. See (d).
+                    % sim_hold_at is cleared here and set again in (A) for a hold.
+                    clear_hold_at();
+                    holdPending = strcmp(cmd, 'start_hold');
+                    zero_cmdvel();                       % v3, defensive
+                    assignin('base', 'hil_supervisor_state', 'restarting');
+                    writer.println('ok');
+                case 'resume'
+                    % v3: release a hold. Harmless if the model is not paused.
+                    try
+                        clear_hold_at();
+                        if strcmp(get_param(model, 'SimulationStatus'), 'paused')
+                            set_param(model, 'SimulationCommand', 'continue');
+                        end
+                        holdPending = false;
+                        assignin('base', 'hil_supervisor_state', 'live');
+                        writer.println('ok');
+                    catch re_
+                        writer.println(['error ' re_.message]);
+                    end
+                case 'status'
+                    writer.println(status_line(model));
+                case 'pub_stop'
+                    try
+                        hil_pub_control('stop');
+                        writer.println('ok');
+                    catch pe
+                        writer.println(['error ' pe.message]);
+                    end
+                case 'stop'
+                    if ~strcmp(get_param(model, 'SimulationStatus'), 'stopped')
+                        set_param(model, 'SimulationCommand', 'stop');
+                    end
+                    restartPending = false;
+                    settlePolls = 0;
+                    verifyPolls = -1;
+                    holdPending = false;                 % v3
+                    clear_hold_at();
+                    assignin('base', 'hil_supervisor_state', 'stopped');
+                    writer.println('ok');
+                otherwise
+                    if strncmp(cmd, 'probe_init', 10) || strncmp(cmd, 'probe_mission', 13) || strncmp(cmd, 'probe_scan', 10) || strncmp(cmd, 'probe_straight', 14) || strncmp(cmd, 'probe_turn', 10)
+                        % SLAM benchmark: only sets flags. The waiting loop of
+                        % hil_session_start_slam(...) flies the probe on the main thread.
+                        try
+                            writer.println(probe_request(cmd));
+                        catch pe
+                            writer.println(['error ' pe.message]);
+                        end
+                    elseif strcmp(cmd, 'probe_status')
+                        try
+                            writer.println(probe_status_line());
+                        catch pe
+                            writer.println(['error ' pe.message]);
+                        end
+                    elseif strcmp(cmd, 'model_info')
+                        try
+                            writer.println(model_info_line(model));
+                        catch pe
+                            writer.println(['error ' pe.message]);
+                        end
+                    elseif strncmp(cmd, 'pub_start', 9)
+                        % "pub_start" or "pub_start <hz>"
+                        try
+                            hz = str2double(strtrim(cmd(10:end)));
+                            if isnan(hz)
+                                hz = 20;
+                                if evalin('base', "exist('sim_cam_pub_hz','var')")
+                                    hz = evalin('base', 'sim_cam_pub_hz');
+                                end
+                            end
+                            if evalin('base', "exist('RGBD_ON','var') && ~isempty(RGBD_ON) && RGBD_ON")
+                                % RGB-D session: hil_pub_control would replace the colour+depth
+                                % timer with a colour-only one. Re-create the RGB-D timer instead.
+                                % It has the same name, so 'pub_stop' and 'status' still work.
+                                hil_pub_control('stop');
+                                setenv('RGBD_PUBLISH_HZ', sprintf('%g', hz));
+                                assignin('base', 'sim_cam_pub_hz', hz);
+                                evalin('base', 'sim_camera_publisher_timer_LT_rgbd');
+                            elseif evalin('base', "exist('STEREO_ON','var') && ~isempty(STEREO_ON) && STEREO_ON")
+                                % Stereo session: hil_pub_control publishes the left eye only, so it
+                                % would silently drop the right eye. Re-create the stereo timer instead
+                                % (sim_camera_publisher_timer_LT, 20 Hz, same name: pub_stop/status work).
+                                hil_pub_control('stop');
+                                evalin('base', 'sim_camera_publisher_timer_LT');
+                            else
+                                hil_pub_control('start', hz);
+                            end
+                            writer.println('ok');
+                        catch pe
+                            writer.println(['error ' pe.message]);
+                        end
+                    else
+                        fprintf('[supervisor] unknown command "%s" (ignored)\n', cmd);
+                        writer.println('error');
+                    end
+            end
+        end
+    catch innerErr
+        fprintf('[supervisor] connection error: %s\n', innerErr.message);
+    end
+    try, conn.close(); catch, end
+end
+
+function line = status_line(model)
+    % One-line state for the "status" command. Reads only; never blocks.
+    st = 'idle';
+    try
+        if evalin('base', "exist('hil_supervisor_state','var')")
+            st = evalin('base', 'hil_supervisor_state');
+        end
+    catch
+    end
+    try, simst = get_param(model, 'SimulationStatus'); catch, simst = '?'; end
+    try, t = get_param(model, 'SimulationTime'); catch, t = NaN; end
+    % v3: drone pose, so the Pi's IC guard can read the initial condition over
+    % the existing protocol instead of opening a bag. sim_pose is written every
+    % model step by read_cmdvel_live_interp as [x; y; z; pitch; yaw] (rad).
+    pose = '';
+    try
+        if evalin('base', "exist('sim_pose','var')")
+            sp = evalin('base', 'sim_pose');
+            if numel(sp) >= 5
+                pose = sprintf(' yaw=%.2f x=%.2f y=%.2f z=%.2f', ...
+                               rad2deg(double(sp(5))), double(sp(1)), double(sp(2)), double(sp(3)));
+            end
+        end
+    catch
+    end
+    try
+        p = hil_pub_control('status');
+        pub = 'off'; if p.running, pub = 'on'; end
+        line = sprintf('status sim=%s t=%.2f state=%s pub=%s timers=%d hz=%g fresh=%d repeat=%d drop=%d%s', ...
+                       simst, t, st, pub, p.ntimers, p.hz, p.fresh, p.repeat, p.drop, pose);
+    catch
+        line = sprintf('status sim=%s t=%.2f state=%s pub=? timers=? hz=? fresh=? repeat=? drop=?%s', simst, t, st, pose);
+    end
+end
+
+function reply = probe_request(cmd)
+    % "probe_init|probe_mission <vx> <cycles> <lambda_m> <yaw_amp_deg>". Sets flags, never flies.
+    % hilprobe_loop is true while the waiting loop of hil_session_start_slam(...) runs.
+    parts = strsplit(strtrim(cmd));
+    what = parts{1}(7:end);                    % 'init' or 'mission'
+    vals = str2double(parts(2:end));
+    loop_on = false;
+    try, loop_on = logical(evalin('base', 'hilprobe_loop')); catch, end
+    if ~loop_on
+        reply = 'error no_loop';
+        return;
+    end
+    if ~(numel(vals) == 4 || numel(vals) == 6 || numel(vals) == 7) || any(isnan(vals))   % 6 = + <cam_yaw_offset_deg> <init_along_path 0|1>; 7 = + <yaw_ramp 0|1>
+        % The loop is up. The Pi sends a bare "probe_init" to test exactly this (answer: bad_args).
+        reply = 'error bad_args';
+        return;
+    end
+    if strcmp(base_text('hilprobe_state', 'idle'), 'running')
+        reply = 'error busy';
+        return;
+    end
+    try, evalin('base', 'clear init_result'); catch, end   % no result of an older probe
+    assignin('base', 'hilprobe_args', vals(:).');
+    assignin('base', 'hilprobe_state', 'running');         % running from now on: no gap for a status poll
+    assignin('base', 'hilprobe_req', what);
+    fprintf('[supervisor] probe %s requested: %s\n', what, num2str(vals));
+    reply = 'ok';
+end
+
+function line = probe_status_line()
+    % One line: state of the probe and the last result (init_result of the probe script).
+    st = base_text('hilprobe_state', 'idle');
+    inv = 0; mt = 0; dist = 'nan'; ex = 'nan'; ey = 'nan'; ez = 'nan';
+    try
+        if evalin('base', "exist('init_result','var')")
+            ir = evalin('base', 'init_result');
+            inv = double(logical(ir.invalid));
+            mt = double(ir.maxtime_hit);
+            if isfinite(ir.dist_to_target_m), dist = sprintf('%.3f', ir.dist_to_target_m); end
+            ex = sprintf('%.2f', ir.end_pos(1)); ey = sprintf('%.2f', ir.end_pos(2)); ez = sprintf('%.2f', ir.end_pos(3));
+        end
+    catch
+    end
+    line = sprintf('probe_status state=%s invalid=%d maxtime_hit=%d dist_to_target_m=%s end_x=%s end_y=%s end_z=%s', ...
+                   st, inv, mt, dist, ex, ey, ez);
+end
+
+function line = model_info_line(model)
+    % What the loaded model really contains, for the Pi's model check. Reads only.
+    ic = {'x_integrator', 'y_integrator', 'z_integrator', 'yaw_integrator'};
+    v = nan(1, 4);
+    for i = 1:4
+        try
+            s = get_param([model '/' ic{i}], 'InitialCondition');
+            v(i) = double(evalin('base', s));
+        catch
+        end
+    end
+    cam_l = [model '/Simulation 3D Camera'];
+    cam_r = [model '/Simulation 3D Camera Right'];
+    fx_left = 'none'; fx_right = 'none'; right_cam = 'absent'; right_y = 'none'; depth_port = 'off';
+    try, fx_left = sprintf('%.9g', first_num(get_param(cam_l, 'FocalLength'))); catch, end
+    try, depth_port = get_param(cam_l, 'DepthOutportEnabled'); catch, end
+    try
+        right_cam = get_param(cam_r, 'Commented');           % 'on' = commented out = camera off
+        if strcmp(right_cam, 'on'), right_cam = 'off'; else, right_cam = 'on'; end
+        fx_right = sprintf('%.9g', first_num(get_param(cam_r, 'FocalLength')));
+        mo = str2num(get_param(cam_r, 'tmountOffset')); %#ok<ST2NM>
+        right_y = sprintf('%.9g', mo(2));
+    catch
+    end
+    left_image = lower(strtrim(getenv('CAM_LEFT_IMAGE')));
+    right_image = lower(strtrim(getenv('CAM_RIGHT_IMAGE')));
+    if isempty(left_image), left_image = 'rgb'; end
+    if isempty(right_image), right_image = 'rgb'; end
+    try   % the RGB-D publisher chooses its colour type with its own variable
+        if evalin('base', "exist('RGBD_ON','var') && ~isempty(RGBD_ON) && RGBD_ON") && strcmp(getenv('RGBD_COLOUR_MONO'), '1')
+            left_image = 'mono';
+        end
+    catch
+    end
+    line = sprintf(['model_info model=%s x_ic=%.9g y_ic=%.9g z_ic=%.9g yaw_ic=%.9g fx_left=%s fx_right=%s ' ...
+                    'right_cam=%s right_y=%s depth_port=%s left_image=%s right_image=%s'], ...
+                   model, v(1), v(2), v(3), v(4), fx_left, fx_right, right_cam, right_y, depth_port, left_image, right_image);
+end
+
+function x = first_num(s)
+    a = str2num(s); %#ok<ST2NM>
+    x = a(1);
+end
+
+function s = base_text(name, default)
+    s = default;
+    try
+        if evalin('base', sprintf("exist('%s','var')", name))
+            s = evalin('base', name);
+        end
+    catch
+    end
+end
+
+function zero_cmdvel()
+    % v3. Clear any latched /cmd_vel so a stale command cannot drive the drone
+    % during a restart. read_cmdvel_live_interp re-reads sim_cmdvel only when
+    % sim_cmdvel_ver changes, so the version counter must be bumped too.
+    % Defensive only: the pilot data shows every run's last angular.z is exactly
+    % 0.000, so a latched yaw rate is NOT the observed cause of the IC fault.
+    try
+        assignin('base', 'sim_cmdvel', zeros(5, 1));
+        v = 0;
+        if evalin('base', "exist('sim_cmdvel_ver','var')")
+            v = double(evalin('base', 'sim_cmdvel_ver'));
+        end
+        assignin('base', 'sim_cmdvel_ver', int32(v + 1));
+    catch
+    end
+end
+
+function clear_hold_at()
+    % (d). Without sim_hold_at, read_cmdvel_live_interp never pauses the model.
+    try
+        evalin('base', 'clear sim_hold_at');
+    catch
+    end
+end
+
+function cs = frame_checksum()
+    % Same sparse checksum as sim_camera_publisher_timer_LT; [] if no valid frame.
+    cs = [];
+    try
+        f = evalin('base', 'latest_frame');
+        if ~isempty(f) && isa(f, 'uint8') && ndims(f) == 3
+            cs = sum(uint32(f(1:200:end)));
+        end
+    catch
+    end
+end

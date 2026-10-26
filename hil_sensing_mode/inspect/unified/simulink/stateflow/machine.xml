@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Stateflow>
+  <machine id="9">
+    <P Name="sfVersion">82600000</P>
+    <Children>
+      <target id="35" name="sfun">
+        <P Name="description">Default Simulink S-Function Target.</P>
+      </target>
+      <target id="36" name="rtw"/>
+      <chart Ref="chart_10"/>
+      <chart Ref="chart_16"/>
+      <chart Ref="chart_23"/>
+      <chart Ref="chart_29"/>
+    </Children>
+  </machine>
+  <instance id="15">
+    <P Name="machine">9</P>
+    <P Name="name">MATLAB Function1</P>
+    <P Name="chart">10</P>
+  </instance>
+  <instance id="22">
+    <P Name="machine">9</P>
+    <P Name="name">sim_clock_writer</P>
+    <P Name="chart">16</P>
+  </instance>
+  <instance id="28">
+    <P Name="machine">9</P>
+    <P Name="name">write_frame_right</P>
+    <P Name="chart">23</P>
+  </instance>
+  <instance id="34">
+    <P Name="machine">9</P>
+    <P Name="name">write_depth_right</P>
+    <P Name="chart">29</P>
+  </instance>
+</Stateflow>

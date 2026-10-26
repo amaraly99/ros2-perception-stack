@@ -1,0 +1,529 @@
+[heldstart] mode rgbd, model hil_closed_loop_baseline_RGBD, from C:\Users\Ahmed\sim_25W\matlab
+set_rgbd: RGB-D ON, model hil_closed_loop_baseline_RGBD (left depth -> /sim/camera/depth/image_raw).
+  Next: run hil_ros_init_LT_rgbd, start hil_closed_loop_baseline_RGBD, run sim_camera_publisher_timer_LT_rgbd.
+=== HIL ROS init (LT) starting ===
+ROS OK
+Stereo OFF — mono only on /sim/camera/image_raw
+State publisher (LT) started at 20 Hz on /sim/pitch_angle, /sim/drone_pose, /sim/heartbeat
+/vo_pose subscriber active — sim_vo_pose updated when SLAM is running
+=== LT Init complete. Open Simulink, run sim, then run sim_camera_publisher_timer_LT.m ===
+RGB-D ON: depth on /sim/camera/depth/image_raw (16UC1 mm)
+=== RGB-D init complete. Start hil_closed_loop_baseline_RGBD, then run sim_camera_publisher_timer_LT_rgbd ===
+[supervisor] model "hil_closed_loop_baseline_RGBD" loaded
+[supervisor] polling port 55556 every 0.2 s (non-blocking state machine)
+[supervisor] command line is FREE (press Enter to see >>). Stop: stop_hil_supervisor
+[supervisor] received: "start_hold"
+[supervisor] start issued — waiting for new frames (up to 30 s)
+[supervisor] HELD at sim 0.30 s, 0.4 s after start, at initial condition. Waiting for "resume"
+[heldstart] start_hold: held after 16.4 s
+[supervisor] received: "pub_start 20"
+sim_cam_pub_timer_LT started at 20 Hz, RGB-D, colour encoding bgr8
+  colour: /sim/camera/image_raw
+  depth:  /sim/camera/depth/image_raw  (16UC1 mm, same stamp)
+  Stop:     stop(sim_cam_pub_timer_LT)
+  Counters: sim_cam_pub_count_LT  sim_cam_pub_count_depth_LT  sim_cam_drop_count_LT  sim_cam_nodepth_count_LT
+[supervisor] received: "status"
+[heldstart] status sim=paused t=0.30 state=held pub=on timers=1 hz=20 fresh=4 repeat=NaN drop=0 yaw=357.36 x=15.12 y=3.84 z=7.50
+[heldstart] pose x 15.12 y 3.84 z 7.50 yaw 357.36 deg, 20.00 m from the frozen sign (35.1, 2.92)
+[heldstart] READY: rgbd held at the 20 m start. The Pi releases it with "resume".
+[25W] label fu_rgbd  model hil_closed_loop_baseline_RGBD  2026-10-25 19:53:15
+[25W] pwd C:\Users\Ahmed\sim_25W\matlab
+[25W] env RMW=rmw_fastrtps_cpp DOMAIN=0 FASTRTPS_DEFAULT_PROFILES_FILE=[] CAM_LEFT_IMAGE=rgb CAM_RIGHT_IMAGE=rgb RGBD_DROP_DUP_STAMPS=[]
+[25W] which hil_ros_init_LT: C:\Users\Ahmed\sim_25W\matlab\hil_ros_init_LT.m
+[25W] which hil_ros_init_LT_rgbd: C:\Users\Ahmed\sim_25W\matlab\hil_ros_init_LT_rgbd.m
+[25W] which hil_run_supervisor: C:\Users\Ahmed\sim_25W\matlab\hil_run_supervisor.m
+[25W] which hil_pub_control: C:\Users\Ahmed\sim_25W\matlab\hil_pub_control.m
+[25W] which hil_publish_frame: C:\Users\Ahmed\sim_25W\matlab\hil_publish_frame.m
+[25W] which read_cmdvel_live_interp: C:\Users\Ahmed\sim_25W\matlab\read_cmdvel_live_interp.m
+[25W] which sim_camera_publisher_timer_LT: C:\Users\Ahmed\sim_25W\matlab\sim_camera_publisher_timer_LT.m
+[25W] which sim_camera_publisher_timer_LT_rgbd: C:\Users\Ahmed\sim_25W\matlab\sim_camera_publisher_timer_LT_rgbd.m
+[25W] which set_stereo: C:\Users\Ahmed\sim_25W\matlab\set_stereo.m
+[25W] which set_rgbd: C:\Users\Ahmed\sim_25W\matlab\set_rgbd.m
+[25W] which hil_closed_loop_baseline_RGBD: C:\Users\Ahmed\sim_25W\matlab\hil_closed_loop_baseline_RGBD.slx
+[25W] Simulation 3D Camera: Commented=off FocalLength=[554, 554] ImageSize=[480, 640] OpticalCenter=[320, 240] tmountOffset=[0.2, 0, 0.2] rmountOffset=[0, 5, 0] DepthOutportEnabled=on SampleTime=-1
+[25W] Simulation 3D Camera Right: Commented=on FocalLength=[554, 554] ImageSize=[480, 640] OpticalCenter=[320, 240] tmountOffset=[0.2, -0.11, 0.2] rmountOffset=[0, 5, 0] DepthOutportEnabled=on SampleTime=-1
+[25W] write_depth_left: Commented=off
+[25W] write_frame_right: Commented=on
+[25W] write_depth_right: Commented=on
+[25W] x_integrator InitialCondition=15.12
+[25W] y_integrator InitialCondition=3.84
+[25W] z_integrator InitialCondition=7.5
+[25W] yaw_integrator InitialCondition=2*pi-0.0460
+[25W] SimulationMode=accelerator FixedStep=1/20 StopTime=inf EnablePacing=on PacingRate=1
+[supervisor] received: "model_info"
+[25W] model_info: model_info model=hil_closed_loop_baseline_RGBD x_ic=15.12 y_ic=3.84 z_ic=7.5 yaw_ic=6.23718531 fx_left=554 fx_right=554 right_cam=off right_y=-0.11 depth_port=on left_image=rgb right_image=rgb
+[supervisor] received: "status"
+[25W] status: status sim=paused t=0.30 state=held pub=on timers=1 hz=20 fresh=12 repeat=NaN drop=0 yaw=357.36 x=15.12 y=3.84 z=7.50
+[supervisor] received: "probe_init 0.5 1 1 0"
+[25W] probe_init 0.5 1 1 0: error no_loop
+[25W] STEREO_ON=0 RGBD_ON=1 cam_pub_right=0 depth_pub=1
+[25W] timer pitch_pub_timer_LT Running=on Period=0.0500
+[25W] timer hil_supervisor_timer Running=on Period=0.2000
+[25W] timer timer-3 Running=on Period=0.0200
+[25W] timer sim_cam_pub_timer_LT Running=on Period=0.0500
+[25W] fu_rgbd_hold1 latest_frame uint8 [480 640 3] sha256 3b26f93339d90d73f5e22f305a949801a45e8e0d924fdd138d5ec88e39b1b4de
+[25W] fu_rgbd_hold1 latest_depth_left double [480 640] valid 46.1% min 14.47 median 19.62 max 58.68 m, centre 1000.00 m, sky(1000) 53.9%
+[25W] --- part A: 180 s held, counters only
+[25W] t=   1.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=24 R=0 D=24 drop=0
+[25W] t=   2.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=44 R=0 D=44 drop=0
+[cam-LT] published: 60  (+60 in 3.0s = 19.8 Hz)  C=60 D=60 nodepth=0
+[25W] t=   3.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=64 R=0 D=64 drop=0
+[25W] t=   4.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=84 R=0 D=84 drop=0
+[25W] t=   5.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=103 R=0 D=103 drop=0
+[cam-LT] published: 120  (+60 in 3.0s = 19.8 Hz)  C=120 D=120 nodepth=0
+[25W] t=   6.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=123 R=0 D=123 drop=0
+[25W] t=   7.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=143 R=0 D=143 drop=0
+[25W] t=   8.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=163 R=0 D=163 drop=0
+[cam-LT] published: 180  (+60 in 3.0s = 19.8 Hz)  C=180 D=180 nodepth=0
+[25W] t=   9.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=183 R=0 D=183 drop=0
+[25W] t=  10.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=203 R=0 D=203 drop=0
+[25W] t=  11.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=223 R=0 D=223 drop=0
+[cam-LT] published: 240  (+60 in 3.0s = 19.8 Hz)  C=240 D=240 nodepth=0
+[25W] t=  12.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=243 R=0 D=243 drop=0
+[25W] t=  13.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=262 R=0 D=262 drop=0
+[25W] t=  14.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=282 R=0 D=282 drop=0
+[cam-LT] published: 300  (+60 in 3.0s = 19.8 Hz)  C=300 D=300 nodepth=0
+[25W] t=  15.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=302 R=0 D=302 drop=0
+[25W] t=  16.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=322 R=0 D=322 drop=0
+[25W] t=  17.0 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=342 R=0 D=342 drop=0
+[cam-LT] published: 360  (+60 in 3.0s = 19.8 Hz)  C=360 D=360 nodepth=0
+[25W] t=  18.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=362 R=0 D=362 drop=0
+[25W] t=  19.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=382 R=0 D=382 drop=0
+[25W] t=  20.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=402 R=0 D=402 drop=0
+[cam-LT] published: 420  (+60 in 3.0s = 19.8 Hz)  C=420 D=420 nodepth=0
+[25W] t=  21.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=422 R=0 D=422 drop=0
+[25W] t=  22.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=442 R=0 D=442 drop=0
+[25W] t=  23.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=462 R=0 D=462 drop=0
+[cam-LT] published: 480  (+60 in 3.0s = 19.8 Hz)  C=480 D=480 nodepth=0
+[25W] t=  24.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=481 R=0 D=481 drop=0
+[25W] t=  25.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=501 R=0 D=501 drop=0
+[25W] t=  26.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=520 R=0 D=520 drop=0
+[cam-LT] published: 539  (+59 in 3.0s = 19.5 Hz)  C=539 D=539 nodepth=0
+[25W] t=  27.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=540 R=0 D=540 drop=0
+[25W] t=  28.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=560 R=0 D=560 drop=0
+[25W] t=  29.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=580 R=0 D=580 drop=0
+[cam-LT] published: 599  (+60 in 3.0s = 19.9 Hz)  C=599 D=599 nodepth=0
+[25W] t=  30.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=600 R=0 D=600 drop=0
+[25W] t=  31.1 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=620 R=0 D=620 drop=0
+[25W] t=  32.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=640 R=0 D=640 drop=0
+[cam-LT] published: 659  (+60 in 3.0s = 19.8 Hz)  C=659 D=659 nodepth=0
+[25W] t=  33.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=660 R=0 D=660 drop=0
+[25W] t=  34.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=680 R=0 D=680 drop=0
+[25W] t=  35.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=700 R=0 D=700 drop=0
+[cam-LT] published: 719  (+60 in 3.0s = 19.9 Hz)  C=719 D=719 nodepth=0
+[25W] t=  36.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=720 R=0 D=720 drop=0
+[25W] t=  37.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=740 R=0 D=740 drop=0
+[25W] t=  38.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=759 R=0 D=759 drop=0
+[cam-LT] published: 779  (+60 in 3.0s = 19.9 Hz)  C=779 D=779 nodepth=0
+[25W] t=  39.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=779 R=0 D=779 drop=0
+[25W] t=  40.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=799 R=0 D=799 drop=0
+[25W] t=  41.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=819 R=0 D=819 drop=0
+[cam-LT] published: 839  (+60 in 3.0s = 19.8 Hz)  C=839 D=839 nodepth=0
+[25W] t=  42.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=839 R=0 D=839 drop=0
+[25W] t=  43.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=859 R=0 D=859 drop=0
+[25W] t=  44.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=879 R=0 D=879 drop=0
+[cam-LT] published: 899  (+60 in 3.0s = 19.8 Hz)  C=899 D=899 nodepth=0
+[25W] t=  45.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=899 R=0 D=899 drop=0
+[25W] t=  46.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=919 R=0 D=919 drop=0
+[25W] t=  47.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=939 R=0 D=939 drop=0
+[25W] t=  48.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=958 R=0 D=958 drop=0
+[cam-LT] published: 959  (+60 in 3.0s = 19.8 Hz)  C=959 D=959 nodepth=0
+[25W] t=  49.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=978 R=0 D=978 drop=0
+[25W] t=  50.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=998 R=0 D=998 drop=0
+[25W] t=  51.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1018 R=0 D=1018 drop=0
+[cam-LT] published: 1019  (+60 in 3.0s = 19.9 Hz)  C=1019 D=1019 nodepth=0
+[25W] t=  52.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1038 R=0 D=1038 drop=0
+[25W] t=  53.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1058 R=0 D=1058 drop=0
+[25W] t=  54.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1078 R=0 D=1078 drop=0
+[cam-LT] published: 1079  (+60 in 3.0s = 19.8 Hz)  C=1079 D=1079 nodepth=0
+[25W] t=  55.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1097 R=0 D=1097 drop=0
+[25W] t=  56.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1117 R=0 D=1117 drop=0
+[25W] t=  57.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1137 R=0 D=1137 drop=0
+[cam-LT] published: 1139  (+60 in 3.0s = 19.8 Hz)  C=1139 D=1139 nodepth=0
+[25W] t=  58.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1157 R=0 D=1157 drop=0
+[25W] t=  59.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1177 R=0 D=1177 drop=0
+[25W] t=  60.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1197 R=0 D=1197 drop=0
+[cam-LT] published: 1199  (+60 in 3.0s = 19.8 Hz)  C=1199 D=1199 nodepth=0
+[25W] t=  61.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1217 R=0 D=1217 drop=0
+[25W] t=  62.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1236 R=0 D=1237 drop=0
+[25W] t=  63.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1256 R=0 D=1256 drop=0
+[cam-LT] published: 1259  (+60 in 3.0s = 19.9 Hz)  C=1259 D=1259 nodepth=0
+[25W] t=  64.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1276 R=0 D=1276 drop=0
+[25W] t=  65.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1296 R=0 D=1296 drop=0
+[25W] t=  66.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1316 R=0 D=1316 drop=0
+[cam-LT] published: 1319  (+60 in 3.0s = 19.8 Hz)  C=1319 D=1319 nodepth=0
+[25W] t=  67.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1336 R=0 D=1336 drop=0
+[25W] t=  68.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1356 R=0 D=1356 drop=0
+[25W] t=  69.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1376 R=0 D=1376 drop=0
+[cam-LT] published: 1379  (+60 in 3.0s = 19.8 Hz)  C=1379 D=1379 nodepth=0
+[25W] t=  70.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1395 R=0 D=1395 drop=0
+[25W] t=  71.2 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1415 R=0 D=1415 drop=0
+[25W] t=  72.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1435 R=0 D=1435 drop=0
+[cam-LT] published: 1439  (+60 in 3.0s = 19.8 Hz)  C=1439 D=1439 nodepth=0
+[25W] t=  73.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1455 R=0 D=1455 drop=0
+[25W] t=  74.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1475 R=0 D=1475 drop=0
+[25W] t=  75.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1495 R=0 D=1495 drop=0
+[cam-LT] published: 1499  (+60 in 3.0s = 19.8 Hz)  C=1499 D=1499 nodepth=0
+[25W] t=  76.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1515 R=0 D=1515 drop=0
+[25W] t=  77.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1535 R=0 D=1535 drop=0
+[25W] t=  78.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1554 R=0 D=1554 drop=0
+[cam-LT] published: 1559  (+60 in 3.0s = 19.9 Hz)  C=1559 D=1559 nodepth=0
+[25W] t=  79.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1574 R=0 D=1574 drop=0
+[25W] t=  80.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1594 R=0 D=1594 drop=0
+[25W] t=  81.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1614 R=0 D=1614 drop=0
+[cam-LT] published: 1619  (+60 in 3.0s = 19.8 Hz)  C=1619 D=1619 nodepth=0
+[25W] t=  82.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1634 R=0 D=1634 drop=0
+[25W] t=  83.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1654 R=0 D=1654 drop=0
+[25W] t=  84.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1674 R=0 D=1674 drop=0
+[cam-LT] published: 1679  (+60 in 3.0s = 19.8 Hz)  C=1679 D=1679 nodepth=0
+[25W] t=  85.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1693 R=0 D=1693 drop=0
+[25W] t=  86.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1713 R=0 D=1713 drop=0
+[25W] t=  87.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1733 R=0 D=1733 drop=0
+[cam-LT] published: 1739  (+60 in 3.0s = 19.8 Hz)  C=1739 D=1739 nodepth=0
+[25W] t=  88.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1753 R=0 D=1753 drop=0
+[25W] t=  89.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1773 R=0 D=1773 drop=0
+[25W] t=  90.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1793 R=0 D=1793 drop=0
+[cam-LT] published: 1799  (+60 in 3.0s = 19.9 Hz)  C=1799 D=1799 nodepth=0
+[25W] t=  91.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1813 R=0 D=1813 drop=0
+[25W] t=  92.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1833 R=0 D=1833 drop=0
+[25W] t=  93.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1853 R=0 D=1853 drop=0
+[cam-LT] published: 1859  (+60 in 3.0s = 19.8 Hz)  C=1859 D=1859 nodepth=0
+[25W] t=  94.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1873 R=0 D=1873 drop=0
+[25W] t=  95.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1892 R=0 D=1892 drop=0
+[25W] t=  96.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1913 R=0 D=1913 drop=0
+[cam-LT] published: 1919  (+60 in 3.0s = 19.9 Hz)  C=1919 D=1919 nodepth=0
+[25W] t=  97.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1932 R=0 D=1932 drop=0
+[25W] t=  98.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1952 R=0 D=1952 drop=0
+[25W] t=  99.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1972 R=0 D=1972 drop=0
+[cam-LT] published: 1979  (+60 in 3.0s = 19.8 Hz)  C=1979 D=1979 nodepth=0
+[25W] t= 100.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1992 R=0 D=1992 drop=0
+[25W] t= 101.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2012 R=0 D=2012 drop=0
+[25W] t= 102.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2032 R=0 D=2032 drop=0
+[cam-LT] published: 2039  (+60 in 3.0s = 19.9 Hz)  C=2039 D=2039 nodepth=0
+[25W] t= 103.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2052 R=0 D=2052 drop=0
+[25W] t= 104.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2071 R=0 D=2071 drop=0
+[25W] t= 105.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2091 R=0 D=2091 drop=0
+[cam-LT] published: 2099  (+60 in 3.0s = 19.8 Hz)  C=2099 D=2099 nodepth=0
+[25W] t= 106.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2111 R=0 D=2111 drop=0
+[25W] t= 107.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2131 R=0 D=2131 drop=0
+[25W] t= 108.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2151 R=0 D=2151 drop=0
+[cam-LT] published: 2159  (+60 in 3.0s = 19.8 Hz)  C=2159 D=2159 nodepth=0
+[25W] t= 109.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2171 R=0 D=2171 drop=0
+[25W] t= 110.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2191 R=0 D=2191 drop=0
+[25W] t= 111.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2210 R=0 D=2210 drop=0
+[cam-LT] published: 2219  (+60 in 3.0s = 19.8 Hz)  C=2219 D=2219 nodepth=0
+[25W] t= 112.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2230 R=0 D=2230 drop=0
+[25W] t= 113.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2250 R=0 D=2250 drop=0
+[25W] t= 114.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2270 R=0 D=2270 drop=0
+[cam-LT] published: 2279  (+60 in 3.0s = 19.8 Hz)  C=2279 D=2279 nodepth=0
+[25W] t= 115.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2290 R=0 D=2290 drop=0
+[25W] t= 116.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2310 R=0 D=2310 drop=0
+[25W] t= 117.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2330 R=0 D=2330 drop=0
+[cam-LT] published: 2339  (+60 in 3.0s = 19.8 Hz)  C=2339 D=2339 nodepth=0
+[25W] t= 118.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2349 R=0 D=2349 drop=0
+[25W] t= 119.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2369 R=0 D=2369 drop=0
+[25W] t= 120.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2389 R=0 D=2389 drop=0
+[cam-LT] published: 2399  (+60 in 3.0s = 19.8 Hz)  C=2399 D=2399 nodepth=0
+[25W] t= 121.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2409 R=0 D=2409 drop=0
+[25W] t= 122.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2429 R=0 D=2429 drop=0
+[25W] t= 123.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2449 R=0 D=2449 drop=0
+[cam-LT] published: 2459  (+60 in 3.0s = 19.8 Hz)  C=2459 D=2459 nodepth=0
+[25W] t= 124.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2468 R=0 D=2468 drop=0
+[25W] t= 125.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2488 R=0 D=2488 drop=0
+[25W] t= 126.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2508 R=0 D=2508 drop=0
+[cam-LT] published: 2519  (+60 in 3.0s = 19.8 Hz)  C=2519 D=2519 nodepth=0
+[25W] t= 127.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2528 R=0 D=2528 drop=0
+[25W] t= 128.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2548 R=0 D=2548 drop=0
+[25W] t= 129.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2567 R=0 D=2567 drop=0
+[cam-LT] published: 2579  (+60 in 3.0s = 19.9 Hz)  C=2579 D=2579 nodepth=0
+[25W] t= 130.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2587 R=0 D=2587 drop=0
+[25W] t= 131.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2607 R=0 D=2607 drop=0
+[25W] t= 132.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2627 R=0 D=2627 drop=0
+[cam-LT] published: 2639  (+60 in 3.0s = 19.8 Hz)  C=2639 D=2639 nodepth=0
+[25W] t= 133.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2647 R=0 D=2647 drop=0
+[25W] t= 134.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2667 R=0 D=2667 drop=0
+[25W] t= 135.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2687 R=0 D=2687 drop=0
+[cam-LT] published: 2699  (+60 in 3.0s = 19.8 Hz)  C=2699 D=2699 nodepth=0
+[25W] t= 136.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2707 R=0 D=2707 drop=0
+[25W] t= 137.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2726 R=0 D=2726 drop=0
+[25W] t= 138.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2746 R=0 D=2746 drop=0
+[cam-LT] published: 2759  (+60 in 3.0s = 19.8 Hz)  C=2759 D=2759 nodepth=0
+[25W] t= 139.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2766 R=0 D=2766 drop=0
+[25W] t= 140.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2787 R=0 D=2787 drop=0
+[25W] t= 141.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2806 R=0 D=2806 drop=0
+[cam-LT] published: 2819  (+60 in 3.0s = 19.8 Hz)  C=2819 D=2819 nodepth=0
+[25W] t= 142.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2826 R=0 D=2826 drop=0
+[25W] t= 143.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2846 R=0 D=2846 drop=0
+[25W] t= 144.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2866 R=0 D=2866 drop=0
+[cam-LT] published: 2879  (+60 in 3.0s = 19.8 Hz)  C=2879 D=2879 nodepth=0
+[25W] t= 145.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2886 R=0 D=2886 drop=0
+[25W] t= 146.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2906 R=0 D=2906 drop=0
+[25W] t= 147.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2926 R=0 D=2926 drop=0
+[cam-LT] published: 2939  (+60 in 3.0s = 19.9 Hz)  C=2939 D=2939 nodepth=0
+[25W] t= 148.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2946 R=0 D=2946 drop=0
+[25W] t= 149.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2966 R=0 D=2966 drop=0
+[25W] t= 150.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=2985 R=0 D=2985 drop=0
+[cam-LT] published: 2999  (+60 in 3.0s = 19.8 Hz)  C=2999 D=2999 nodepth=0
+[25W] t= 151.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3005 R=0 D=3005 drop=0
+[25W] t= 152.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3025 R=0 D=3025 drop=0
+[25W] t= 153.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3045 R=0 D=3045 drop=0
+[cam-LT] published: 3059  (+60 in 3.0s = 19.9 Hz)  C=3059 D=3059 nodepth=0
+[25W] t= 154.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3065 R=0 D=3065 drop=0
+[25W] t= 155.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3085 R=0 D=3085 drop=0
+[25W] t= 156.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3105 R=0 D=3105 drop=0
+[cam-LT] published: 3119  (+60 in 3.0s = 19.8 Hz)  C=3119 D=3119 nodepth=0
+[25W] t= 157.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3125 R=0 D=3125 drop=0
+[25W] t= 158.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3144 R=0 D=3144 drop=0
+[25W] t= 159.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3164 R=0 D=3164 drop=0
+[cam-LT] published: 3179  (+60 in 3.0s = 19.8 Hz)  C=3179 D=3179 nodepth=0
+[25W] t= 160.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3184 R=0 D=3184 drop=0
+[25W] t= 161.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3204 R=0 D=3204 drop=0
+[25W] t= 162.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3224 R=0 D=3224 drop=0
+[cam-LT] published: 3239  (+60 in 3.0s = 19.9 Hz)  C=3239 D=3239 nodepth=0
+[25W] t= 163.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3244 R=0 D=3244 drop=0
+[25W] t= 164.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3264 R=0 D=3264 drop=0
+[25W] t= 165.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3283 R=0 D=3283 drop=0
+[cam-LT] published: 3299  (+60 in 3.0s = 19.8 Hz)  C=3299 D=3299 nodepth=0
+[25W] t= 166.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3303 R=0 D=3303 drop=0
+[25W] t= 167.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3323 R=0 D=3323 drop=0
+[25W] t= 168.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3343 R=0 D=3343 drop=0
+[cam-LT] published: 3359  (+60 in 3.1s = 19.6 Hz)  C=3359 D=3359 nodepth=0
+[25W] t= 169.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3363 R=0 D=3363 drop=0
+[25W] t= 170.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3382 R=0 D=3382 drop=0
+[25W] t= 171.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3402 R=0 D=3402 drop=0
+[cam-LT] published: 3419  (+60 in 3.0s = 19.9 Hz)  C=3419 D=3419 nodepth=0
+[25W] t= 172.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3422 R=0 D=3422 drop=0
+[25W] t= 173.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3442 R=0 D=3442 drop=0
+[25W] t= 174.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3462 R=0 D=3462 drop=0
+[cam-LT] published: 3479  (+60 in 3.0s = 19.9 Hz)  C=3479 D=3479 nodepth=0
+[25W] t= 175.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3482 R=0 D=3482 drop=0
+[25W] t= 176.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3502 R=0 D=3502 drop=0
+[25W] t= 177.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3522 R=0 D=3522 drop=0
+[cam-LT] published: 3539  (+60 in 3.0s = 19.8 Hz)  C=3539 D=3539 nodepth=0
+[25W] t= 178.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3542 R=0 D=3542 drop=0
+[25W] t= 179.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3562 R=0 D=3562 drop=0
+[25W] t= 180.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3581 R=0 D=3581 drop=0
+[cam-LT] published: 3599  (+60 in 3.0s = 19.8 Hz)  C=3599 D=3599 nodepth=0
+[25W] t= 181.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=3601 R=0 D=3601 drop=0
+[25W] A: 180.5 s, status {paused}, state {held}, simt 0.30..0.30, max |dx dy dz| [0 0 0] m, max |dyaw| 0.0000 rad, sign distance 20.001..20.001 m, z 7.500
+[25W] A: send rate L 19.82 Hz, R 0.00 Hz, D 19.82 Hz (sends 3577 0 3577), drops +0; HELD_AT_START=1
+[25W] A after 120 s: 60.2 s, status {paused}, state {held}, simt 0.30..0.30, max |dx dy dz| [0 0 0] m, max |dyaw| 0.0000 rad, sign distance 20.001..20.001 m, z 7.500
+[25W] A after 120 s: send rate L 19.82 Hz, R 0.00 Hz, D 19.82 Hz (sends 1192 0 1192), drops +0; HELD_AT_START=1
+[25W] A: MATLAB memory used 5860 MB at start, 5861 MB at end (+0 MB)
+[25W] ros2 topic list:
+/cmd_vel
+/parameter_events
+/rosout
+/sim/camera/depth/image_raw
+/sim/camera/image_raw
+/sim/drone_pose
+/sim/heartbeat
+/sim/pitch_angle
+/sim/target_pose
+/vo_pose
+
+[25W] --- part B1: node /check_25W subscribes (best effort) to the three image topics
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 1] 
+[cam-LT] published: 3658  (+59 in 3.0s = 19.5 Hz)  C=3658 D=3658 nodepth=0
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 1] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 2] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 3] 
+[cam-LT] published: 3718  (+60 in 3.0s = 19.8 Hz)  C=3718 D=3718 nodepth=0
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 2] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 4] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 3] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 5] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 4] 
+[cam-LT] published: 3778  (+60 in 3.0s = 19.8 Hz)  C=3778 D=3778 nodepth=0
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 5] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 6] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 7] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 8] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 9] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 6] 
+[cam-LT] published: 3838  (+60 in 3.0s = 19.9 Hz)  C=3838 D=3838 nodepth=0
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 7] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 10] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 11] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 12] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 13] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 14] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 15] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 16] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 17] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 18] 
+[cam-LT] published: 3898  (+60 in 3.0s = 19.9 Hz)  C=3898 D=3898 nodepth=0
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 8] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 19] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 20] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 21] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 22] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 9] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 10] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 23] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 11] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 12] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 13] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 24] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 25] 
+[cam-LT] published: 3958  (+60 in 3.0s = 19.8 Hz)  C=3958 D=3958 nodepth=0
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 14] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 26] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 15] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 16] 
+[25W] B1 15 s in the same hold: received [271 0 283], sent L+297 R+0 D+297
+[25W]   /sim/camera/image_raw: 271 msgs, last 640x480 bgr8 step 1920 frame_id "camera" stamp 0.250000000
+[25W]   /sim/camera/right/image_raw: 0 msgs, last 
+[25W]   /sim/camera/depth/image_raw: 283 msgs, last 640x480 16UC1 step 1280 frame_id "camera" stamp 0.250000000
+[25W] --- part B2: the Pi's per-run sequence into a second hold
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 27] 
+[supervisor] received: "stop"
+[25W] stop: ok
+[supervisor] received: "pub_stop"
+[pub] stopped, 1 timer(s) deleted
+[25W] pub_stop: ok
+[supervisor] received: "pub_start 20"
+sim_cam_pub_timer_LT started at 20 Hz, RGB-D, colour encoding bgr8
+  colour: /sim/camera/image_raw
+  depth:  /sim/camera/depth/image_raw  (16UC1 mm, same stamp)
+  Stop:     stop(sim_cam_pub_timer_LT)
+  Counters: sim_cam_pub_count_LT  sim_cam_pub_count_depth_LT  sim_cam_drop_count_LT  sim_cam_nodepth_count_LT
+[cam-LT] published: 1  (+1 in 3.4s = 0.3 Hz)  C=1 D=1 nodepth=0
+[25W] pub_start 20: ok
+[supervisor] received: "start_hold"
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 17] 
+[25W] start_hold: ok
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 28] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 29] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 18] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 30] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 19] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 20] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 21] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 22] 
+[cam-LT] published: 61  (+60 in 3.0s = 19.9 Hz)  C=61 D=61 nodepth=0
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 23] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 24] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 31] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 32] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 33] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 34] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 35] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 36] 
+[supervisor] start issued — waiting for new frames (up to 30 s)
+[cam-LT] published: 104  (+43 in 8.0s = 5.4 Hz)  C=104 D=104 nodepth=0
+[supervisor] HELD at sim 0.30 s, 0.4 s after start, at initial condition. Waiting for "resume"
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 37] 
+[25W] second hold: state held after 11.3 s, received so far [102 0 104]
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 38] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 25] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 26] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 39] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 27] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 40] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 41] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 42] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 43] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 28] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 44] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 45] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 46] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 47] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 48] 
+[cam-LT] published: 162  (+58 in 3.0s = 19.2 Hz)  C=162 D=162 nodepth=0
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 49] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 50] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 51] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 52] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 53] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 29] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 54] 
+[cam-LT] published: 223  (+61 in 3.0s = 20.1 Hz)  C=223 D=223 nodepth=0
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 30] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 31] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 55] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 32] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 33] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 56] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 57] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 58] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 34] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 35] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 59] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 60] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 36] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 61] 
+[cam-LT] published: 283  (+60 in 3.0s = 19.8 Hz)  C=283 D=283 nodepth=0
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 62] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 37] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 63] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 64] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 65] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 38] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 66] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 67] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 39] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 68] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 40] 
+[cam-LT] published: 343  (+60 in 3.0s = 19.8 Hz)  C=343 D=343 nodepth=0
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 41] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 42] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 69] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 70] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 71] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 43] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 72] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 44] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 73] 
+[cam-LT] published: 403  (+60 in 3.0s = 19.8 Hz)  C=403 D=403 nodepth=0
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 74] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 45] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 75] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 76] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 46] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 77] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 47] 
+[cam-LT] published: 463  (+60 in 3.0s = 19.9 Hz)  C=463 D=463 nodepth=0
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 78] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 79] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 80] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 81] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 82] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 83] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 84] 
+[cam-LT] published: 523  (+60 in 3.0s = 19.9 Hz)  C=523 D=523 nodepth=0
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 85] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 48] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 86] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 87] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 88] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 49] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 89] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 90] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/depth/image_raw. Total lost messages: 50] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 91] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 92] 
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 93] 
+[cam-LT] published: 583  (+60 in 3.0s = 19.9 Hz)  C=583 D=583 nodepth=0
+[Warning: [/check_25W]: Lost messages on topic /sim/camera/image_raw. Total lost messages: 94] 
+[25W] t= 214.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=113 R=0 D=113 drop=3
+[25W] t= 239.5 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=611 R=0 D=611 drop=3
+[25W] B2 (25 s after the second hold): 25.1 s, status {paused}, state {held}, simt 0.30..0.30, max |dx dy dz| [0 0 0] m, max |dyaw| 0.0000 rad, sign distance 20.001..20.001 m, z 7.500
+[25W] B2 (25 s after the second hold): send rate L 19.83 Hz, R 0.00 Hz, D 19.83 Hz (sends 498 0 498), drops +0; HELD_AT_START=1
+[25W] B2 from pub_start to end: received [544 0 577], sent L+-3377 R+0 D+-3377
+[25W]   /sim/camera/image_raw: 544 msgs, last 640x480 bgr8 step 1920 frame_id "camera" stamp 0.250000000
+[25W]   /sim/camera/right/image_raw: 0 msgs, last 
+[25W]   /sim/camera/depth/image_raw: 577 msgs, last 640x480 16UC1 step 1280 frame_id "camera" stamp 0.250000000
+[25W] fu_rgbd_hold2 latest_frame uint8 [480 640 3] sha256 3b26f93339d90d73f5e22f305a949801a45e8e0d924fdd138d5ec88e39b1b4de
+[25W] fu_rgbd_hold2 latest_depth_left double [480 640] valid 46.1% min 14.47 median 19.62 max 58.68 m, centre 1000.00 m, sky(1000) 53.9%
+[25W] --- teardown
+[supervisor] received: "stop"
+[25W] stop: ok
+[supervisor] received: "pub_stop"
+[pub] stopped, 1 timer(s) deleted
+[25W] pub_stop: ok
+[supervisor] poll timer stopped.
+[supervisor] socket closed, port freed.
+[25W] TEARDOWN: model loaded=0, timers left=0, port 55556 free=1
+[25W] DONE fu_rgbd after 241 s
+[25W] SESSION END OK

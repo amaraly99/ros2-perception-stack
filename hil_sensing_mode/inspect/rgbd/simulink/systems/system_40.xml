@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<System>
+  <P Name="Location">[223, 338, 826, 833]</P>
+  <P Name="SIDHighWatermark">30</P>
+  <Block BlockType="Inport" Name="t" SID="40::1">
+    <P Name="Position">[20, 101, 40, 119]</P>
+    <P Name="ZOrder">-1</P>
+  </Block>
+  <Block BlockType="Demux" Name=" Demux " SID="40::29">
+    <PortCounts in="1" out="1"/>
+    <P Name="Position">[270, 230, 320, 270]</P>
+    <P Name="ZOrder">20</P>
+    <P Name="Outputs">1</P>
+  </Block>
+  <Block BlockType="S-Function" Name=" SFunction " SID="40::28">
+    <P Name="Tag">Stateflow S-Function 2</P>
+    <PortCounts in="1" out="2"/>
+    <P Name="Position">[180, 100, 230, 160]</P>
+    <P Name="ZOrder">19</P>
+    <P Name="FunctionName">sf_sfun</P>
+    <P Name="PortCounts">[1 2]</P>
+    <P Name="SFunctionDeploymentMode">off</P>
+    <P Name="EnableBusSupport">off</P>
+    <P Name="SFcnIsStateOwnerBlock">off</P>
+    <PortProperties>
+      <Port Type="out" Index="2">
+        <P Name="Name">y</P>
+      </Port>
+    </PortProperties>
+  </Block>
+  <Block BlockType="Terminator" Name=" Terminator " SID="40::30">
+    <P Name="Position">[460, 241, 480, 259]</P>
+    <P Name="ZOrder">21</P>
+  </Block>
+  <Block BlockType="Outport" Name="y" SID="40::5">
+    <P Name="Position">[460, 101, 480, 119]</P>
+    <P Name="ZOrder">-5</P>
+  </Block>
+  <Line>
+    <P Name="ZOrder">9</P>
+    <P Name="Src">40::1#out:1</P>
+    <P Name="Dst">40::28#in:1</P>
+  </Line>
+  <Line>
+    <P Name="Name">y</P>
+    <P Name="ZOrder">10</P>
+    <P Name="Labels">[0, 0]</P>
+    <P Name="Src">40::28#out:2</P>
+    <P Name="Dst">40::5#in:1</P>
+  </Line>
+  <Line>
+    <P Name="ZOrder">11</P>
+    <P Name="Src">40::29#out:1</P>
+    <P Name="Dst">40::30#in:1</P>
+  </Line>
+  <Line>
+    <P Name="ZOrder">12</P>
+    <P Name="Src">40::28#out:1</P>
+    <P Name="Dst">40::29#in:1</P>
+  </Line>
+</System>

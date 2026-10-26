@@ -1,0 +1,1278 @@
+[heldstart] mode mono, model hil_closed_loop_unified, from C:\Users\Ahmed\sim_25A\matlab
+=== HIL ROS init (LT) starting ===
+ROS OK
+Stereo OFF — mono only on /sim/camera/image_raw
+State publisher (LT) started at 20 Hz on /sim/pitch_angle, /sim/drone_pose, /sim/heartbeat
+/vo_pose subscriber active — sim_vo_pose updated when SLAM is running
+=== LT Init complete. Open Simulink, run sim, then run sim_camera_publisher_timer_LT.m ===
+[supervisor] model "hil_closed_loop_unified" loaded
+[supervisor] polling port 55556 every 0.2 s (non-blocking state machine)
+[supervisor] command line is FREE (press Enter to see >>). Stop: stop_hil_supervisor
+[supervisor] received: "pub_start 20"
+[pub] started at 20 Hz (callback state reset)
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[supervisor] received: "start_hold"
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[cam-LT-err] Unrecognized function or variable 'latest_frame'.
+[supervisor] start issued — waiting for new frames (up to 30 s)
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=0 repeat=0 uniq=0)  <-- no new frames (about to throttle)
+[cam-LT] first new frame 20.2 s after pub_start — publishing
+[supervisor] HELD at sim 0.30 s, 0.4 s after start, at initial condition. Waiting for "resume"
+[heldstart] start_hold: held after 20.3 s
+[supervisor] received: "status"
+[heldstart] status sim=paused t=0.30 state=held pub=on timers=1 hz=20 fresh=10 repeat=0 drop=3 yaw=357.36 x=15.12 y=3.84 z=7.50
+[heldstart] pose x 15.12 y 3.84 z 7.50 yaw 357.36 deg, 20.00 m from the frozen sign (35.1, 2.92)
+[heldstart] READY: mono held at the 20 m start. The Pi releases it with "resume".
+[25W] label mono_final  model hil_closed_loop_unified  2026-10-25 16:20:55
+[25W] pwd C:\Users\Ahmed\sim_25A\matlab
+[25W] env RMW=rmw_fastrtps_cpp DOMAIN=0 FASTRTPS_DEFAULT_PROFILES_FILE=[] CAM_LEFT_IMAGE=rgb CAM_RIGHT_IMAGE=rgb
+[25W] which hil_ros_init_LT: C:\Users\Ahmed\sim_25A\matlab\hil_ros_init_LT.m
+[25W] which hil_ros_init_LT_rgbd: C:\Users\Ahmed\sim_25A\matlab\hil_ros_init_LT_rgbd.m
+[25W] which hil_run_supervisor: C:\Users\Ahmed\sim_25A\matlab\hil_run_supervisor.m
+[25W] which hil_pub_control: C:\Users\Ahmed\sim_25A\matlab\hil_pub_control.m
+[25W] which hil_publish_frame: C:\Users\Ahmed\sim_25A\matlab\hil_publish_frame.m
+[25W] which read_cmdvel_live_interp: C:\Users\Ahmed\sim_25A\matlab\read_cmdvel_live_interp.m
+[25W] which sim_camera_publisher_timer_LT: C:\Users\Ahmed\sim_25A\matlab\sim_camera_publisher_timer_LT.m
+[25W] which sim_camera_publisher_timer_LT_rgbd: C:\Users\Ahmed\sim_25A\matlab\sim_camera_publisher_timer_LT_rgbd.m
+[25W] which set_stereo: C:\Users\Ahmed\sim_25A\matlab\set_stereo.m
+[25W] which set_rgbd: C:\Users\Ahmed\sim_25A\matlab\set_rgbd.m
+[25W] which hil_closed_loop_unified: C:\Users\Ahmed\sim_25A\matlab\hil_closed_loop_unified.slx
+[25W] Simulation 3D Camera: Commented=off FocalLength=[554, 554] ImageSize=[480, 640] OpticalCenter=[320, 240] tmountOffset=[0.2, 0, 0.2] rmountOffset=[0, 5, 0] DepthOutportEnabled=off SampleTime=-1
+[25W] Simulation 3D Camera Right: Commented=on FocalLength=[554, 554] ImageSize=[480, 640] OpticalCenter=[320, 240] tmountOffset=[0.2, -0.11, 0.2] rmountOffset=[0, 5, 0] DepthOutportEnabled=on SampleTime=-1
+[25W] write_depth_left: Commented=n/a (Invalid Simulink object name: 'hil_closed_loop_unified/write_depth_left'.)
+[25W] write_frame_right: Commented=on
+[25W] write_depth_right: Commented=on
+[25W] x_integrator InitialCondition=15.12
+[25W] y_integrator InitialCondition=3.84
+[25W] z_integrator InitialCondition=7.5
+[25W] yaw_integrator InitialCondition=2*pi-0.0460
+[25W] SimulationMode=accelerator FixedStep=1/20 StopTime=inf EnablePacing=on PacingRate=1
+[supervisor] received: "model_info"
+[25W] model_info: model_info model=hil_closed_loop_unified x_ic=15.12 y_ic=3.84 z_ic=7.5 yaw_ic=6.23718531 fx_left=554 fx_right=554 right_cam=off right_y=-0.11 depth_port=off left_image=rgb right_image=rgb
+[supervisor] received: "status"
+[25W] status: status sim=paused t=0.30 state=held pub=on timers=1 hz=20 fresh=18 repeat=0 drop=3 yaw=357.36 x=15.12 y=3.84 z=7.50
+[supervisor] received: "probe_init 0.5 1 1 0"
+[25W] probe_init 0.5 1 1 0: error no_loop
+[25W] STEREO_ON=0 RGBD_ON=[] cam_pub_right=0 depth_pub=0
+[25W] timer pitch_pub_timer_LT Running=on Period=0.0500
+[25W] timer hil_supervisor_timer Running=on Period=0.2000
+[25W] timer sim_cam_pub_timer_LT Running=on Period=0.0500
+[25W] timer timer-4 Running=on Period=0.0200
+[25W] mono_final_hold1 latest_frame uint8 [480 640 3] sha256 3b26f93339d90d73f5e22f305a949801a45e8e0d924fdd138d5ec88e39b1b4de
+[25W] --- part A: 30 s held, counters only
+[25W] t=   0.7 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=25 R=0 D=0 drop=3
+[25W] t=   1.7 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=44 R=0 D=0 drop=3
+[cam-LT] 19.2 Hz sent, 1.3 Hz NEW  (fresh=58 repeat=0 uniq=4)
+[25W] t=   2.7 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=64 R=0 D=0 drop=3
+[25W] t=   3.7 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=84 R=0 D=0 drop=3
+[25W] t=   4.7 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=104 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 5 s — sim frozen? (3D window closed?)
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=118 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=   5.7 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=124 R=0 D=0 drop=3
+[25W] t=   6.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=144 R=0 D=0 drop=3
+[25W] t=   7.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=164 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 8 s — sim frozen? (3D window closed?)
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=178 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=   8.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=184 R=0 D=0 drop=3
+[25W] t=   9.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=204 R=0 D=0 drop=3
+[25W] t=  10.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=224 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 11 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=238 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  11.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=243 R=0 D=0 drop=3
+[25W] t=  12.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=263 R=0 D=0 drop=3
+[25W] t=  13.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=283 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 14 s — sim frozen? (3D window closed?)
+[cam-LT] 19.7 Hz sent, 0.0 Hz NEW  (fresh=297 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  14.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=302 R=0 D=0 drop=3
+[25W] t=  15.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=322 R=0 D=0 drop=3
+[25W] t=  16.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=342 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 17 s — sim frozen? (3D window closed?)
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=357 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  17.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=362 R=0 D=0 drop=3
+[25W] t=  18.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=382 R=0 D=0 drop=3
+[25W] t=  19.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=402 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 20 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=417 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  20.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=422 R=0 D=0 drop=3
+[25W] t=  21.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=442 R=0 D=0 drop=3
+[25W] t=  22.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=461 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 23 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=477 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  23.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=481 R=0 D=0 drop=3
+[25W] t=  24.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=501 R=0 D=0 drop=3
+[25W] t=  25.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=521 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 26 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=537 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  26.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=541 R=0 D=0 drop=3
+[25W] t=  27.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=561 R=0 D=0 drop=3
+[25W] t=  28.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=581 R=0 D=0 drop=3
+[cam-LT] WARNING: frames valid but IDENTICAL for 29 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=597 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[25W] t=  29.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=600 R=0 D=0 drop=3
+[25W] t=  30.8 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=620 R=0 D=0 drop=3
+[25W] A: 30.1 s, status {paused}, state {held}, simt 0.30..0.30, max |dx dy dz| [0 0 0] m, max |dyaw| 0.0000 rad, sign distance 20.001..20.001 m, z 7.500
+[25W] A: send rate L 19.78 Hz, R 0.00 Hz, D 0.00 Hz (sends 595 0 0), drops +0; HELD_AT_START=1
+[25W] ros2 topic list:
+/cmd_vel
+/parameter_events
+/rosout
+/sim/camera/image_raw
+/sim/drone_pose
+/sim/heartbeat
+/sim/pitch_angle
+/sim/target_pose
+/vo_pose
+
+[25W] DONE mono_final after 31 s
+[25W] SESSION END OK (mono left running and held)
+[cam-LT] WARNING: frames valid but IDENTICAL for 32 s — sim frozen? (3D window closed?)
+[cam-LT] 19.2 Hz sent, 0.0 Hz NEW  (fresh=655 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 35 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=715 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 38 s — sim frozen? (3D window closed?)
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=775 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 41 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=835 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 44 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=895 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 47 s — sim frozen? (3D window closed?)
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=955 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 50 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=1015 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 53 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=1075 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 56 s — sim frozen? (3D window closed?)
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=1135 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 59 s — sim frozen? (3D window closed?)
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=1195 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 63 s — sim frozen? (3D window closed?)
+[cam-LT] 19.6 Hz sent, 0.0 Hz NEW  (fresh=1254 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 66 s — sim frozen? (3D window closed?)
+[cam-LT] 20.0 Hz sent, 0.0 Hz NEW  (fresh=1315 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 69 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=1375 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 72 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=1435 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 75 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=1495 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 78 s — sim frozen? (3D window closed?)
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=1555 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 81 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=1615 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 84 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=1675 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 87 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=1735 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 90 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=1795 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 93 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=1855 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 96 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=1915 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 99 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=1975 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 102 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=2035 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 105 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=2095 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 108 s — sim frozen? (3D window closed?)
+[cam-LT] 19.9 Hz sent, 0.0 Hz NEW  (fresh=2155 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 111 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=2215 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 114 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=2275 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 117 s — sim frozen? (3D window closed?)
+[cam-LT] 19.8 Hz sent, 0.0 Hz NEW  (fresh=2335 repeat=0 uniq=4)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 120 s — sim frozen? (3D window closed?)
+[cam-LT] 15.6 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[supervisor] received: "model_info"
+[supervisor] received: "status"
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[supervisor] received: "status"
+[supervisor] received: "model_info"
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=2382 repeat=0 uniq=4)  [IDLE: sending paused (static scene) — resumes on motion]
+[supervisor] received: "pub_start 20"
+[pub] stopped, 1 timer(s) deleted
+[pub] started at 20 Hz (callback state reset)
+[supervisor] received: "start_hold"
+[supervisor] received: "status"
+[supervisor] received: "status"
+[supervisor] received: "status"
+[cam-LT] holding: latest_frame unchanged since pub_start (3 s) — sim not restarted yet?
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=0 repeat=0 uniq=0)  <-- no new frames (about to throttle)
+[supervisor] received: "status"
+[supervisor] received: "status"
+[supervisor] start issued — waiting for new frames (up to 30 s)
+[supervisor] received: "status"
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=0 repeat=0 uniq=0)  <-- no new frames (about to throttle)
+[supervisor] received: "status"
+[cam-LT] first new frame 12.0 s after pub_start — publishing
+[supervisor] HELD at sim 0.30 s, 0.4 s after start, at initial condition. Waiting for "resume"
+[supervisor] received: "status"
+[cam-LT] 16.0 Hz sent, 1.6 Hz NEW  (fresh=49 repeat=0 uniq=5)
+[cam-LT] WARNING: frames valid but IDENTICAL for 5 s — sim frozen? (3D window closed?)
+[cam-LT] 16.0 Hz sent, 0.0 Hz NEW  (fresh=98 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[supervisor] received: "status"
+[cam-LT] WARNING: frames valid but IDENTICAL for 8 s — sim frozen? (3D window closed?)
+[cam-LT] 16.1 Hz sent, 0.0 Hz NEW  (fresh=147 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 11 s — sim frozen? (3D window closed?)
+[cam-LT] 16.0 Hz sent, 0.0 Hz NEW  (fresh=195 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 14 s — sim frozen? (3D window closed?)
+[cam-LT] 16.3 Hz sent, 0.0 Hz NEW  (fresh=244 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[supervisor] received: "status"
+[cam-LT] WARNING: frames valid but IDENTICAL for 17 s — sim frozen? (3D window closed?)
+[cam-LT] 16.0 Hz sent, 0.0 Hz NEW  (fresh=292 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 20 s — sim frozen? (3D window closed?)
+[cam-LT] 16.3 Hz sent, 0.0 Hz NEW  (fresh=341 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 23 s — sim frozen? (3D window closed?)
+[cam-LT] 16.1 Hz sent, 0.0 Hz NEW  (fresh=390 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 26 s — sim frozen? (3D window closed?)
+[cam-LT] 16.0 Hz sent, 0.0 Hz NEW  (fresh=439 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 29 s — sim frozen? (3D window closed?)
+[cam-LT] 16.0 Hz sent, 0.0 Hz NEW  (fresh=488 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 32 s — sim frozen? (3D window closed?)
+[cam-LT] 15.9 Hz sent, 0.0 Hz NEW  (fresh=536 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 35 s — sim frozen? (3D window closed?)
+[cam-LT] 16.4 Hz sent, 0.0 Hz NEW  (fresh=586 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 38 s — sim frozen? (3D window closed?)
+[cam-LT] 16.1 Hz sent, 0.0 Hz NEW  (fresh=635 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 42 s — sim frozen? (3D window closed?)
+[cam-LT] 16.1 Hz sent, 0.0 Hz NEW  (fresh=684 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 45 s — sim frozen? (3D window closed?)
+[cam-LT] 16.1 Hz sent, 0.0 Hz NEW  (fresh=733 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 48 s — sim frozen? (3D window closed?)
+[cam-LT] 16.1 Hz sent, 0.0 Hz NEW  (fresh=782 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 51 s — sim frozen? (3D window closed?)
+[cam-LT] 16.2 Hz sent, 0.0 Hz NEW  (fresh=831 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 54 s — sim frozen? (3D window closed?)
+[cam-LT] 16.1 Hz sent, 0.0 Hz NEW  (fresh=880 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 57 s — sim frozen? (3D window closed?)
+[cam-LT] 16.0 Hz sent, 0.0 Hz NEW  (fresh=929 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 60 s — sim frozen? (3D window closed?)
+[cam-LT] 16.3 Hz sent, 0.0 Hz NEW  (fresh=978 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 63 s — sim frozen? (3D window closed?)
+[cam-LT] 16.0 Hz sent, 0.0 Hz NEW  (fresh=1027 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 66 s — sim frozen? (3D window closed?)
+[cam-LT] 16.2 Hz sent, 0.0 Hz NEW  (fresh=1076 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 69 s — sim frozen? (3D window closed?)
+[cam-LT] 16.0 Hz sent, 0.0 Hz NEW  (fresh=1125 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 72 s — sim frozen? (3D window closed?)
+[cam-LT] 16.3 Hz sent, 0.0 Hz NEW  (fresh=1174 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 75 s — sim frozen? (3D window closed?)
+[cam-LT] 16.1 Hz sent, 0.0 Hz NEW  (fresh=1223 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 78 s — sim frozen? (3D window closed?)
+[supervisor] received: "status"
+[cam-LT] 16.2 Hz sent, 0.0 Hz NEW  (fresh=1272 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 81 s — sim frozen? (3D window closed?)
+[cam-LT] 16.1 Hz sent, 0.0 Hz NEW  (fresh=1321 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 84 s — sim frozen? (3D window closed?)
+[cam-LT] 16.1 Hz sent, 0.0 Hz NEW  (fresh=1370 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 87 s — sim frozen? (3D window closed?)
+[cam-LT] 16.0 Hz sent, 0.0 Hz NEW  (fresh=1419 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 90 s — sim frozen? (3D window closed?)
+[cam-LT] 16.2 Hz sent, 0.0 Hz NEW  (fresh=1468 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 93 s — sim frozen? (3D window closed?)
+[cam-LT] 16.0 Hz sent, 0.0 Hz NEW  (fresh=1517 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 96 s — sim frozen? (3D window closed?)
+[cam-LT] 16.1 Hz sent, 0.0 Hz NEW  (fresh=1566 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 99 s — sim frozen? (3D window closed?)
+[cam-LT] 16.3 Hz sent, 0.0 Hz NEW  (fresh=1615 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 102 s — sim frozen? (3D window closed?)
+[cam-LT] 16.1 Hz sent, 0.0 Hz NEW  (fresh=1664 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 105 s — sim frozen? (3D window closed?)
+[cam-LT] 16.1 Hz sent, 0.0 Hz NEW  (fresh=1713 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 108 s — sim frozen? (3D window closed?)
+[cam-LT] 16.1 Hz sent, 0.0 Hz NEW  (fresh=1762 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 112 s — sim frozen? (3D window closed?)
+[cam-LT] 16.2 Hz sent, 0.0 Hz NEW  (fresh=1811 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 115 s — sim frozen? (3D window closed?)
+[cam-LT] 16.0 Hz sent, 0.0 Hz NEW  (fresh=1860 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 118 s — sim frozen? (3D window closed?)
+[cam-LT] 16.0 Hz sent, 0.0 Hz NEW  (fresh=1909 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] 8.9 Hz sent, 0.0 Hz NEW  (fresh=1936 repeat=0 uniq=5)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=1936 repeat=0 uniq=5)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=1936 repeat=0 uniq=5)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=1936 repeat=0 uniq=5)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=1936 repeat=0 uniq=5)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=1936 repeat=0 uniq=5)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=1936 repeat=0 uniq=5)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=1936 repeat=0 uniq=5)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=1936 repeat=0 uniq=5)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=1936 repeat=0 uniq=5)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=1936 repeat=0 uniq=5)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=1936 repeat=0 uniq=5)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=1936 repeat=0 uniq=5)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=1936 repeat=0 uniq=5)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=1936 repeat=0 uniq=5)  [IDLE: sending paused (static scene) — resumes on motion]
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=1936 repeat=0 uniq=5)  [IDLE: sending paused (static scene) — resumes on motion]
+[supervisor] received: "stop"
+[supervisor] received: "pub_stop"
+[pub] stopped, 1 timer(s) deleted
+[supervisor] received: "status"
+[supervisor] received: "status"
+[supervisor] received: "model_info"
+[supervisor] received: "status"
+[supervisor] received: "model_info"
+[supervisor] received: "pub_start 20"
+[pub] started at 20 Hz (callback state reset)
+[supervisor] received: "start_hold"
+[supervisor] received: "status"
+[supervisor] received: "status"
+[supervisor] received: "status"
+[cam-LT] holding: latest_frame unchanged since pub_start (3 s) — sim not restarted yet?
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=0 repeat=0 uniq=0)  <-- no new frames (about to throttle)
+[supervisor] received: "status"
+[supervisor] received: "status"
+[supervisor] start issued — waiting for new frames (up to 30 s)
+[supervisor] received: "status"
+[cam-LT] 0.0 Hz sent, 0.0 Hz NEW  (fresh=0 repeat=0 uniq=0)  <-- no new frames (about to throttle)
+[supervisor] received: "status"
+[cam-LT] first new frame 11.6 s after pub_start — publishing
+[supervisor] HELD at sim 0.30 s, 0.4 s after start, at initial condition. Waiting for "resume"
+[supervisor] received: "status"
+[cam-LT] 15.5 Hz sent, 1.6 Hz NEW  (fresh=47 repeat=0 uniq=5)
+[cam-LT] WARNING: frames valid but IDENTICAL for 5 s — sim frozen? (3D window closed?)
+[cam-LT] 16.2 Hz sent, 0.0 Hz NEW  (fresh=96 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 8 s — sim frozen? (3D window closed?)
+[cam-LT] 16.0 Hz sent, 0.0 Hz NEW  (fresh=145 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 11 s — sim frozen? (3D window closed?)
+[cam-LT] 16.1 Hz sent, 0.0 Hz NEW  (fresh=194 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 14 s — sim frozen? (3D window closed?)
+[cam-LT] 16.1 Hz sent, 0.0 Hz NEW  (fresh=243 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 17 s — sim frozen? (3D window closed?)
+[cam-LT] 16.2 Hz sent, 0.0 Hz NEW  (fresh=292 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 20 s — sim frozen? (3D window closed?)
+[cam-LT] 16.2 Hz sent, 0.0 Hz NEW  (fresh=341 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 23 s — sim frozen? (3D window closed?)
+[cam-LT] 16.2 Hz sent, 0.0 Hz NEW  (fresh=390 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 26 s — sim frozen? (3D window closed?)
+[cam-LT] 16.2 Hz sent, 0.0 Hz NEW  (fresh=439 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 29 s — sim frozen? (3D window closed?)
+[cam-LT] 16.1 Hz sent, 0.0 Hz NEW  (fresh=488 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 32 s — sim frozen? (3D window closed?)
+[cam-LT] 16.2 Hz sent, 0.0 Hz NEW  (fresh=537 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 35 s — sim frozen? (3D window closed?)
+[cam-LT] 16.2 Hz sent, 0.0 Hz NEW  (fresh=586 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 38 s — sim frozen? (3D window closed?)
+[cam-LT] 16.1 Hz sent, 0.0 Hz NEW  (fresh=635 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 41 s — sim frozen? (3D window closed?)
+[cam-LT] 16.0 Hz sent, 0.0 Hz NEW  (fresh=683 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 44 s — sim frozen? (3D window closed?)
+[cam-LT] 16.1 Hz sent, 0.0 Hz NEW  (fresh=732 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 47 s — sim frozen? (3D window closed?)
+[cam-LT] 16.4 Hz sent, 0.0 Hz NEW  (fresh=782 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 51 s — sim frozen? (3D window closed?)
+[cam-LT] 16.0 Hz sent, 0.0 Hz NEW  (fresh=831 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 54 s — sim frozen? (3D window closed?)
+[cam-LT] 16.3 Hz sent, 0.0 Hz NEW  (fresh=880 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 57 s — sim frozen? (3D window closed?)
+[cam-LT] 16.1 Hz sent, 0.0 Hz NEW  (fresh=929 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 60 s — sim frozen? (3D window closed?)
+[cam-LT] 16.2 Hz sent, 0.0 Hz NEW  (fresh=978 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 63 s — sim frozen? (3D window closed?)
+[cam-LT] 16.0 Hz sent, 0.0 Hz NEW  (fresh=1027 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 66 s — sim frozen? (3D window closed?)
+[cam-LT] 16.2 Hz sent, 0.0 Hz NEW  (fresh=1076 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 69 s — sim frozen? (3D window closed?)
+[cam-LT] 16.2 Hz sent, 0.0 Hz NEW  (fresh=1125 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 72 s — sim frozen? (3D window closed?)
+[cam-LT] 16.1 Hz sent, 0.0 Hz NEW  (fresh=1174 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 75 s — sim frozen? (3D window closed?)
+[cam-LT] 16.1 Hz sent, 0.0 Hz NEW  (fresh=1223 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 78 s — sim frozen? (3D window closed?)
+[cam-LT] 16.1 Hz sent, 0.0 Hz NEW  (fresh=1272 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 81 s — sim frozen? (3D window closed?)
+[cam-LT] 15.9 Hz sent, 0.0 Hz NEW  (fresh=1321 repeat=0 uniq=5)  <-- no new frames (about to throttle)
+[cam-LT] WARNING: frames valid but IDENTICAL for 84 s — sim frozen? (3D window closed?)
+[supervisor] received: "stop"
+[supervisor] received: "pub_stop"
+[pub] stopped, 1 timer(s) deleted
+[supervisor] received: "status"
+[supervisor] received: "status"
+[supervisor] received: "model_info"
+[Warning: You are deleting one or more running timer objects. MATLAB has automatically stopped them before deletion.] 
+[Warning: You are deleting one or more running timer objects. MATLAB has automatically stopped them before deletion.] 

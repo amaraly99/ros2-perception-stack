@@ -1,0 +1,106 @@
+label stereo  model hil_closed_loop_baseline_061  2026-10-25 16:13:15
+pwd C:\Users\Ahmed\sim_25A\matlab
+env RMW=rmw_fastrtps_cpp DOMAIN=0 FASTRTPS_DEFAULT_PROFILES_FILE=[] CAM_LEFT_IMAGE=rgb CAM_RIGHT_IMAGE=rgb
+which hil_ros_init_LT: C:\Users\Ahmed\sim_25A\matlab\hil_ros_init_LT.m
+which hil_ros_init_LT_rgbd: C:\Users\Ahmed\sim_25A\matlab\hil_ros_init_LT_rgbd.m
+which hil_run_supervisor: C:\Users\Ahmed\sim_25A\matlab\hil_run_supervisor.m
+which hil_pub_control: C:\Users\Ahmed\sim_25A\matlab\hil_pub_control.m
+which hil_publish_frame: C:\Users\Ahmed\sim_25A\matlab\hil_publish_frame.m
+which read_cmdvel_live_interp: C:\Users\Ahmed\sim_25A\matlab\read_cmdvel_live_interp.m
+which sim_camera_publisher_timer_LT: C:\Users\Ahmed\sim_25A\matlab\sim_camera_publisher_timer_LT.m
+which sim_camera_publisher_timer_LT_rgbd: C:\Users\Ahmed\sim_25A\matlab\sim_camera_publisher_timer_LT_rgbd.m
+which set_stereo: C:\Users\Ahmed\sim_25A\matlab\set_stereo.m
+which set_rgbd: C:\Users\Ahmed\sim_25A\matlab\set_rgbd.m
+which hil_closed_loop_baseline_061: C:\Users\Ahmed\sim_25A\matlab\hil_closed_loop_baseline_061.slx
+Simulation 3D Camera: Commented=off FocalLength=[554, 554] ImageSize=[480, 640] OpticalCenter=[320, 240] tmountOffset=[0.2, 0, 0.2] rmountOffset=[0, 5, 0] DepthOutportEnabled=off SampleTime=-1
+Simulation 3D Camera Right: Commented=off FocalLength=[554, 554] ImageSize=[480, 640] OpticalCenter=[320, 240] tmountOffset=[0.2, -0.61, 0.2] rmountOffset=[0, 5, 0] DepthOutportEnabled=on SampleTime=-1
+write_depth_left: Commented=n/a (Invalid Simulink object name: 'hil_closed_loop_baseline_061/write_depth_left'.)
+write_frame_right: Commented=off
+write_depth_right: Commented=off
+x_integrator InitialCondition=15.12
+y_integrator InitialCondition=3.84
+z_integrator InitialCondition=7.5
+yaw_integrator InitialCondition=2*pi-0.0460
+SimulationMode=accelerator FixedStep=1/20 StopTime=inf EnablePacing=on PacingRate=1
+model_info: model_info model=hil_closed_loop_baseline_061 x_ic=15.12 y_ic=3.84 z_ic=7.5 yaw_ic=6.23718531 fx_left=554 fx_right=554 right_cam=on right_y=-0.61 depth_port=off left_image=rgb right_image=rgb
+status: status sim=paused t=0.30 state=held pub=on timers=1 hz=NaN fresh=1 repeat=NaN drop=11 yaw=357.36 x=15.12 y=3.84 z=7.50
+probe_init 0.5 1 1 0: error no_loop
+STEREO_ON=1 RGBD_ON=[] cam_pub_right=1 depth_pub=0
+timer pitch_pub_timer_LT Running=on Period=0.0500
+timer hil_supervisor_timer Running=on Period=0.2000
+timer timer-3 Running=on Period=0.0200
+timer sim_cam_pub_timer_LT Running=on Period=0.0500
+stereo_hold1 latest_frame uint8 [480 640 3] sha256 3b26f93339d90d73f5e22f305a949801a45e8e0d924fdd138d5ec88e39b1b4de
+stereo_hold1 latest_frame_right uint8 [480 640 3] sha256 861cce9e55f928eaeed62c9020e5587be996dddfb3a03c31674d5225a08c8c1c identical_to_left 0 mean_abs_diff 12.381
+--- part A: 30 s held, counters only
+t=   1.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=1 D=0 drop=28
+t=   2.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=1 D=0 drop=47
+t=   3.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=1 D=0 drop=67
+t=   4.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=1 D=0 drop=87
+t=   5.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=1 D=0 drop=107
+t=   6.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=1 D=0 drop=127
+t=   7.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=1 D=0 drop=147
+t=   8.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=1 D=0 drop=167
+t=   9.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=1 D=0 drop=187
+t=  10.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=1 D=0 drop=207
+t=  11.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=1 D=0 drop=226
+t=  12.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=1 D=0 drop=246
+t=  13.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=1 D=0 drop=266
+t=  14.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=1 D=0 drop=286
+t=  15.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=1 D=0 drop=306
+t=  16.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=1 D=0 drop=326
+t=  17.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=1 D=0 drop=346
+t=  18.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=1 D=0 drop=365
+t=  19.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=1 D=0 drop=385
+t=  20.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=1 D=0 drop=405
+t=  21.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=1 D=0 drop=425
+t=  22.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=1 D=0 drop=445
+t=  23.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=1 D=0 drop=465
+t=  24.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=1 D=0 drop=485
+t=  25.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=1 D=0 drop=505
+t=  26.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=1 D=0 drop=525
+t=  27.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=1 D=0 drop=545
+t=  28.3 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=1 D=0 drop=565
+t=  29.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=1 D=0 drop=584
+t=  30.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=1 D=0 drop=604
+t=  31.4 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=1 R=1 D=0 drop=625
+A: 30.1 s, status {paused}, state {held}, simt 0.30..0.30, max |dx dy dz| [0 0 0] m, max |dyaw| 0.0000 rad, sign distance 20.001..20.001 m, z 7.500
+A: send rate L 0.00 Hz, R 0.00 Hz, D 0.00 Hz (sends 0 0 0), drops +597; HELD_AT_START=1
+ros2 topic list:
+/cmd_vel
+/parameter_events
+/rosout
+/sim/camera/image_raw
+/sim/camera/right/image_raw
+/sim/drone_pose
+/sim/heartbeat
+/sim/pitch_angle
+/sim/target_pose
+/vo_pose
+
+--- part B1: node /check_25W subscribes (best effort) to the three image topics
+B1 15 s in the same hold: received [0 0 0], sent L+0 R+0 D+0
+  /sim/camera/image_raw: 0 msgs, last 
+  /sim/camera/right/image_raw: 0 msgs, last 
+  /sim/camera/depth/image_raw: 0 msgs, last 
+--- part B2: the Pi's per-run sequence into a second hold
+stop: ok
+pub_stop: ok
+pub_start 20: ok
+start_hold: ok
+second hold: state held after 11.8 s, received so far [4 4 0]
+t=  64.7 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=5 R=5 D=0 drop=111
+t=  89.7 paused  simt=0.30 state=held x=15.120 y=3.840 z=7.500 yaw=357.36deg L=5 R=5 D=0 drop=607
+B2 (25 s after the second hold): 25.0 s, status {paused}, state {held}, simt 0.30..0.30, max |dx dy dz| [0 0 0] m, max |dyaw| 0.0000 rad, sign distance 20.001..20.001 m, z 7.500
+B2 (25 s after the second hold): send rate L 0.00 Hz, R 0.00 Hz, D 0.00 Hz (sends 0 0 0), drops +496; HELD_AT_START=1
+B2 from pub_start to end: received [4 4 0], sent L+4 R+4 D+0
+  /sim/camera/image_raw: 4 msgs, last 640x480 bgr8 step 1920 frame_id "" stamp 0.250000000
+  /sim/camera/right/image_raw: 4 msgs, last 640x480 bgr8 step 1920 frame_id "" stamp 0.250000000
+  /sim/camera/depth/image_raw: 0 msgs, last 
+stereo_hold2 latest_frame uint8 [480 640 3] sha256 3b26f93339d90d73f5e22f305a949801a45e8e0d924fdd138d5ec88e39b1b4de
+stereo_hold2 latest_frame_right uint8 [480 640 3] sha256 861cce9e55f928eaeed62c9020e5587be996dddfb3a03c31674d5225a08c8c1c identical_to_left 0 mean_abs_diff 12.381
+--- teardown
+stop: ok
+pub_stop: ok
+TEARDOWN: model loaded=0, timers left=0, port 55556 free=1
+DONE stereo after 92 s

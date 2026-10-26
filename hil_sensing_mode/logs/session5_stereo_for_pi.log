@@ -1,0 +1,264 @@
+[heldstart] mode stereo, model hil_closed_loop_baseline_061, from C:\Users\Ahmed\sim_25A\matlab
+set_stereo: STEREO — right camera active, /sim/camera/right/image_raw will publish.
+  Bandwidth doubles to ~37 MB/s (~295 Mbit/s). Wired Ethernet only.
+  Next: re-run hil_ros_init_LT, restart the model, re-run sim_camera_publisher_timer_LT.
+=== HIL ROS init (LT) starting ===
+ROS OK
+Stereo ON  — right eye on /sim/camera/right/image_raw
+State publisher (LT) started at 20 Hz on /sim/pitch_angle, /sim/drone_pose, /sim/heartbeat
+/vo_pose subscriber active — sim_vo_pose updated when SLAM is running
+=== LT Init complete. Open Simulink, run sim, then run sim_camera_publisher_timer_LT.m ===
+[supervisor] model "hil_closed_loop_baseline_061" loaded
+[supervisor] polling port 55556 every 0.2 s (non-blocking state machine)
+[supervisor] command line is FREE (press Enter to see >>). Stop: stop_hil_supervisor
+[supervisor] received: "start_hold"
+[supervisor] start issued — waiting for new frames (up to 30 s)
+[supervisor] HELD at sim 0.30 s, 0.4 s after start, at initial condition. Waiting for "resume"
+[heldstart] start_hold: held after 24.4 s
+[supervisor] received: "pub_start 20"
+sim_cam_pub_timer_LT started at 20 Hz, STEREO
+  left:  /sim/camera/image_raw        (rgb, bgr8)
+  right: /sim/camera/right/image_raw  (rgb, bgr8)
+  Wired Ethernet only — stereo roughly doubles the bytes/s.
+  Stop:     stop(sim_cam_pub_timer_LT)
+  Counters: sim_cam_pub_count_LT   sim_cam_drop_count_LT   sim_cam_pub_count_right_LT
+[supervisor] received: "status"
+[heldstart] status sim=paused t=0.30 state=held pub=on timers=1 hz=NaN fresh=1 repeat=NaN drop=3 yaw=357.36 x=15.12 y=3.84 z=7.50
+[heldstart] pose x 15.12 y 3.84 z 7.50 yaw 357.36 deg, 20.00 m from the frozen sign (35.1, 2.92)
+[heldstart] READY: stereo held at the 20 m start. The Pi releases it with "resume".
+[cam-LT] published: 1  (+1 in 3.0s = 0.3 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.1s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  L=1 R=1
+[supervisor] received: "status"
+[supervisor] received: "model_info"
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.1s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.1s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.1s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.1s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.1s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.1s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.1s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.1s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.1s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.1s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.1s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.1s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.1s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.1s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  L=1 R=1
+[supervisor] received: "model_info"
+[supervisor] received: "status"
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  L=1 R=1
+[supervisor] received: "status"
+[supervisor] received: "model_info"
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  L=1 R=1
+[cam-LT] published: 1  (+0 in 3.0s = 0.0 Hz)  L=1 R=1
+[supervisor] received: "pub_start 20"
+[pub] stopped, 1 timer(s) deleted
+sim_cam_pub_timer_LT started at 20 Hz, STEREO
+  left:  /sim/camera/image_raw        (rgb, bgr8)
+  right: /sim/camera/right/image_raw  (rgb, bgr8)
+  Wired Ethernet only — stereo roughly doubles the bytes/s.
+  Stop:     stop(sim_cam_pub_timer_LT)
+  Counters: sim_cam_pub_count_LT   sim_cam_drop_count_LT   sim_cam_pub_count_right_LT
+[supervisor] received: "start_hold"
+[supervisor] received: "status"
+[supervisor] received: "status"
+[cam-LT] published: 0  (+0 in 3.0s = 0.0 Hz)  L=0 R=0
+[supervisor] received: "status"
+[supervisor] received: "status"
+[supervisor] received: "status"
+[cam-LT] published: 0  (+0 in 3.1s = 0.0 Hz)  L=0 R=0
+[supervisor] start issued — waiting for new frames (up to 30 s)
+[supervisor] received: "status"
+[cam-LT] published: 0  (+0 in 7.5s = 0.0 Hz)  L=0 R=0
+[supervisor] received: "status"
+[supervisor] HELD at sim 0.30 s, 0.4 s after start, at initial condition. Waiting for "resume"
+[supervisor] received: "status"
+[cam-LT] published: 5  (+5 in 3.1s = 1.6 Hz)  L=5 R=5
+[cam-LT] published: 5  (+0 in 3.0s = 0.0 Hz)  L=5 R=5
+[cam-LT] published: 5  (+0 in 3.1s = 0.0 Hz)  L=5 R=5
+[cam-LT] published: 5  (+0 in 3.0s = 0.0 Hz)  L=5 R=5
+[cam-LT] published: 5  (+0 in 3.1s = 0.0 Hz)  L=5 R=5
+[cam-LT] published: 5  (+0 in 3.0s = 0.0 Hz)  L=5 R=5
+[cam-LT] published: 5  (+0 in 3.0s = 0.0 Hz)  L=5 R=5
+[cam-LT] published: 5  (+0 in 3.0s = 0.0 Hz)  L=5 R=5
+[cam-LT] published: 5  (+0 in 3.1s = 0.0 Hz)  L=5 R=5
+[cam-LT] published: 5  (+0 in 3.0s = 0.0 Hz)  L=5 R=5
+[cam-LT] published: 5  (+0 in 3.1s = 0.0 Hz)  L=5 R=5
+[cam-LT] published: 5  (+0 in 3.0s = 0.0 Hz)  L=5 R=5
+[cam-LT] published: 5  (+0 in 3.1s = 0.0 Hz)  L=5 R=5
+[cam-LT] published: 5  (+0 in 3.0s = 0.0 Hz)  L=5 R=5
+[cam-LT] published: 5  (+0 in 3.1s = 0.0 Hz)  L=5 R=5
+[cam-LT] published: 5  (+0 in 3.0s = 0.0 Hz)  L=5 R=5
+[cam-LT] published: 5  (+0 in 3.1s = 0.0 Hz)  L=5 R=5
+[cam-LT] published: 5  (+0 in 3.1s = 0.0 Hz)  L=5 R=5
+[cam-LT] published: 5  (+0 in 3.0s = 0.0 Hz)  L=5 R=5
+[cam-LT] published: 5  (+0 in 3.0s = 0.0 Hz)  L=5 R=5
+[cam-LT] published: 5  (+0 in 3.0s = 0.0 Hz)  L=5 R=5
+[supervisor] received: "status"
+[cam-LT] published: 5  (+0 in 3.0s = 0.0 Hz)  L=5 R=5
+[cam-LT] published: 5  (+0 in 3.1s = 0.0 Hz)  L=5 R=5
+[cam-LT] published: 5  (+0 in 3.0s = 0.0 Hz)  L=5 R=5
+[cam-LT] published: 5  (+0 in 3.1s = 0.0 Hz)  L=5 R=5
+[supervisor] received: "status"
+[supervisor] received: "model_info"
+[cam-LT] published: 5  (+0 in 3.0s = 0.0 Hz)  L=5 R=5
+[cam-LT] published: 5  (+0 in 3.0s = 0.0 Hz)  L=5 R=5
+[supervisor] received: "pub_start 20"
+[pub] stopped, 1 timer(s) deleted
+sim_cam_pub_timer_LT started at 20 Hz, STEREO
+  left:  /sim/camera/image_raw        (rgb, bgr8)
+  right: /sim/camera/right/image_raw  (rgb, bgr8)
+  Wired Ethernet only — stereo roughly doubles the bytes/s.
+  Stop:     stop(sim_cam_pub_timer_LT)
+  Counters: sim_cam_pub_count_LT   sim_cam_drop_count_LT   sim_cam_pub_count_right_LT
+[supervisor] received: "start_hold"
+[supervisor] received: "status"
+[supervisor] received: "status"
+[cam-LT] published: 0  (+0 in 3.0s = 0.0 Hz)  L=0 R=0
+[supervisor] received: "status"
+[supervisor] received: "status"
+[supervisor] received: "status"
+[cam-LT] published: 0  (+0 in 3.1s = 0.0 Hz)  L=0 R=0
+[supervisor] start issued — waiting for new frames (up to 30 s)
+[supervisor] received: "status"
+[cam-LT] published: 0  (+0 in 7.0s = 0.0 Hz)  L=0 R=0
+[supervisor] received: "status"
+[supervisor] HELD at sim 0.30 s, 0.4 s after start, at initial condition. Waiting for "resume"
+[supervisor] received: "status"
+[cam-LT] published: 4  (+4 in 3.0s = 1.3 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[supervisor] received: "status"
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[supervisor] received: "status"
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[supervisor] received: "status"
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[supervisor] received: "pub_start 20"
+[pub] stopped, 1 timer(s) deleted
+sim_cam_pub_timer_LT started at 20 Hz, STEREO
+  left:  /sim/camera/image_raw        (rgb, bgr8)
+  right: /sim/camera/right/image_raw  (rgb, bgr8)
+  Wired Ethernet only — stereo roughly doubles the bytes/s.
+  Stop:     stop(sim_cam_pub_timer_LT)
+  Counters: sim_cam_pub_count_LT   sim_cam_drop_count_LT   sim_cam_pub_count_right_LT
+[supervisor] received: "start_hold"
+[supervisor] received: "status"
+[cam-LT] published: 0  (+0 in 3.0s = 0.0 Hz)  L=0 R=0
+[supervisor] received: "status"
+[supervisor] received: "status"
+[supervisor] received: "status"
+[cam-LT] published: 0  (+0 in 3.1s = 0.0 Hz)  L=0 R=0
+[supervisor] received: "status"
+[supervisor] start issued — waiting for new frames (up to 30 s)
+[supervisor] received: "status"
+[cam-LT] published: 0  (+0 in 7.9s = 0.0 Hz)  L=0 R=0
+[supervisor] received: "status"
+[supervisor] HELD at sim 0.30 s, 0.4 s after start, at initial condition. Waiting for "resume"
+[supervisor] received: "status"
+[cam-LT] published: 4  (+4 in 3.1s = 1.3 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.0s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[cam-LT] published: 4  (+0 in 3.1s = 0.0 Hz)  L=4 R=4
+[supervisor] received: "stop"
+[supervisor] received: "pub_stop"
+[pub] stopped, 1 timer(s) deleted
+[supervisor] received: "status"
+[supervisor] received: "status"
+[Warning: You are deleting one or more running timer objects. MATLAB has automatically stopped them before deletion.] 
+[Warning: You are deleting one or more running timer objects. MATLAB has automatically stopped them before deletion.] 
