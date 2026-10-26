@@ -1,5 +1,5 @@
-function hil_session_start_heldstart_mode(mode)
-% hil_session_start_heldstart_mode.m  (prompt 25W, 2026-10-25)
+function hil_session_start_heldstart_mode(mode, opt)
+% hil_session_start_heldstart_mode.m  (prompt 25W, 2026-10-25; 'rate16' and 'check' added in 26W, 2026-10-26)
 % One sensing-mode session at our 20 m held start. Models and scripts load from .\matlab next to
 % this file: copies of matlab\ at 28114bd (Amar's sim/unified-start-2026-10-04), byte-identical except
 % that the three camera publishers keep sending a held frame at their timer rate (25W follow-up), and,
@@ -24,6 +24,24 @@ function hil_session_start_heldstart_mode(mode)
 % 20.0 m from the frozen sign). Release stays with the Pi ("resume"). There is no probe loop, so
 % probe_* commands answer "error no_loop" and the scripted trajectory cannot start.
 % Calling it again switches mode in this MATLAB: the session before is shut down first.
+%
+% 16 Hz state (26W): the publisher's 50 ms timer fires every 62.5 ms (16 Hz) while every window of this
+% MATLAB is minimized, and every 50 ms (20 Hz) while one is visible (26W step 1, this host, Windows 11).
+%   >> hil_session_start_heldstart_mode('mono', 'rate16')   % or 'stereo' / 'rgbd'
+% starts keep16.ps1 (next to this file), which keeps this MATLAB's windows minimized until MATLAB exits,
+% then, once held, records the publisher's send intervals for 60 s and prints their mode. It stops with an
+% error, before READY, unless the mode is near 62.5 ms. Tell the Pi to go only after "16 Hz state: OK".
+%   >> hil_session_start_heldstart_mode('check')            % the 60 s check again, on the running session
+
+if nargin < 2, opt = ''; end
+if strcmpi(mode, 'check')
+    hm_rate_check(60);
+    return;
+end
+rate16 = strcmpi(opt, 'rate16');
+if ~isempty(opt) && ~rate16
+    error('[heldstart] option must be ''rate16'' (got "%s")', opt);
+end
 
 MODELS = struct('mono',   'hil_closed_loop_unified', ...
                 'stereo', 'hil_closed_loop_baseline_061', ...
@@ -37,6 +55,7 @@ here = fileparts(mfilename('fullpath'));
 src = fullfile(here, 'matlab');
 addpath(here);                                % callable again after cd(src)
 fprintf('[heldstart] mode %s, model %s, from %s\n', mode, model, src);
+if rate16, hm_keep16(here); end               % windows minimized from the start, build included
 hm_shutdown();                                % the session before, if any
 
 % Environment of our session start. HIL's hil_ros_init_LT.m:19 hard-sets Fast DDS; the worktree
@@ -83,7 +102,71 @@ p = evalin('base', 'sim_pose');
 fprintf('[heldstart] %s\n', hm_send('status'));
 fprintf('[heldstart] pose x %.2f y %.2f z %.2f yaw %.2f deg, %.2f m from the frozen sign (35.1, 2.92)\n', ...
         p(1), p(2), p(3), rad2deg(p(5)), hypot(35.1 - p(1), 2.92 - p(2)));
+if rate16, hm_rate_check(60); end
 fprintf('[heldstart] READY: %s held at the 20 m start. The Pi releases it with "resume".\n', mode);
+end
+
+
+function hm_keep16(here)
+% Starts keep16.ps1 for this MATLAB (hidden, no console window). A keeper left by an earlier call in this
+% MATLAB is stopped first through its stop file.
+    pid = feature('getpid');
+    logdir = fullfile(here, 'logs');
+    if ~isfolder(logdir), mkdir(logdir); end
+    stopf = fullfile(logdir, sprintf('keep16_%d.stop', pid));
+    fid = fopen(stopf, 'w'); fclose(fid);
+    pause(2);
+    delete(stopf);
+    args = sprintf('-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "%s" -MatlabPid %d -Log "%s" -StopFile "%s"', ...
+                   fullfile(here, 'keep16.ps1'), pid, fullfile(logdir, sprintf('keep16_%d.log', pid)), stopf);
+    psi = System.Diagnostics.ProcessStartInfo('powershell.exe', args);
+    psi.UseShellExecute = false;
+    psi.CreateNoWindow = true;
+    p = System.Diagnostics.Process.Start(psi);
+    fprintf('[heldstart] keep16 started (pid %d): this MATLAB''s windows stay minimized until it exits\n', p.Id);
+end
+
+
+function hm_rate_check(secs)
+% Records, for secs, the time of every publisher tick that sent a frame (sim_cam_pub_count_LT went up),
+% by wrapping the TimerFcn of the running publisher timer, then restores it and prints the interval mode.
+% 16 Hz state = mode 62-63 ms (four 15.625 ms ticks); 20 Hz state = mode 50-51 ms.
+    t = timerfindall('Name', 'sim_cam_pub_timer_LT');
+    if numel(t) ~= 1 || ~strcmp(t.Running, 'on')
+        error('[heldstart] rate check: no running publisher timer');
+    end
+    f = t.TimerFcn;
+    ts = zeros(1, ceil(secs * 25) + 50);
+    n = 0;
+    T = tic;
+    t.TimerFcn = @rec;
+    restore = onCleanup(@() set(t, 'TimerFcn', f));
+    fprintf('[heldstart] %d s held check of the publisher send intervals...\n', secs);
+    pause(secs);
+    clear restore
+    iv = diff(ts(1:n)) * 1000;
+    if numel(iv) < 10
+        error('[heldstart] rate check: only %d sends in %d s', n, secs);
+    end
+    h = histcounts(iv, 0:1:150);
+    [~, mb] = max(h);
+    fprintf('[heldstart] %d s held check: %d sends, %.2f Hz, send-interval mode %d-%d ms, median %.1f ms (%.0f %% near 62.5 ms, %.0f %% near 50 ms)\n', ...
+            secs, n, (n - 1) / (ts(n) - ts(1)), mb - 1, mb, median(iv), 100 * mean(iv >= 57.5 & iv < 67.5), ...
+            100 * mean(iv >= 45 & iv < 55));
+    if mb - 1 < 57 || mb > 68
+        error(['[heldstart] NOT in the 16 Hz state (send-interval mode %d-%d ms). Do not start the Pi. ' ...
+               'Minimize every MATLAB window, then run hil_session_start_heldstart_mode(''check'').'], mb - 1, mb);
+    end
+    fprintf('[heldstart] 16 Hz state: OK\n');
+
+    function rec(o, e)
+        c0 = evalin('base', 'sim_cam_pub_count_LT');
+        f(o, e);
+        if evalin('base', 'sim_cam_pub_count_LT') ~= c0 && n < numel(ts)
+            n = n + 1;
+            ts(n) = toc(T);
+        end
+    end
 end
 
 
