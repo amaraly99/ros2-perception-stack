@@ -90,9 +90,11 @@ function publish_frame_LT_rgbd(pub, msg, pub_d, msg_d)
             assignin('base','sim_cam_nodepth_count_LT', n + 1);
         else
             % Same sparse duplicate guard as the mono script (left colour only).
-            % 25W (sim_25W copy): off, so a held (paused) model re-sends colour + depth
-            % every tick, as hil_publish_frame does in mono.
-            SKIP_REPEATS = false;
+            % 25W/26W (sim_25W copy): off only while the supervisor reports the model
+            % held, so held colour + depth are re-sent every tick, as hil_publish_frame
+            % does in mono. Otherwise on, as in Amar's file: in flight a repeat is a stale frame.
+            try, held = strcmp(evalin('base', 'hil_supervisor_state'), 'held'); catch, held = false; end
+            SKIP_REPEATS = ~held;
             cs = sum(uint32(frame(1:200:end)));
             if SKIP_REPEATS && cs == last_cs
                 d = evalin('base','sim_cam_drop_count_LT');

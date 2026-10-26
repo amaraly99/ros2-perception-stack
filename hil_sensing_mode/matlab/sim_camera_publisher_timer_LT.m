@@ -170,9 +170,11 @@ function publish_frame_LT(pub, msg, pub_r, msg_r)
             % Keyed on the LEFT eye only, so mono and stereo throttle at
             % exactly the same moments. Skips the full BGR convert + DDS send
             % on BOTH eyes together when Simulink is paused.
-            % 25W (sim_25W copy): off, so a held (paused) model re-sends its pair
-            % every tick, as hil_publish_frame does in mono.
-            SKIP_REPEATS = false;
+            % 25W/26W (sim_25W copy): off only while the supervisor reports the model
+            % held, so a held pair is re-sent every tick, as hil_publish_frame does in
+            % mono. Otherwise on, as in Amar's file: in flight a repeat is a stale frame.
+            try, held = strcmp(evalin('base', 'hil_supervisor_state'), 'held'); catch, held = false; end
+            SKIP_REPEATS = ~held;
             cs = sum(uint32(frame(1:200:end)));
             if SKIP_REPEATS && cs == last_cs
                 d = evalin('base','sim_cam_drop_count_LT');

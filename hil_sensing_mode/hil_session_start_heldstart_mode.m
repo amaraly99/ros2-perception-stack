@@ -2,10 +2,12 @@ function hil_session_start_heldstart_mode(mode)
 % hil_session_start_heldstart_mode.m  (prompt 25W, 2026-10-25)
 % One sensing-mode session at our 20 m held start. Models and scripts load from .\matlab next to
 % this file: copies of matlab\ at 28114bd (Amar's sim/unified-start-2026-10-04), byte-identical except
-% that the three camera publishers keep sending a held frame at their timer rate (25W follow-up):
-%   hil_publish_frame.m                   IDLE_THROTTLE_SEC = Inf (was 120)
-%   sim_camera_publisher_timer_LT.m       SKIP_REPEATS = false (stereo pair)
-%   sim_camera_publisher_timer_LT_rgbd.m  SKIP_REPEATS = false (colour + depth)
+% that the three camera publishers keep sending a held frame at their timer rate (25W follow-up), and,
+% since 26W, only while the supervisor reports the model held (hil_supervisor_state = 'held'); at any
+% other time, in flight included, they behave as Amar's files:
+%   hil_publish_frame.m                   IDLE_THROTTLE_SEC = Inf while held (else Amar's 120)
+%   sim_camera_publisher_timer_LT.m       SKIP_REPEATS off while held (else on, as Amar's; stereo pair)
+%   sim_camera_publisher_timer_LT_rgbd.m  SKIP_REPEATS off while held (else on, as Amar's; colour + depth)
 % Edits nothing in the worktree or in HIL.
 %
 %   >> cd C:\Users\Ahmed\sim_25W

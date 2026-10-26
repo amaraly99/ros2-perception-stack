@@ -16,9 +16,11 @@ function hil_publish_frame(pub, msg)
     % searches the whole run (and startup can fail). A run cycle is only ~95 s, so
     % 120 s never triggers inside a run; it only catches genuine multi-minute idle
     % (between chunks / abandoned session), which is the case that crashed MATLAB.
-    % 25W (sim_25W copy): Inf, so a held frame keeps going out at the timer rate for
-    % as long as the hold lasts (was 120). The idle-memory risk above returns with it.
-    IDLE_THROTTLE_SEC = Inf;
+    % 25W/26W (sim_25W copy): Inf only while the supervisor reports the model held, so a
+    % held frame keeps going out at the timer rate for as long as the hold lasts.
+    % Otherwise 120, as in Amar's file. The idle-memory risk above applies during a hold.
+    IDLE_THROTTLE_SEC = 120;
+    try, if strcmp(evalin('base', 'hil_supervisor_state'), 'held'), IDLE_THROTTLE_SEC = Inf; end, catch, end
     % STALE GUARDS (visible freeze instead of a silent one):
     %   REPEAT_MAX_SEC — latest_frame empty/invalid: re-send the cached frame for at
     %     most this long (covers a normal supervisor restart), then send NOTHING so
