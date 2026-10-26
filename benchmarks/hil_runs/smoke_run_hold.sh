@@ -17,6 +17,10 @@ OURS_PIN="${HIL_OURS_PIN:?set HIL_OURS_PIN to the commit of our repo this run mu
 # Sim model check (2026-10-04). The Pi cannot read the Windows file, so the operator exports
 # SIM_MODEL_SHA256 = the sha256 apply_sim_params.m printed for the model now running; it must equal
 # model_sha256 in sim_geometry.json. Until 4C fills that in (PENDING_4C), every run stops here.
+# 25C (R4, DEVIATIONS 17.86): that is the check of the frozen setup (HIL_SIM_SETUP=frozen, the default) and is unchanged. For
+# another setup the hash is not used: sim_setup.py compares the supervisor's model_info reply with the pinned reply of
+# HIL_SIM_MODE (exit 14 on a mismatch), and the pin records the setup instead of the sim_geometry.json hash.
+# 25C (R3): sample_procs waits for ov2slam_node only when the stack config enables SLAM, so a SLAM-off run is sampled too.
 GEOM="$HIL_GEOM"
 WIN_MODEL_SHA=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['model_sha256'])" "$GEOM")
 say() { echo "$(date -u +%FT%TZ) [$L] $*" | tee -a "$OUT/stage3.log"; }
@@ -33,12 +37,13 @@ tracked_ok() {  # our repo clean at pin; worktree HEAD at pin and its full diff 
 }
 
 sample_procs() {  # live: wait for the stack, then record affinity + mapped OpenCV libs (host /proc)
-    local f="$OUT/${L}_procs.txt" ctrl det ov
+    local f="$OUT/${L}_procs.txt" ctrl det ov slam_on
+    slam_on=$(python3 "$WT/scripts/parse_stack.py" "$WT/config/hil/stack/$CFG.yaml" --get slam.enabled 2>/dev/null)
     for _ in $(seq 1 90); do
         ctrl=$(pgrep -f '/(visp_servo_node|hil_servo_node)( |$)' | head -1)
         det=$(pgrep -f 'src/yolo_producer/.*producer\.py' | head -1)
         ov=$(pgrep -f '/ov2slam_node( |$)' | head -1)
-        [ -n "$ctrl" ] && [ -n "$det" ] && [ -n "$ov" ] && break
+        [ -n "$ctrl" ] && [ -n "$det" ] && { [ -n "$ov" ] || [ "$slam_on" = False ]; } && break
         sleep 2
     done
     sleep 15   # let SLAM settle past its startup delay
@@ -67,9 +72,14 @@ sample_procs() {  # live: wait for the stack, then record affinity + mapped Open
 th=$(vcgencmd get_throttled | cut -d= -f2)
 [ $(( th & 0xF )) -eq 0 ] || { say "STOP throttle before run (live bits): $th"; exit 10; }; say "throttle word before run: $th (5F: guard on live bits only; sticky bits 16-19 recorded, not blocking)"
 w=$(tracked_ok) || { say "STOP tracked change before run: $w"; exit 11; }
+if [ "$HIL_SIM_SETUP" = frozen ]; then
 case "$WIN_MODEL_SHA" in [0-9a-f]*) ;; *) say "STOP sim model sha256 not set in $GEOM ($WIN_MODEL_SHA)"; exit 14 ;; esac
 [ "${#WIN_MODEL_SHA}" -eq 64 ] || { say "STOP sim model sha256 in $GEOM is not 64 hex chars"; exit 14; }
 [ "${SIM_MODEL_SHA256:-}" = "$WIN_MODEL_SHA" ] || { say "STOP sim model sha256 '${SIM_MODEL_SHA256:-unset}' != expected $WIN_MODEL_SHA"; exit 14; }
+else
+SS=$(python3 "$HIL_RUNS/sim_setup.py" check "$HIL_SIM_SETUP" "$HIL_SIM_MODE" 2>&1) || { say "STOP $SS"; exit 14; }; say "$SS"
+WIN_MODEL_SHA=""                                                # not the running model's: the pin records the setup instead
+fi
 
 bash "$HIL_HOST/pi_telemetry.sh" "$OUT/${L}_thermal.csv" 1 & TP=$!
 sample_procs & SP=$!
@@ -103,7 +113,8 @@ json.dump({
                            "2e8e354e8069ea0f594cecc01d9a6438739dc7bef18fea66604e8c1108281904"]},
   "image_id": sh("sudo docker image inspect ros2_perception_stack --format '{{.Id}}'"),
   "model_artifact": {"path": art, "sha256": sh(f"sha256sum '{art}' | cut -d' ' -f1") if art else ""},
-  "windows_simulink_model_sha256": "${WIN_MODEL_SHA}",
+  "windows_simulink_model_sha256": "${WIN_MODEL_SHA}" or None,
+  **({"sim_setup": "${HIL_SIM_SETUP}/${HIL_SIM_MODE}"} if "${HIL_SIM_SETUP}" != "frozen" else {}),
   "cpu_pin_note": "detector.cpu and controller.cpu = \"0-3\": taskset -c 0-3, all four Pi 5 cores, equivalent to unpinned",
   "live_processes": procs,
   "runner_rc": ${RC}, "throttle_rows_nonzero": ${thr}, "temp_max_c": "${tmax}",

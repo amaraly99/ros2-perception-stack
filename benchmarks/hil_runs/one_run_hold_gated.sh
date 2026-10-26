@@ -62,7 +62,7 @@ CP=$!
 # Level 2 table needs. Only started when the caller asks (L2_PROCMEM=1), so a detector-sweep rerun
 # writes the same set of files as before.
 if [ "${L2_PROCMEM:-0}" = 1 ]; then
-  taskset -c 0 python3 "$HIL_HOST/level2_procmem.py" "$OUT/${TAG}_procmem.csv" "$OUT/${TAG}_link.csv" 2 "${L2_IFACE:-eth0}" &
+  taskset -c 0 sudo -n python3 "$HIL_HOST/level2_procmem.py" "$OUT/${TAG}_procmem.csv" "$OUT/${TAG}_link.csv" 2 "${L2_IFACE:-eth0}" &
   PMP=$!
 fi
 

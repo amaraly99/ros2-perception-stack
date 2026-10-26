@@ -9,6 +9,9 @@
 #   this bag is up before resume and Table 14 is scored from it (the stack's bag starts 1.6 s after resume, 5I). Its type
 #   (yolo_msgs) comes from the pinned worktree's install/, mounted READ-ONLY at /workspace as the stack mounts it.
 #   hash: rec.sh start hash  -> render_hash_logger.py, log /tmp/r20_hash.log, renders /tmp/r20_renders/
+#   25C (R5, DEVIATIONS 17.86): REC_HELD_ONLY=1 (unset: every distinct render, as before) hands the logger the marker
+#   /tmp/r20_hold_done, which hold_gate.sh writes once it has read the final held render: no render is saved after it,
+#   and the last frame is saved at exit as terminal_<sha1>.raw (the one flight frame kept, for the terminal-state figure).
 set -u; set -o noclobber; ACT="$1"; K="$2"; C="r20_$K"
 source "$(dirname "$(readlink -f "$0")")/hil_env.sh"
 # 5J standing rule: never overwrite or append to an earlier run's files. start refuses (exit 2) while its outputs exist;
@@ -26,10 +29,11 @@ case "$ACT:$K" in
     for _ in $(seq 1 60); do grep -q "Subscribed to topic '/sim/drone_pose'" /tmp/r20_bag_rec.log 2>/dev/null && { echo "rec bag: up"; exit 0; }; sleep 0.5; done
     echo "rec bag: NOT subscribed after 30 s"; exit 3 ;;
   start:hash)
-    refuse_if_exists /tmp/r20_hash.log /tmp/r20_hash.err /tmp/r20_renders; check_runtime
+    refuse_if_exists /tmp/r20_hash.log /tmp/r20_hash.err /tmp/r20_renders /tmp/r20_hold_done; check_runtime
+    case "${REC_HELD_ONLY:-}" in "") HD= ;; 1) HD=/tmp/r20_hold_done ;; *) echo "rec: REFUSE: REC_HELD_ONLY '${REC_HELD_ONLY}' is not empty or 1"; exit 2 ;; esac
     sudo docker run -d --rm --init --name "$C" --entrypoint "" --net=host --ipc=host -v /tmp:/tmp -v "$RT:$RT:ro" ros2_perception_stack \
-      bash -lc "$ENV; exec python3 $RT/r20_render_hash_logger.py /tmp/r20_hash.log /tmp/r20_renders > /tmp/r20_hash.err 2>&1" >/dev/null
-    echo "rec hash: started" ;;
+      bash -lc "$ENV; exec python3 $RT/r20_render_hash_logger.py /tmp/r20_hash.log /tmp/r20_renders $HD > /tmp/r20_hash.err 2>&1" >/dev/null
+    echo "rec hash: started${HD:+ (renders saved until $HD exists, then only the terminal frame)}" ;;
   stop:*)
     sudo docker kill -s INT "$C" >/dev/null 2>&1
     if timeout 30 sudo docker wait "$C" >/dev/null 2>&1 || ! sudo docker ps -q --filter "name=^$C\$" | grep -q .; then

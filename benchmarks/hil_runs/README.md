@@ -43,3 +43,28 @@ Outputs never go into the repo. Every batch and every run writes into a new fold
 | `plans/` | batch plans (tsv) | new |
 
 `MANIFEST_sources.txt` (outside the repo, in `stage6/repo_5Q/`) lists the sha256 of every source file copied here.
+
+## 25C: simulator setups, the expected SLAM process, and one flight frame per run (DEVIATIONS 17.86)
+
+- **Simulator setup (ruling R4).** `HIL_SIM_SETUP` (hil_env.sh, default `frozen`) names the setup. `frozen` is the setup of
+  every run before 25C and keeps its check exactly: the exported `SIM_MODEL_SHA256` must equal the model hash in
+  `config/sim_geometry.json` and `config/held_reference.json`. `sim25w` (25W's wrapper on the sim host, `HIL_SIM_MODE` mono
+  or stereo) is checked by `sim_setup.py`: the supervisor's `model_info` reply must have exactly the keys and values of the
+  reply pinned for that mode in `config/sim_setups.json`, before the session gate and before every run (batch.sh), and at
+  the stack run (smoke_run_hold.sh, exit 14). Each run records its setup, mode and reply in `sim_setup.json` and in
+  `pin_record.json` (`sim_setup`). No other setup or mode is accepted. A sim25w batch also refuses an exported
+  `SIM_MODEL_SHA256`, any `HIL_SIM_SETUPS` but the committed file, and a plan line whose stack config's camera.stereo does
+  not match `HIL_SIM_MODE`.
+- **SLAM co-load check (ruling R3).** `check_run.py` `slam_coload_alive` reads the cell's expected SLAM process from the
+  run's `run_config.yaml`: none for `slam.enabled false` (absence required: the stack log, every topthreads sample up to
+  and including the first one after the mission window, every procmem row), ov2slam_node otherwise (the 17.83 rule, plus,
+  where `L2_PROCMEM=1` wrote procmem.csv, one pid without a gap from its first row in the mission window to the window's
+  end, that first row at most 10 s after resume, and the first row after the window with the same pid). A SLAM-off run
+  also needs procmem rows past the window's end; a sim25w run without procmem.csv fails. The stored runs keep their
+  verdicts. A sim25w batch requires L2_PROCMEM=1.
+- **No flight images but one (ruling R5; Ahmed, 2026-10-25).** With `REC_HELD_ONLY=1` the render logger saves no new
+  render once hold_gate.sh has read the final held render (marker `/tmp/r20_hold_done`, moved into the run folder), and
+  saves the last frame at exit (`terminal_<sha1>.raw`, `terminal.txt`), the one flight frame kept, for the terminal-state
+  figure. batch.sh requires it for a `sim25w` batch. Neither bag records an image topic in any mode.
+- **Configs.** `ours_fx554_{A,B}_ibvs_slamoff` (SLAM off) and `ours_fx554_B_ibvs_mono_accurate` (mono CPU) in the
+  integration patch; the PSS fix of 25A in `host/level2_procmem.py` (sudo -n from one_run_hold_gated.sh).

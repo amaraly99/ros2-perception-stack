@@ -12,6 +12,13 @@
 #   NPU runs: placement A, stack config ours_fx554_A_ibvs; CPU runs: placement B, ours_fx554_B_ibvs (the backend is set by the
 #   stack config only; run_one.sh refuses a mismatch). The mission window comes from config/protocol_fx554.json.
 #   Needs SIM_MODEL_SHA256 exported (the sha256 apply_sim_params.m printed for the running model).
+#   25C (R4, R5, DEVIATIONS 17.86): HIL_SIM_SETUP (hil_env.sh, default frozen) names the simulator setup. frozen: the model
+#   hash check below, unchanged. sim25w (25W's wrapper, mono or stereo in HIL_SIM_MODE): SIM_MODEL_SHA256 is not used; the
+#   supervisor's model_info reply must equal the reply pinned for that mode in config/sim_setups.json (sim_setup.py), before
+#   the session gate and before every run. Such a batch also needs REC_HELD_ONLY=1 (rec.sh: no render saved after the hold
+#   gate, one terminal frame), L2_PROCMEM=1 (check_run.py's SLAM co-load rule reads procmem.csv), SIM_MODEL_SHA256 unset
+#   (no hash it never checked goes into a pin record), HIL_SIM_SETUPS at the committed config/sim_setups.json, and every
+#   plan line's stack config must have camera.stereo true exactly when HIL_SIM_MODE is stereo.
 # Order of work:
 #   0. refuse an existing batch_dir; our repo must be clean, and its HEAD is pinned for the whole batch (HIL_OURS_PIN);
 #      SIM_MODEL_SHA256 must equal the model in sim_geometry.json and held_reference.json; runtime files must verify.
@@ -60,15 +67,31 @@ stop() {  # stop <reason> <first not-started line number (1-based in plan.tsv)>
 }
 
 # ── 0. batch pre-checks ──────────────────────────────────────────────────────
-: "${SIM_MODEL_SHA256:?export SIM_MODEL_SHA256 first}"
+[ "$HIL_SIM_SETUP" = frozen ] && : "${SIM_MODEL_SHA256:?export SIM_MODEL_SHA256 first}"
 gs=$(git -C "$HIL_OURS" status --porcelain) || stop "git status failed in $HIL_OURS" 1
 [ -z "$gs" ] || stop "our repo is not clean: runs must come from committed code" 1
 HIL_OURS_PIN=$(git -C "$HIL_OURS" rev-parse HEAD); export HIL_OURS_PIN
 log "batch $BATCH_ID: plan $PLAN ($(wc -l < "$BD/plan.tsv") runs), ours $HIL_OURS_PIN, stack $HIL_AMAR_PIN, patch ${HIL_PATCH_SHA:0:8}"
+if [ "$HIL_SIM_SETUP" = frozen ]; then
 for f in "$HIL_GEOM" "$HIL_HELD_REF"; do
   want=$(python3 -c "import json,sys; j=json.load(open(sys.argv[1])); print(j.get('model_sha256') or j.get('sim_model_sha256'))" "$f")
   [ "$want" = "$SIM_MODEL_SHA256" ] || stop "SIM_MODEL_SHA256 ${SIM_MODEL_SHA256:0:8} != ${want:0:8} in $f" 1
 done
+else                                                            # 25C R4: the model_info check of the named setup and mode
+  [ "$HIL_SIM_SETUPS" = "$HIL_RUNS/config/sim_setups.json" ] || stop "HIL_SIM_SETUPS must be the committed $HIL_RUNS/config/sim_setups.json" 1
+  r=$(python3 "$HIL_RUNS/sim_setup.py" check "$HIL_SIM_SETUP" "${HIL_SIM_MODE:-}" 2>&1) || stop "$r" 1; log "$r"
+  [ "${REC_HELD_ONLY:-}" = 1 ] || stop "REC_HELD_ONLY=1 is required for a $HIL_SIM_SETUP batch (R5: no render saved after the hold)" 1
+  [ "${L2_PROCMEM:-0}" = 1 ] || stop "L2_PROCMEM=1 is required for a $HIL_SIM_SETUP batch (R3: the co-load rule reads procmem.csv)" 1
+  [ -z "${SIM_MODEL_SHA256:-}" ] || stop "SIM_MODEL_SHA256 must be unset for a $HIL_SIM_SETUP batch (its model is checked by model_info, not a hash)" 1
+  log "renders saved per run: until the hold gate has read the final held render, then only the terminal frame (REC_HELD_ONLY=1); L2_PROCMEM=1"
+  while IFS=$'\t' read -r _k _m BK0 _r CF0; do               # every plan line: camera.stereo true exactly in a stereo session
+    case "$BK0" in npu) P0=A ;; cpu) P0=B ;; *) continue ;; esac   # a bad backend is refused per line below, as before
+    CF0="${CF0:-ours_fx554_${P0}_ibvs}"
+    ST=$(python3 "$HIL_WT/scripts/parse_stack.py" "$HIL_WT/config/hil/stack/$CF0.yaml" --get camera.stereo 2>/dev/null)
+    { [ "$ST" = True ] && [ "$HIL_SIM_MODE" = stereo ]; } || { [ "$ST" != True ] && [ "$HIL_SIM_MODE" = mono ]; } \
+      || stop "plan: stack config $CF0 (camera.stereo ${ST:-unset}) does not match HIL_SIM_MODE $HIL_SIM_MODE" 1
+  done < "$BD/plan.tsv"
+fi
 (cd "$HIL_RUNTIME" && sha256sum --quiet -c SHA256SUMS >/dev/null 2>&1) || stop "runtime files missing or changed" 1
 [ "$(sha256sum "$HIL_PATCH" | cut -d' ' -f1)" = "$HIL_PATCH_SHA" ] || stop "patch file hash differs from HIL_PATCH_SHA" 1
 if [ -n "${HIL_CODE_COMMIT:-}" ]; then    # 5R: the run code at HEAD must be the recorded code commit (hil_env.sh aside)
@@ -83,7 +106,8 @@ PM=$(for f in "$HIL_POWER_DIR"/power_cycled_*; do
 [ -n "$PM" ] || stop "no unconsumed power marker newer than this boot ($(date -d "@$BT" '+%F %T')) in $HIL_POWER_DIR: run power_marker.sh after a full power removal" 1
 echo "consumed by batch $BATCH_ID at $(date -u +%FT%TZ), boot $(date -d "@$BT" '+%F %T')" > "$PM.consumed" || stop "cannot write $PM.consumed" 1
 log "power marker $(basename "$PM") consumed (boot $(date -d "@$BT" '+%F %T')): NPU open budget counts from this power-on"
-log "sim model ${SIM_MODEL_SHA256:0:8}, $(vcgencmd get_throttled), $(vcgencmd measure_temp)"
+if [ "$HIL_SIM_SETUP" = frozen ]; then log "sim model ${SIM_MODEL_SHA256:0:8}, $(vcgencmd get_throttled), $(vcgencmd measure_temp)"
+else log "sim setup $HIL_SIM_SETUP mode $HIL_SIM_MODE, $(vcgencmd get_throttled), $(vcgencmd measure_temp)"; fi
 
 npu_opens() {  # VDevice creates since boot (HailoRT logs local time, as uptime -s)
   local b; b=$(uptime -s)
@@ -121,6 +145,9 @@ pre_run_checks() {  # pre_run_checks <backend>
     *sim=stopped*state=stopped*|*sim=stopped*state=idle*) ;;
     *) echo "supervisor not stopped: $st"; return 1 ;;
   esac
+  if [ "$HIL_SIM_SETUP" != frozen ]; then                         # 25C R4: the same setup and mode before every run
+    local ms; ms=$(python3 "$HIL_RUNS/sim_setup.py" check "$HIL_SIM_SETUP" "$HIL_SIM_MODE" 2>&1) || { echo "$ms"; return 1; }
+  fi
   local d; for d in "$BD" "$HIL_WT"; do                              # run folders, and the stack's bags in the worktree
     free=$(df -BG --output=avail "$d" | tail -1 | tr -dc 0-9); [ "$free" -ge "$min" ] || { echo "free disk ${free} GB < ${min} GB at $d"; return 1; }
   done

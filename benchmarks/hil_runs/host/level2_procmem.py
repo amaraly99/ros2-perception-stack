@@ -6,31 +6,32 @@
 # `docker stats` reports 0 for every container's memory and anything built on cgroup memory reads 0.
 # Amar's benchmarks/slam_cpu_sampler.sh at 1beef72 solves this with sudo docker stats + sudo docker
 # top + /proc, three sudo docker calls every 2 s. This reads /proc only, resolves the processes by
-# the same command-line patterns smoke_run_hold.sh:38-40 and :49-52 already use with pgrep -f, and
+# the same command-line patterns smoke_run_hold.sh (sample_procs) already uses with pgrep -f, and
 # spawns nothing per sample, so it adds no measurable load to the run it is measuring.
 #
 # procmem.csv: utc, name, pid, pss_mb, rss_mb, hwm_mb      (one row per named process per sample)
 #   pss  = /proc/<pid>/smaps_rollup Pss          shared pages split between processes
 #   rss  = /proc/<pid>/status VmRSS
 #   hwm  = /proc/<pid>/status VmHWM              peak RSS, so peaks between samples still count
+#   slam_container (25A): pid = the SLAM process, pss/rss/hwm = sums over EVERY process in that
+#   process's cgroup (its container), the definition of Amar's benchmarks/slam_cpu_sampler.sh:16-19
+#   (sum of PSS over `docker top`); the runtime table takes the per-run max of this sum.
 # link.csv:    utc, rx_bytes, tx_bytes, rx_MBps, tx_MBps   (<iface> counters, default eth0)
 #
-# The processes are the four the run already pins and records (smoke_run_hold.sh's _procs.txt), plus
-# the two camera bridges. A name that is not running is written with empty fields, never skipped, so
+# The processes are the four the run already pins and records (smoke_run_hold.sh's _procs.txt), an ORB-SLAM3
+# node, the two camera bridges and (25A, 25C) their right-eye instances, plus one slam_container row per
+# sample (the sums above). A name that is not running is written with empty fields, never skipped, so
 # a missing process is visible in the data instead of being silently absent.
 #
-# KNOWN LIMITATION on a stereo stack (20C review finding 5; harmless for a mono row, which is all of
-# Level 2 session 1). The right eye is a SECOND INSTANCE of the same two executables, differing only
-# in its ROS node name (hil_simulation.launch.py: sim_camera_bridge/ovcam_bridge against
-# sim_camera_bridge_right/ovcam_bridge_right), so the sim_camera_bridge and ovcam_bridge patterns
-# below match both instances while find_pids keeps only the lowest matching pid. On cells B0, C1 and
-# X1 one member of each bridge pair is therefore not measured, and the rows named sim_camera_bridge
-# and ovcam_bridge are whichever of the pair started first, not a sum over the pair. The smallest
-# fix, deliberately left for the commit that precedes session 2 rather than slipped into this one:
-# add ("sim_camera_bridge_right", r"__node:=sim_camera_bridge_right") and the matching ovcam entry,
-# or record every matching pid per name. Nothing in a validity check or a stored run reads these
-# files, so the fix cannot move any scored result.
+# Stereo stack (20C review finding 5, fixed in 25C): the right eye is a SECOND INSTANCE of the same two
+# executables, differing only in its ROS node name (hil_simulation.launch.py: sim_camera_bridge/ovcam_bridge
+# against sim_camera_bridge_right/ovcam_bridge_right). The left patterns below exclude the right node name
+# and the right instances have their own rows, so each member of a bridge pair is measured on its own.
+# 25C (DEVIATIONS 17.86): check_run.py's slam_coload_alive now reads this file (the ov2slam_node pid per row
+# and, for a SLAM-off cell, the absence of every SLAM row's pid); the memory columns stay covariates.
 import os
+# 25A: Pss in smaps_rollup is readable only by the owner or root, and every stack process except the
+# detector producer runs as root in a container, so the sampler is started with sudo -n by its caller.
 import re
 import signal
 import sys
@@ -43,9 +44,13 @@ PATTERNS = (
     ("yolo_bridge_node", r"/yolo_bridge_node( |$)"),
     ("controller", r"/(visp_servo_node|hil_servo_node|h_vs_servo_node)( |$)"),
     ("ov2slam_node", r"/ov2slam_node( |$)"),
-    ("sim_camera_bridge", r"/sim_camera_bridge_node( |$)"),
-    ("ovcam_bridge", r"/ovcam_bridge_node( |$)"),
+    ("orbslam3_node", r"/(rgbd_node_cpp|stereo_node_cpp|mono_node_cpp)( |$)"),
+    ("sim_camera_bridge", r"/sim_camera_bridge_node( |$)(?!.*__node:=sim_camera_bridge_right)"),
+    ("ovcam_bridge", r"/ovcam_bridge_node( |$)(?!.*__node:=ovcam_bridge_right)"),
+    ("sim_camera_bridge_right", r"__node:=sim_camera_bridge_right( |$)"),
+    ("ovcam_bridge_right", r"__node:=ovcam_bridge_right( |$)"),
 )
+SLAM_NAMES = ("ov2slam_node", "orbslam3_node")
 
 
 def cmdline(pid):
@@ -91,6 +96,33 @@ def mem_of(pid):
     return f(ro.get("Pss")), f(st.get("VmRSS")), f(st.get("VmHWM"))
 
 
+def cgroup_of(pid):
+    try:
+        with open(f"/proc/{pid}/cgroup") as f:
+            return f.read().strip()
+    except OSError:
+        return None
+
+
+def group_mem(pid):
+    """Sums of Pss, VmRSS and VmHWM (MB) over every process sharing pid's cgroup, or blanks."""
+    cg = cgroup_of(pid)
+    if not cg or "docker" not in cg:                     # a container's own cgroup only, never a host session
+        return "", "", ""
+    pss = rss = hwm = 0
+    ok = False
+    for p in (q for q in os.listdir("/proc") if q.isdigit()):
+        if cgroup_of(p) != cg:
+            continue
+        st = kb(f"/proc/{p}/status", {"VmRSS", "VmHWM"}) or {}
+        ro = kb(f"/proc/{p}/smaps_rollup", {"Pss"}) or {}
+        if "Pss" in ro:
+            ok = True
+        pss += ro.get("Pss", 0); rss += st.get("VmRSS", 0); hwm += st.get("VmHWM", 0)
+    f = lambda v: round(v / 1024.0, 2)
+    return (f(pss), f(rss), f(hwm)) if ok else ("", f(rss), f(hwm))
+
+
 def counters(iface):
     try:
         base = f"/sys/class/net/{iface}/statistics"
@@ -106,6 +138,9 @@ def main():
     utc = lambda: time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     pm = open(pm_path, "w", buffering=1)
     lk = open(link_path, "w", buffering=1)
+    if os.environ.get("SUDO_UID"):                       # 25A: started with sudo, files stay the caller's
+        for path in (pm_path, link_path):
+            os.chown(path, int(os.environ["SUDO_UID"]), int(os.environ.get("SUDO_GID", os.environ["SUDO_UID"])))
     pm.write("utc,name,pid,pss_mb,rss_mb,hwm_mb\n")
     lk.write("utc,rx_bytes,tx_bytes,rx_MBps,tx_MBps\n")
     prx, ptx = counters(iface)
@@ -121,6 +156,12 @@ def main():
             else:
                 pss, rss, hwm = mem_of(pid)
                 pm.write(f"{u},{name},{pid},{pss},{rss},{hwm}\n")
+        slam = next((pids[n] for n in SLAM_NAMES if pids[n] is not None), None)
+        if slam is None:
+            pm.write(f"{u},slam_container,,,,\n")
+        else:
+            pss, rss, hwm = group_mem(slam)
+            pm.write(f"{u},slam_container,{slam},{pss},{rss},{hwm}\n")
         rx, tx = counters(iface)
         now = time.monotonic()
         dt = now - pt

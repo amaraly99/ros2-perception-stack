@@ -25,7 +25,12 @@ later is a covariate, never a check (18B: the transport delay is 0.3 to 0.8 s, s
 while loading shared libraries"; ov2slam_node in the last topthreads sample at or before resume + mission_window_s OR in the
 first sample after it: level2_coresampler.py line 43 lists only threads that existed in the previous 15 s sample, so a co-load
 restarted late in the window is invisible for one sample). The /slam/pose count, first-pose delay and largest pose gap are
-covariates (info), never checks."""
+covariates (info), never checks.
+25C (R3, DEVIATIONS 17.86): slam_coload_alive asks for the cell's EXPECTED SLAM process from the run's run_config.yaml
+(slam.enabled, slam.type): none for a SLAM-off cell, whose absence is required (stack log, topthreads, procmem); ov2slam_node
+otherwise, as above, plus, where the Level 2 sampler ran, one pid without a gap from its first row in the window to the end,
+that first row at most 10 s after resume, and the first row after the window with the same pid; a non-frozen setup run
+without procmem.csv fails."""
 import datetime, glob, importlib.util, json, math, os, re, subprocess, sys
 from collections import deque
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -526,8 +531,81 @@ if tr_ns and _tt:
     _after = sorted(t for t in _samples if t > tr_ns + int(SC["mission_window_s"] * 1e9))
     SC["ov2slam_in_first_sample_after_window"] = any(c.startswith("ov2slam") for c in _samples[_after[0]]) if _after else None
     SC["first_sample_after_window_s_after_resume"] = round((_after[0] - tr_ns) / 1e9, 1) if _after else None
+# 25C (R3, DEVIATIONS 17.86): the check now asks for the cell's EXPECTED SLAM process, read from the run's own launcher
+#     record (<label>_run1_run_config.yaml, block slam:, keys enabled and type). enabled false (a SLAM-off cell): the expected
+#     process is none and its ABSENCE is required over the whole run: the stack log says "SLAM will be skipped" and never
+#     "SLAM sidecar started", no topthreads sample up to and including the first one after the mission window lists an ov2slam
+#     thread, and the Level 2 sampler (<tag>_procmem.csv, required here, with rows past the window's end) never found
+#     ov2slam_node, an ORB-SLAM3 node or a SLAM container. Any type
+#     other than ov2slam with SLAM enabled has no expected process defined: False. Otherwise (every stored run: enabled true,
+#     type ov2slam) the ov2slam branch below decides exactly as before, and where the Level 2 sampler ran it must also show
+#     ov2slam_node without interruption, one pid, from its first row in the mission window to the window's end, that
+#     first row at most SLAM_START_MAX_S after resume (the sidecar starts 4.2 to 7.2 s after resume by design in the 22 stored
+#     Level 2 runs, so presence from resume itself is not asked; the 10 s bound is Ahmed's ruling of 2026-10-25, prompt 25C),
+#     and the first row AFTER the window carrying the same pid, so one process ran to the window's end even if the sampler's
+#     rows stop early. A run of a non-frozen simulator setup (sim_setup.json in --pre-resume-dir, written by run_one.sh for
+#     such runs only) without procmem.csv fails: the Level 2 sampler is required there (batch.sh asks for L2_PROCMEM=1).
+SLAM_START_MAX_S = 10.0
+def _yaml_block(txt, name):
+    out, on = {}, False
+    for ln in txt.splitlines():
+        if re.match(rf"^{name}:\s*$", ln):
+            on = True; continue
+        if on:
+            if ln and not ln[0].isspace():
+                break
+            m = re.match(r"^\s+(\w+):\s*(.*?)\s*$", ln)
+            if m:
+                out[m.group(1)] = m.group(2).strip('"')
+    return out
+_slam_cfg = _yaml_block(rd(P + "_run_config.yaml"), "slam")
+_slam_off = _slam_cfg.get("enabled") == "false"
+_slam_other = not _slam_off and _slam_cfg.get("type") not in (None, "ov2slam")
+_pm = sorted(glob.glob(os.path.join(d, "*_procmem.csv")))
+
+
+def _pm_rows(names):
+    import csv as _csv
+    out = []
+    for row in _csv.DictReader(open(_pm[0])):
+        if row.get("name") not in names:
+            continue
+        try:
+            tu = int(datetime.datetime.strptime(row["utc"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=datetime.timezone.utc).timestamp() * 1e9)
+        except (KeyError, ValueError):
+            continue
+        out.append((tu, row.get("name"), row.get("pid") or ""))
+    return out
+
+
 if not tr_ns:
     SC["status"] = "n/a: the run never resumed"; C["slam_coload_alive"] = True
+elif _slam_off:
+    SC["expected_slam_process"] = None
+    SC["log_says_slam_skipped"] = "SLAM will be skipped" in log
+    _upto = []
+    if _tt:
+        _w = tr_ns + int(SC["mission_window_s"] * 1e9)
+        _upto = sorted(t for t in _samples if t <= _w) + sorted(t for t in _samples if t > _w)[:1]
+    SC["samples_checked"] = len(_upto)
+    SC["samples_with_ov2slam"] = sum(1 for t in _upto if any(c.startswith("ov2slam") for c in _samples[t]))
+    SC["procmem_file"] = os.path.basename(_pm[0]) if _pm else None
+    _pr = _pm_rows(("ov2slam_node", "orbslam3_node", "slam_container")) if _pm else []
+    SC["procmem_slam_rows"], SC["procmem_slam_rows_with_pid"] = len(_pr), sum(1 for r in _pr if r[2])
+    SC["procmem_rows_after_window"] = sum(1 for r in _pr if r[0] > tr_ns + int(SC["mission_window_s"] * 1e9))
+    C["slam_coload_alive"] = bool(SC["log_says_slam_skipped"] and not SC["sidecar_started"] and _tt and _upto
+                                  and SC["samples_with_ov2slam"] == 0 and _pm and _pr and SC["procmem_slam_rows_with_pid"] == 0
+                                  and SC["procmem_rows_after_window"] > 0)
+    SC["status"] = "ok: no SLAM process, as the cell requires" if C["slam_coload_alive"] else "FAIL: " + "; ".join(w for w, bad in (
+        ("the stack log does not say SLAM will be skipped", not SC["log_says_slam_skipped"]),
+        ("SLAM sidecar started", SC["sidecar_started"]), ("no topthreads sample", not _upto),
+        ("an ov2slam thread in a topthreads sample", SC["samples_with_ov2slam"] > 0),
+        ("no procmem record to show the absence", not (_pm and _pr)),
+        ("no procmem row after the mission window (the sampler stopped early)", bool(_pm and _pr) and SC["procmem_rows_after_window"] == 0),
+        ("the procmem sampler found a SLAM process", SC["procmem_slam_rows_with_pid"] > 0)) if bad)
+elif _slam_other:
+    SC["expected_slam_process"] = None
+    SC["status"] = f"FAIL: no expected SLAM process is defined for slam.type {_slam_cfg.get('type')}"; C["slam_coload_alive"] = False
 else:
     SC["decided_by_sample"], SC["decided_sample_s_after_resume"] = (
         ("last_in_window", SC.get("last_window_sample_s_after_resume")) if SC["ov2slam_in_last_window_sample"]
@@ -540,6 +618,33 @@ else:
         ("no topthreads sample", not _tt),
         ("ov2slam_node absent from the last sample in the mission window and from the first sample after it",
          _tt and not _present)) if bad)
+    if _pm:   # 25C: the Level 2 sampler ran, so presence is also asked of every 2 s row from the first one that found it
+        _w = tr_ns + int(SC["mission_window_s"] * 1e9)
+        _pr = [r for r in _pm_rows(("ov2slam_node",)) if tr_ns <= r[0] <= _w]
+        _i0 = next((k for k, r in enumerate(_pr) if r[2]), None)
+        _run = _pr[_i0:] if _i0 is not None else []
+        SC["procmem_rows_in_window"] = len(_pr)
+        SC["procmem_first_present_s_after_resume"] = round((_pr[_i0][0] - tr_ns) / 1e9, 1) if _i0 is not None else None
+        SC["procmem_rows_missing_after_start"] = sum(1 for r in _run if not r[2])
+        SC["procmem_pids_after_start"] = len({r[2] for r in _run if r[2]})
+        SC["procmem_first_present_max_s"] = SLAM_START_MAX_S
+        _late = SC["procmem_first_present_s_after_resume"] is not None and SC["procmem_first_present_s_after_resume"] > SLAM_START_MAX_S
+        _nx = next((r for r in _pm_rows(("ov2slam_node",)) if r[0] > _w), None)
+        SC["procmem_first_row_after_window_s_after_resume"] = round((_nx[0] - tr_ns) / 1e9, 1) if _nx else None
+        SC["procmem_same_pid_after_window"] = bool(_nx and _nx[2] and {r[2] for r in _run if r[2]} == {_nx[2]})
+        _cont = (bool(_run) and not _late and SC["procmem_rows_missing_after_start"] == 0 and SC["procmem_pids_after_start"] == 1
+                 and SC["procmem_same_pid_after_window"])
+        if not _cont:
+            C["slam_coload_alive"] = False
+            SC["status"] = ("FAIL: " if SC["status"] == "ok" else SC["status"] + "; ") + (
+                "ov2slam_node in no procmem row of the mission window" if not _run else
+                f"ov2slam_node first present {SC['procmem_first_present_s_after_resume']} s after resume, later than {SLAM_START_MAX_S} s" if _late else
+                "ov2slam_node not continuous in the procmem rows after its start (a gap or a second pid)"
+                if SC["procmem_rows_missing_after_start"] or SC["procmem_pids_after_start"] != 1 else
+                "no procmem row after the mission window with the same ov2slam_node pid")
+    elif pre_dir and os.path.exists(os.path.join(pre_dir, "sim_setup.json")):   # 25C: a non-frozen setup run needs the sampler
+        C["slam_coload_alive"] = False
+        SC["status"] = ("FAIL: " if SC["status"] == "ok" else SC["status"] + "; ") + "no procmem.csv in a run of a non-frozen simulator setup"
 I["slam_coload"] = SC
 # covariates of the co-load's tracking (never checks): over the window after resume
 if msgs and tr_ns:

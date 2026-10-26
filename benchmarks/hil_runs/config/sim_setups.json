@@ -1,0 +1,39 @@
+{
+ "_doc": "Simulator setups other than the frozen one (prompt 25C, ruling R4, DEVIATIONS 17.86). Read by sim_setup.py. The frozen setup of every run before 25C is NOT here: its check is the SIM_MODEL_SHA256 comparison with sim_geometry.json and held_reference.json in batch.sh and smoke_run_hold.sh, unchanged. A setup here is accepted only in a mode listed under it, and only when the supervisor's model_info reply has exactly the keys and values of the pinned reply of that mode. Nothing else is accepted.",
+ "setups": {
+  "sim25w": {
+   "what": "prompt 25W's wrapper hil_session_start_heldstart_mode('<mode>') and the copies of Amar's publisher files that re-send the held frame in every mode; MODEL_PIN.md in C:\\Users\\Ahmed\\sim_25W; the files as run committed as 36528927 on the sim host's local branch sim-25w in the worktree C:\\Users\\Ahmed\\sim_25A (parent 28114bd), as MODEL_PIN.md states",
+   "source": "the lines Ahmed pasted from sim_25W/MODEL_PIN.md at pop-up 1 of prompt 25C, 2026-10-25, answered before 21:09 EDT (copy: stage6/sensing_25C/MODEL_PIN_25W_pasted.txt); the mono line equals the live model_info reply of 21:09:15 EDT",
+   "modes": {
+    "mono": {
+     "model_info": "model_info model=hil_closed_loop_unified x_ic=15.12 y_ic=3.84 z_ic=7.5 yaw_ic=6.23718531 fx_left=554 fx_right=554 right_cam=off right_y=-0.11 depth_port=off left_image=rgb right_image=rgb"
+    },
+    "stereo": {
+     "model_info": "model_info model=hil_closed_loop_baseline_061 x_ic=15.12 y_ic=3.84 z_ic=7.5 yaw_ic=6.23718531 fx_left=554 fx_right=554 right_cam=on right_y=-0.61 depth_port=off left_image=rgb right_image=rgb"
+    }
+   },
+   "model_pin_md": {
+    "sim_host_commit": "3652892746bbb5ef7e43a3b4aeeb48893325288a",
+    "sim_host_branch": "sim-25w (local, not pushed), in C:\\Users\\Ahmed\\sim_25A, parent 28114bd",
+    "sha256_as_run_on_the_sim_host_crlf": {
+     "hil_session_start_heldstart_mode.m": "ad9838d8e60b0e376feed8e53c841886899fee5b344db4cbc4c856276cc78cbd",
+     "matlab/hil_closed_loop_unified.slx": "97b3a7e40a922c05cef669023d161cec192a1a6897386eda866ccc15215c246f",
+     "matlab/hil_closed_loop_baseline_061.slx": "3e360771ea3eff7bc5916afeb8af7571c113f991055fefb944f8729b3b0140a3",
+     "matlab/hil_closed_loop_baseline_RGBD.slx": "26fb1fb91d7f2290c3560ffca5515f170975f466b5147e8d7974b3957d01f6e8",
+     "matlab/hil_publish_frame.m": "2b17104fe2252cbcfdbc6774e1c1c0c9119ed341eef8b1fb9ba406c4773f583b",
+     "matlab/sim_camera_publisher_timer_LT.m": "9b8acaf46385f60c307599da7903bd0712ff9f38e7897a6de5a5fd73a78a951c",
+     "matlab/sim_camera_publisher_timer_LT_rgbd.m": "abf2e6ffbbe4e008aabe1bd9a2ee46b45298007407493ee2e9abb69a152cf0a5",
+     "matlab/hil_pub_control.m": "b88197d5b5b989c1e1f59be2ecf1f781cfb3a000edfec8db9f57fed17c6909ec",
+     "matlab/hil_ros_init_LT.m": "d9890be4753732388444f95b642e00c3f9c1b8deebbc9354109360d7964110f9",
+     "matlab/hil_ros_init_LT_rgbd.m": "d591d0833de9f248432a32c041d949d7d15b9c6975f50fde65fdae9a3dd8ca47",
+     "matlab/hil_run_supervisor.m": "ac01d2b8a50d68b6be0cf3667b22ba9457294c514950ab9cebe6a16a36c60ab3",
+     "matlab/read_cmdvel_live_interp.m": "eedcc50d857df98bd20504542b41e8b587f0d6cb86ae17fa7b723d0fb847e36c",
+     "matlab/set_rgbd.m": "de7d772ca0296bb1033f0215a203f97b579716ad568110dc17e918f4e3919350",
+     "matlab/set_stereo.m": "259db2eb58b440f68766c156aebbc4e73eb02fa4416ba5f48d0a02f7bb701489",
+     "matlab/stop_hil_supervisor.m": "6ede2d7628917a4a06c345db9e1284b4ef323da610e868c889d42ab6b53c491f"
+    },
+    "changed_vs_28114bd": "hil_publish_frame.m (idle throttle Inf), sim_camera_publisher_timer_LT.m and _rgbd.m (no repeated-frame skip); the 3 models and the other 8 scripts byte-identical to 28114bd matlab/"
+   }
+  }
+ }
+}

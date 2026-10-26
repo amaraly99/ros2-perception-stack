@@ -30,6 +30,9 @@ echo "$FINAL" > "$O/held_final_sha1.txt"
 python3 "$HIL_RUNS/held_members.py" accept "$HIL_HELD_REF" "$FINAL" \
   || { echo "hold_gate: FAIL final held render $FINAL is not in the accepted set of $HIL_HELD_REF (17.84)"; exit 1; }
 python3 -c "import numpy as np,cv2,sys; a=np.fromfile(sys.argv[1],np.uint8).reshape(480,640,3); cv2.imwrite(sys.argv[2],a)" "/tmp/r20_renders/$FINAL.raw" "$O/held_final_render.png"
+# 25C (R5, DEVIATIONS 17.86): with REC_HELD_ONLY=1 the render logger saves nothing new from here on (rec.sh); the final held
+# render has just been read, and every later check reads held_final_render.png and the hash log, not a saved render.
+[ "${REC_HELD_ONLY:-}" = 1 ] && : > /tmp/r20_hold_done
 GC=(); [ "$GATE_CONFIGS" = all ] || GC=(--configs $GATE_CONFIGS)
 python3 "$HIL_RUNS/gate_render.py" "$O/held_final_render.png" "$O/gate.json" "${GC[@]}" 2>"$O/gate.err" || exit 1
 bash "$HIL_RUNS/rec.sh" start bag || exit 1

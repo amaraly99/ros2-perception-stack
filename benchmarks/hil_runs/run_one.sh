@@ -6,7 +6,10 @@
 #   RUN_KEY      run label suffix, unique within the batch (label = level2_<model>_<backend>_<placement>_r<RUN_KEY>)
 #   MODEL BACKEND [PLACEMENT=A] [STACK_CFG=ours_fx554_A_ibvs] [DURATION=60]   (the stack config sets the backend: refused if it
 #   is not BACKEND, so a run labelled cpu can never run on the NPU)
-#   SIM_MODEL_SHA256   the sha256 apply_sim_params.m printed for the running Simulink model
+#   SIM_MODEL_SHA256   the sha256 apply_sim_params.m printed for the running Simulink model (frozen setup only)
+#   25C (R4, R5, DEVIATIONS 17.86): with HIL_SIM_SETUP other than frozen, the run first records the setup, mode and the
+#   supervisor's model_info reply into RUN_DIR/sim_setup.json (sim_setup.py record; a mismatch refuses the run, exit 20), and
+#   the pin record carries it with the MODEL_PIN.md checksums; REC_HELD_ONLY, when set, is recorded too (rec.sh).
 #   HIL_OURS_PIN       our repo commit this run must come from (default: HEAD, if the repo is clean)
 #   [GATE_CONFIGS]     pre-resume gate set (default: <model>_<backend>, the run's own configuration)   [BATCH_ID]
 # Layout: RUN_DIR/ run.log, pin_record.json, run_result.json, hold gate outputs, approach_bag/, recorder logs, sidecar files
@@ -16,7 +19,7 @@
 set -u; set -o noclobber
 source "$(dirname "$(readlink -f "$0")")/hil_env.sh"
 : "${RUN_DIR:?set RUN_DIR to a NEW run folder}"; : "${RUN_KEY:?set RUN_KEY}"; : "${MODEL:?}"; : "${BACKEND:?}"
-: "${SIM_MODEL_SHA256:?export SIM_MODEL_SHA256 first}"
+[ "$HIL_SIM_SETUP" = frozen ] && : "${SIM_MODEL_SHA256:?export SIM_MODEL_SHA256 first}"
 P="${PLACEMENT:-A}"; CFG="${STACK_CFG:-ours_fx554_A_ibvs}"; DUR="${DURATION:-60}"
 O="$RUN_DIR"; S="$O/stack"; M="$MODEL"; B="$BACKEND"; K="$RUN_KEY"
 L="level2_${M}_${B}_${P}_r${K}"; TAG="${M}_${B}_${P}_r${K}"
@@ -28,7 +31,7 @@ if [ -z "${HIL_OURS_PIN:-}" ]; then
 fi
 export HIL_OURS_PIN
 [ -e "$O" ] && { echo "run_one: REFUSE: $O exists (every run writes into a new folder)"; exit 20; }
-for f in /tmp/r20_bag /tmp/r20_bag_rec.log /tmp/r20_hash.log /tmp/r20_hash.err /tmp/r20_renders /tmp/r20_dets.log; do
+for f in /tmp/r20_bag /tmp/r20_bag_rec.log /tmp/r20_hash.log /tmp/r20_hash.err /tmp/r20_renders /tmp/r20_dets.log /tmp/r20_hold_done; do
   [ -e "$f" ] && { echo "run_one: REFUSE: $f is left from an earlier run; move it aside first"; exit 20; }
 done
 (cd "$HIL_RUNTIME" 2>/dev/null && sha256sum --quiet -c SHA256SUMS >/dev/null 2>&1) || { echo "run_one: REFUSE: runtime files in $HIL_RUNTIME missing or changed"; exit 20; }
@@ -37,6 +40,11 @@ CB=$(python3 "$HIL_WT/scripts/parse_stack.py" "$HIL_WT/config/hil/stack/$CFG.yam
 mkdir -p "$(dirname "$O")"; mkdir "$O" || { echo "run_one: REFUSE: cannot create $O"; exit 20; }
 mkdir "$S" "$O/check"; cd "$O" || exit 20
 echo "run: $L cfg=$CFG duration=${DUR}s gate=$GATE_CONFIGS ours=$HIL_OURS_PIN batch=${BATCH_ID:-none} start_utc=$(date -u +%FT%TZ)" | tee "$O/run.log"
+if [ "$HIL_SIM_SETUP" != frozen ]; then                         # 25C R4: this run's setup, mode and model_info reply
+  python3 "$HIL_RUNS/sim_setup.py" record "$HIL_SIM_SETUP" "$HIL_SIM_MODE" "$O/sim_setup.json" | tee -a "$O/run.log"
+  [ "${PIPESTATUS[0]}" -eq 0 ] || { echo "run_one: REFUSE: the sim setup check failed (sim_setup.json)" | tee -a "$O/run.log"; exit 20; }
+fi
+[ "${REC_HELD_ONLY:-}" = 1 ] && echo "renders: saved only until the hold gate has read the final held render, then the terminal frame (REC_HELD_ONLY, 25C R5)" | tee -a "$O/run.log"
 # 5R: SoC temperature and LIVE throttle bits (0xF) at the start and the end of the run; the peak comes from the 1 Hz telemetry
 export RUN_T_START=$(vcgencmd measure_temp | sed 's/[^0-9.]//g') RUN_TH_START=$(vcgencmd get_throttled | cut -d= -f2)
 echo "soc_start: ${RUN_T_START} C throttled ${RUN_TH_START} (live bits $(( RUN_TH_START & 0xF )))" | tee -a "$O/run.log"
@@ -56,7 +64,7 @@ bash "$HIL_RUNS/rec.sh" stop bag | tee -a "$O/run.log"; bash "$HIL_RUNS/rec.sh" 
 kill "$SC" 2>/dev/null; wait "$SC" 2>/dev/null
 # the recorders run as root: sudo for the move (5I: a plain mv copied the bag but could not remove /tmp/r20_bag)
 [ -d /tmp/r20_bag ] && sudo mv /tmp/r20_bag "$O/approach_bag"
-for f in /tmp/r20_hash.log /tmp/r20_bag_rec.log /tmp/r20_dets.log /tmp/r20_hash.err /tmp/r20_renders; do
+for f in /tmp/r20_hash.log /tmp/r20_bag_rec.log /tmp/r20_dets.log /tmp/r20_hash.err /tmp/r20_renders /tmp/r20_hold_done; do
   [ -e "$f" ] && sudo mv "$f" "$O/"
 done
 sudo chown -R "$(id -u):$(id -g)" "$O"
@@ -179,6 +187,11 @@ rec = {
   "thermal": thermal,
   "stack_pin": pin,
 }
+if E.get("HIL_SIM_SETUP", "frozen") != "frozen":                 # 25C R4: setup, mode, model_info reply, MODEL_PIN.md checksums
+    try: rec["sim_setup"] = json.load(open(os.path.join(O, "sim_setup.json")))
+    except (OSError, ValueError) as e: rec["sim_setup"] = {"error": str(e)}
+if E.get("REC_HELD_ONLY"):
+    rec["rec_held_only"] = E["REC_HELD_ONLY"]
 with open(os.path.join(O, "pin_record.json"), "x") as f: json.dump(rec, f, indent=2)
 with open(os.path.join(O, "run_result.json"), "x") as f:
     json.dump({"label": label, "smoke_rc": int(rc), "check_rc": int(crc), "hold_sim_t": rec["hold"]["sim_t"],
