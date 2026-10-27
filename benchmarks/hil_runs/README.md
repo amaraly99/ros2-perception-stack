@@ -68,3 +68,22 @@ Outputs never go into the repo. Every batch and every run writes into a new fold
   figure. batch.sh requires it for a `sim25w` batch. Neither bag records an image topic in any mode.
 - **Configs.** `ours_fx554_{A,B}_ibvs_slamoff` (SLAM off) and `ours_fx554_B_ibvs_mono_accurate` (mono CPU) in the
   integration patch; the PSS fix of 25A in `host/level2_procmem.py` (sudo -n from one_run_hold_gated.sh).
+
+## 27A: the RGB-D cell's source stamp and expected SLAM process (DEVIATIONS 17.87)
+
+- **Source stamp (integration patch).** `rgbd_node_cpp` pairs colour and depth only on an identical stamp, and the depth
+  image keeps MATLAB's stamp (INFERRED from Amar's RGB-D publisher, one clock read for both messages; 27B's stream check
+  tests it), so the left chain must keep it too. A stack config with `camera.rgbd: true` makes `parse_stack.py` emit
+  `RGBD_ON=true`, `run_stack_hil.sh` append `rgbd:=true` to the launch arguments, and `hil_simulation.launch.py` set
+  `use_source_stamp` true on both left nodes (what Amar's `hil_simulation_rgbd.launch.py` does). Without the key nothing
+  changes: the launch command and every node parameter are those of 25C.
+- **SLAM co-load check (R3 extended).** An ORB-SLAM3 RGB-D run (`slam.type orbslam3`, `rgbd_node_cpp` in `slam.command`)
+  expects the ORB-SLAM3 RGB-D node under the OV2SLAM rule: its threads by name in topthreads (`orb_*`, `rgbd_node_cpp`),
+  its procmem row `orbslam3_node`, and the stack log must carry run_stack_hil.sh's line "RGB-D: left image keeps the
+  MATLAB source stamp" (without camera.rgbd no frame pairs). The runner's `save_logs` (integration patch) appends the
+  ORB-SLAM3 container's console (`/tmp/slam_sidecar_slam_orbslam3.log`, so the container must be named `slam_orbslam3`)
+  to the stack log when it exists, as it does the OV2SLAM one, so the library-error test covers it. smoke_run_hold.sh
+  waits for and records that node for `slam.type orbslam3`. Other ORB-SLAM3 commands still have no expected process.
+  The stored runs keep their verdicts and outputs.
+- **Not yet in the run code:** the RGB-D configs, an `rgbd` mode for `sim25w` in `config/sim_setups.json`, and the
+  batch.sh plan-line check, which today accepts only mono and stereo sessions (stage6/rgbd_27A/PLAN_27B.md).

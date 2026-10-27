@@ -2,7 +2,7 @@
 # smoke_run_hold.sh <label=level2_<model>_<backend>_<placement>_r<HOLD_K>> <stack_config> <model> — HELD-START arm: one_run_hold.sh (unmodified) via an adapter
 # Pre/post guards: throttle 0x0, our repo clean at its pinned HEAD, worktree diff == the saved patch.
 # Then the worktree runner (one run, warmup 5 s, 60 s window), throttle telemetry, a live process
-# sampler (Cpus_allowed_list of detector + controller, OpenCV libs mapped into ov2slam_node), pin record.
+# sampler (Cpus_allowed_list of detector + controller, OpenCV libs mapped into the SLAM node), pin record.
 # Exit: runner rc, or 10 throttle before, 11 tracked change before, 12 throttle during, 13 tracked change after,
 #       14 sim model sha256 missing or not the expected one.
 # Patch: ours_on_4490660_2026-10-04b.patch (e337034b...), kept in patches/. The 2026-10-03 patch (2e8e354e...) is SUPERSEDED.
@@ -21,6 +21,8 @@ OURS_PIN="${HIL_OURS_PIN:?set HIL_OURS_PIN to the commit of our repo this run mu
 # another setup the hash is not used: sim_setup.py compares the supervisor's model_info reply with the pinned reply of
 # HIL_SIM_MODE (exit 14 on a mismatch), and the pin records the setup instead of the sim_geometry.json hash.
 # 25C (R3): sample_procs waits for ov2slam_node only when the stack config enables SLAM, so a SLAM-off run is sampled too.
+# 27A (R3, DEVIATIONS 17.87): with slam.type orbslam3 it waits for and records the ORB-SLAM3 node instead (orbslam3_node, the
+# pattern of level2_procmem.py); every other config waits for and records exactly what it did before.
 GEOM="$HIL_GEOM"
 WIN_MODEL_SHA=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['model_sha256'])" "$GEOM")
 say() { echo "$(date -u +%FT%TZ) [$L] $*" | tee -a "$OUT/stage3.log"; }
@@ -37,24 +39,28 @@ tracked_ok() {  # our repo clean at pin; worktree HEAD at pin and its full diff 
 }
 
 sample_procs() {  # live: wait for the stack, then record affinity + mapped OpenCV libs (host /proc)
-    local f="$OUT/${L}_procs.txt" ctrl det ov slam_on
+    local f="$OUT/${L}_procs.txt" ctrl det ov slam_on sn sp
     slam_on=$(python3 "$WT/scripts/parse_stack.py" "$WT/config/hil/stack/$CFG.yaml" --get slam.enabled 2>/dev/null)
+    sn=ov2slam_node; sp='/ov2slam_node( |$)'
+    [ "$(python3 "$WT/scripts/parse_stack.py" "$WT/config/hil/stack/$CFG.yaml" --get slam.type 2>/dev/null)" = orbslam3 ] \
+        && sn=orbslam3_node && sp='/(rgbd_node_cpp|stereo_node_cpp|mono_node_cpp)( |$)'
     for _ in $(seq 1 90); do
         ctrl=$(pgrep -f '/(visp_servo_node|hil_servo_node)( |$)' | head -1)
         det=$(pgrep -f 'src/yolo_producer/.*producer\.py' | head -1)
-        ov=$(pgrep -f '/ov2slam_node( |$)' | head -1)
+        ov=$(pgrep -f "$sp" | head -1)
         [ -n "$ctrl" ] && [ -n "$det" ] && { [ -n "$ov" ] || [ "$slam_on" = False ]; } && break
         sleep 2
     done
     sleep 15   # let SLAM settle past its startup delay
     {
         echo "sampled_utc: $(date -u +%FT%TZ)"
-        for name in detector_producer yolo_bridge_node controller ov2slam_node; do
+        for name in detector_producer yolo_bridge_node controller $sn; do
             case $name in
                 detector_producer) p=$(pgrep -f 'src/yolo_producer/.*producer\.py' | head -1) ;;
                 yolo_bridge_node)  p=$(pgrep -f '/yolo_bridge_node( |$)' | head -1) ;;
                 controller)        p=$(pgrep -f '/(visp_servo_node|hil_servo_node)( |$)' | head -1) ;;
                 ov2slam_node)      p=$(pgrep -f '/ov2slam_node( |$)' | head -1) ;;
+                orbslam3_node)     p=$(pgrep -f "$sp" | head -1) ;;
             esac
             if [ -n "$p" ]; then
                 echo "$name pid=$p comm=$(cat /proc/$p/comm 2>/dev/null) $(sudo grep Cpus_allowed_list /proc/$p/status | tr -s '\t' ' ')"
@@ -63,7 +69,7 @@ sample_procs() {  # live: wait for the stack, then record affinity + mapped Open
             fi
         done
         if [ -n "${ov:-}" ] && [ -d "/proc/$ov" ]; then
-            echo "ov2slam_node_mapped_opencv:"
+            echo "${sn}_mapped_opencv:"
             sudo awk '$6 ~ /libopencv/ {print $6}' "/proc/$ov/maps" | sort -u | sed 's/^/  /'
         fi
     } > "$f" 2>&1

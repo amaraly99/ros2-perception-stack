@@ -184,10 +184,10 @@ index 0000000000000000000000000000000000000000..ebdcd3ab8265467b9419ccc4c7814ead
 +    main()
 diff --git a/benchmarks/run_hil_experiments.sh b/benchmarks/run_hil_experiments.sh
 new file mode 100755
-index 0000000000000000000000000000000000000000..c33b6c3a7f9573c31059f8fdd79613cf227d389f
+index 0000000000000000000000000000000000000000..312eb40602c80316d85205068482dfd33123b81f
 --- /dev/null
 +++ b/benchmarks/run_hil_experiments.sh
-@@ -0,0 +1,369 @@
+@@ -0,0 +1,373 @@
 +#!/bin/bash
 +# run_hil_experiments.sh — Ahmed's detector-run loop (exp/detector-accuracy), driving
 +# THIS tree's run_stack_hil.sh with a stack config instead of the old flag launcher.
@@ -329,6 +329,10 @@ index 0000000000000000000000000000000000000000..c33b6c3a7f9573c31059f8fdd79613cf
 +    { echo "=== /tmp/hil_launch.log"; cat /tmp/hil_launch.log
 +      echo "=== /tmp/yolo_producer.log"; cat /tmp/yolo_producer.log
 +      echo "=== /tmp/slam_sidecar_slam_ov2slam.log (tail 200)"; tail -200 /tmp/slam_sidecar_slam_ov2slam.log
++      # 27A: the ORB-SLAM3 RGB-D container's console too, so check_run.py's library-error test sees it; written only
++      # when that container ran this run (removed at run start below), so every other stack log is unchanged
++      [[ -f /tmp/slam_sidecar_slam_orbslam3.log ]] && { echo "=== /tmp/slam_sidecar_slam_orbslam3.log (tail 200)"
++          tail -200 /tmp/slam_sidecar_slam_orbslam3.log; }
 +    } >> "$1" 2>/dev/null || true
 +}
 +
@@ -353,7 +357,7 @@ index 0000000000000000000000000000000000000000..c33b6c3a7f9573c31059f8fdd79613cf
 +    MLOG="${RUN_PREFIX}_matlab.log"
 +    PROBE_CSV="/tmp/hil_probe_${LABEL}_run${N}.csv"
 +    sudo rm -f "$TELEM_CSV" ${STAMP_CSV:+"$STAMP_CSV"} /tmp/hil_launch.log /tmp/yolo_producer.log \
-+        /tmp/slam_sidecar_slam_ov2slam.log "$PROBE_CSV" 2>/dev/null || true
++        /tmp/slam_sidecar_slam_ov2slam.log /tmp/slam_sidecar_slam_orbslam3.log "$PROBE_CSV" 2>/dev/null || true
 +
 +    # 1. simulation first (a restart resets the drone pose), frames on
 +    echo "status_before: $(sup "$MLOG" status)" >> "$MLOG"
@@ -1956,7 +1960,7 @@ index 0000000000000000000000000000000000000000..e95a4168ff165fd86cdc7f64c3cb0ee3
 +  }
 +}
 diff --git a/run_stack_hil.sh b/run_stack_hil.sh
-index 9cb9badaafe3a230342c56b531368cfad2ac44ce..8ef047440eb44e219a883da53c088225bb5efb25 100755
+index 9cb9badaafe3a230342c56b531368cfad2ac44ce..ef5df47c01ed31ea5a5ff26529fd2beb4cbd693f 100755
 --- a/run_stack_hil.sh
 +++ b/run_stack_hil.sh
 @@ -35,6 +35,8 @@
@@ -2071,10 +2075,14 @@ index 9cb9badaafe3a230342c56b531368cfad2ac44ce..8ef047440eb44e219a883da53c088225
          " || die "colcon build failed — fix errors above before launching"
      log "Build complete."
      sep
-@@ -735,6 +763,12 @@ LAUNCH_ARGS+=" controller_cpu:=${CONTROLLER_CPU:-} detector_cpu:=${DETECTOR_CPU:
+@@ -735,6 +763,16 @@ LAUNCH_ARGS+=" controller_cpu:=${CONTROLLER_CPU:-} detector_cpu:=${DETECTOR_CPU:
  LAUNCH_ARGS+=" use_slam_depth:=${CONTROLLER_USE_SLAM_DEPTH:-false}"
  LAUNCH_ARGS+=" use_slam_pose:=${CONTROLLER_USE_SLAM_POSE:-false}"
  LAUNCH_ARGS+=" stereo:=${STEREO_ON:-false}"
++# RGB-D (camera.rgbd): the left chain keeps the MATLAB stamp so rgbd_node_cpp pairs colour
++# with depth. Appended only when on, so every other config's launch command is unchanged.
++[[ "${RGBD_ON:-false}" == "true" ]] && LAUNCH_ARGS+=" rgbd:=true" \
++    && log "RGB-D: left image keeps the MATLAB source stamp (pairs with the depth topic)"
 +# Optional overrides (each empty = launch-file default = previous behaviour).
 +[[ -n "${CAM_STAMP_LOG:-}"     ]] && LAUNCH_ARGS+=" cam_stamp_log:=${CAM_STAMP_LOG}" \
 +    && log "Camera stamp log → ${CAM_STAMP_LOG}"
@@ -2084,7 +2092,7 @@ index 9cb9badaafe3a230342c56b531368cfad2ac44ce..8ef047440eb44e219a883da53c088225
  if [[ "$DETECTOR" == "oracle" ]]; then
      log "Detector: oracle (yolo_bridge skipped, oracle_detector_node starts in Docker)"
  else
-@@ -790,15 +824,54 @@ if [[ "$HOLD_FSM" == "true" ]]; then
+@@ -790,15 +828,54 @@ if [[ "$HOLD_FSM" == "true" ]]; then
      log "3/5  Detector deferred — FSM held (--hold-fsm); starts on --resume-fsm"
  elif [[ "$DETECTOR" == "yolo" ]]; then
      DETECTOR_HOST_CPU="${DETECTOR_HOST_CPU:-1}"
@@ -2141,19 +2149,21 @@ index 9cb9badaafe3a230342c56b531368cfad2ac44ce..8ef047440eb44e219a883da53c088225
      for i in $(seq 1 20); do
          [[ -e /dev/shm/yolo_shm ]] && break
 diff --git a/scripts/parse_stack.py b/scripts/parse_stack.py
-index 4b8300f1ddc66020b056a397d172f2021e2bd598..22e43d33b097a0bd8efde1deb29f7834508139a3 100644
+index 4b8300f1ddc66020b056a397d172f2021e2bd598..4ca13a8b8125eb879469287cfadb1f7b193e7b5e 100644
 --- a/scripts/parse_stack.py
 +++ b/scripts/parse_stack.py
-@@ -89,6 +89,8 @@ def emit_env(cfg):
+@@ -89,6 +89,10 @@ def emit_env(cfg):
          # ── camera (stereo toggle — default false so all existing mono configs
          # keep working unmodified; see docs/STEREO_INTERFACE_CONTRACT.md) ──
          ("STEREO_ON", as_bool(get(cfg, "camera.stereo"), False)),
++        # RGB-D: left chain keeps the MATLAB stamp so colour pairs with depth; default false
++        ("RGBD_ON", as_bool(get(cfg, "camera.rgbd"), False)),
 +        # per-frame stamp CSV from sim_camera_bridge (left eye); "" = off
 +        ("CAM_STAMP_LOG", get(cfg, "camera.stamp_log", "")),
  
          # ── detector (runs in main container; host_cpu is for yolo_producer) ──
          ("DETECTOR",          get(cfg, "detector.type", "yolo")),
-@@ -98,6 +100,13 @@ def emit_env(cfg):
+@@ -98,6 +102,13 @@ def emit_env(cfg):
          ("DETECTOR_OUT",      get(cfg, "detector.topics.out", "/yolo/detections")),
          ("YOLO_HEF",          get(cfg, "detector.yolo.hef", "")),
          ("YOLO_CONF",         get(cfg, "detector.yolo.confidence", "")),
@@ -2167,7 +2177,7 @@ index 4b8300f1ddc66020b056a397d172f2021e2bd598..22e43d33b097a0bd8efde1deb29f7834
  
          # ── controller (runs in main container) ──
          ("CONTROLLER",            get(cfg, "controller.type", "proportional")),
-@@ -107,6 +116,8 @@ def emit_env(cfg):
+@@ -107,6 +118,8 @@ def emit_env(cfg):
          ("CONTROLLER_CMD_OUT",    get(cfg, "controller.topics.cmd_out", "/cmd_vel")),
          ("CONTROLLER_USE_SLAM_DEPTH", as_bool(get(cfg, "controller.use_slam_depth"), False)),
          ("CONTROLLER_USE_SLAM_POSE",  as_bool(get(cfg, "controller.use_slam_pose"),  False)),
@@ -2194,10 +2204,21 @@ index b46235e386954f08afa61b017438c4d7becf1258..27d74a3e049b93f4a9937dee38ee2c82
      // Reaches further than these two lines: this writes last_bearing_to_sign_rad_,
      // which seed_search_from_last_bearing() (~line 749) uses as the SEARCH yaw target,
 diff --git a/src/sim_camera_bridge/launch/hil_simulation.launch.py b/src/sim_camera_bridge/launch/hil_simulation.launch.py
-index 5882a09f475740d5f5d8c982384ec74ce49c74ff..e11f7cfb98cd588b1103c4a223e376046779d57c 100644
+index 5882a09f475740d5f5d8c982384ec74ce49c74ff..e27f98983cd25154af9adae3b5d27b602a91e503 100644
 --- a/src/sim_camera_bridge/launch/hil_simulation.launch.py
 +++ b/src/sim_camera_bridge/launch/hil_simulation.launch.py
-@@ -73,6 +73,10 @@ def launch_setup(context, *args, **kwargs):
+@@ -28,6 +28,10 @@
+ #                     eye on one simulation timestamp. Default false = mono, byte-identical
+ #                     to every published mono result. Stereo doubles the inbound stream to
+ #                     ~295 Mbit/s and requires wired Ethernet.)
++#   rgbd            true | false  (default: false. true = the left chain keeps the MATLAB
++#                     source stamp, so rgbd_node_cpp can pair /ovcam/image_raw with
++#                     /sim/camera/depth/image_raw on one stamp; the job of
++#                     hil_simulation_rgbd.launch.py, as a switch. false = unchanged.)
+ 
+ from launch import LaunchDescription
+ from launch.actions import DeclareLaunchArgument, OpaqueFunction
+@@ -73,6 +77,10 @@ def launch_setup(context, *args, **kwargs):
      detector_cpu   = s('detector_cpu').strip()
      use_slam_depth = s('use_slam_depth').lower() in ('true', '1', 'yes')
      use_slam_pose  = s('use_slam_pose').lower()  in ('true', '1', 'yes')
@@ -2208,7 +2229,19 @@ index 5882a09f475740d5f5d8c982384ec74ce49c74ff..e11f7cfb98cd588b1103c4a223e37604
  
      # Stereo (optional right eye). Kept as an unresolved LaunchConfiguration
      # (not run through s()) so IfCondition/ParameterValue can defer evaluation
-@@ -109,6 +113,7 @@ def launch_setup(context, *args, **kwargs):
+@@ -82,6 +90,11 @@ def launch_setup(context, *args, **kwargs):
+     # left/right pair carries one identical stamp — required for stereo,
+     # a no-op when stereo is off (the node's own default is also false).
+     use_source_stamp = ParameterValue(stereo_lc, value_type=bool)
++    # RGB-D: rgbd_node_cpp pairs colour and depth only on an IDENTICAL stamp
++    # (common_rgbd.cpp TryMatchRgbdPair), and depth arrives with MATLAB's stamp,
++    # so the left chain must keep it too. Off by default: the line above stands.
++    if s('rgbd').lower() in ('true', '1', 'yes'):
++        use_source_stamp = True
+ 
+     cfg = lambda name: f'{workspace}/config/hil/{name}'
+     # taskset prefix for a node, or None when the cpu arg is empty (no pinning).
+@@ -109,6 +122,7 @@ def launch_setup(context, *args, **kwargs):
                  'shm_name': '/ovcam_frames',
                  'sem_name': '/ovcam_ready',
                  'use_source_stamp': use_source_stamp,
@@ -2216,7 +2249,7 @@ index 5882a09f475740d5f5d8c982384ec74ce49c74ff..e11f7cfb98cd588b1103c4a223e37604
              }],
          ))
  
-@@ -177,6 +182,8 @@ def launch_setup(context, *args, **kwargs):
+@@ -177,6 +191,8 @@ def launch_setup(context, *args, **kwargs):
          dparams = [cfg(p) for p in dparam_files]
          if dwants_class:
              dparams.append({'target_class': target_class})
@@ -2225,7 +2258,7 @@ index 5882a09f475740d5f5d8c982384ec74ce49c74ff..e11f7cfb98cd588b1103c4a223e37604
          nodes.append(Node(
              package=dpkg,
              executable=dexe,
-@@ -205,17 +212,22 @@ def launch_setup(context, *args, **kwargs):
+@@ -205,17 +221,22 @@ def launch_setup(context, *args, **kwargs):
              raise RuntimeError(
                  f"Unknown controller='{controller}'. Valid: {list(CTRL_MAP)}")
          pkg, exe, ctrl_cfg = CTRL_MAP[controller]
@@ -2253,7 +2286,7 @@ index 5882a09f475740d5f5d8c982384ec74ce49c74ff..e11f7cfb98cd588b1103c4a223e37604
          ))
  
      return nodes
-@@ -263,6 +275,12 @@ def generate_launch_description():
+@@ -263,6 +284,14 @@ def generate_launch_description():
                          'one simulation timestamp. Default false = mono, byte-identical to '
                          'every published mono result. NOTE: stereo doubles the inbound stream '
                          'to ~295 Mbit/s and requires wired Ethernet.'),
@@ -2263,6 +2296,8 @@ index 5882a09f475740d5f5d8c982384ec74ce49c74ff..e11f7cfb98cd588b1103c4a223e37604
 +            description='yolo_bridge "id:name,..." class overrides; empty = COCO only'),
 +        DeclareLaunchArgument('cam_fx', default_value='',
 +            description='controller cam_fx = cam_fy override; empty = bench_fsm.yaml value'),
++        DeclareLaunchArgument('rgbd', default_value='false',
++            description='true = left chain keeps the MATLAB source stamp (RGB-D colour/depth pairing)'),
          DeclareLaunchArgument('calib_yaml',
              default_value=PathJoinSubstitution(
                  [EnvironmentVariable('WORKSPACE_DIR', default_value='/workspace'),

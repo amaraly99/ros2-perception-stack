@@ -6,9 +6,12 @@ HIL_RUNS="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"                    # be
 : "${HIL_WT:=$HOME/amar_4490660}"                                            # pinned stack worktree, read only
 : "${HIL_AMAR_PIN:=449066089465aa713382e13c1d4f043f29be96ab}"                # its HEAD
 : "${HIL_PATCH:=$HIL_OURS/integration/ours_on_4490660.patch}"                # our stack on that HEAD, committed (5R: + ours_fx554_B_ibvs.yaml)
-: "${HIL_PATCH_SHA:=74f65d749915510555c5cc6e7f0fc89c2c6dea5062ef82e79d61fe06935ea9d6}"   # 2026-10-04b (e337034b) + ours_fx554_B_ibvs.yaml (5R) + 20C: the Level 2 sessions 1-3 configs
+: "${HIL_PATCH_SHA:=df967e68e0b97703ed927448dce387437d28fa7376dcda03cdc34b02881a65ae}"   # 2026-10-04b (e337034b) + ours_fx554_B_ibvs.yaml (5R) + 20C: the Level 2 sessions 1-3 configs
                                                                              # and the tracking-state bag line; 21E: + the cell C1 config ours_fx554_A_proportional_mono_accurate.yaml
                                                                              # 25C: + ours_fx554_{A,B}_ibvs_slamoff.yaml and ours_fx554_B_ibvs_mono_accurate.yaml
+                                                                             # 27A: + the RGB-D source-stamp switch (camera.rgbd: launch file, parse_stack.py,
+                                                                             # run_stack_hil.sh) and the ORB-SLAM3 sidecar log in the runner's save_logs;
+                                                                             # 74f65d74 before. To be deployed to HIL_WT by 27B (27A left HIL_WT unchanged)
 : "${HIL_CODE_COMMIT:=20813a021858474b81ae89aad3f487fec45c394c}"            # commit of the run code; batch.sh refuses a HEAD whose
                                                                              # hil_runs, scorer or integration/ differ from it
 : "${HIL_GEOM:=$HIL_RUNS/config/sim_geometry.json}"                         # sim geometry, read by every check

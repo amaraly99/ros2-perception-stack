@@ -30,7 +30,10 @@ covariates (info), never checks.
 (slam.enabled, slam.type): none for a SLAM-off cell, whose absence is required (stack log, topthreads, procmem); ov2slam_node
 otherwise, as above, plus, where the Level 2 sampler ran, one pid without a gap from its first row in the window to the end,
 that first row at most 10 s after resume, and the first row after the window with the same pid; a non-frozen setup run
-without procmem.csv fails."""
+without procmem.csv fails.
+27A (DEVIATIONS 17.87): an ORB-SLAM3 RGB-D run (slam.type orbslam3, rgbd_node_cpp in slam.command) expects the ORB-SLAM3
+RGB-D node under the same rule: its threads by name in topthreads (orb_*, rgbd_node_cpp), its procmem row orbslam3_node;
+and the stack log must say the left image kept the MATLAB source stamp (camera.rgbd), or colour and depth never pair."""
 import datetime, glob, importlib.util, json, math, os, re, subprocess, sys
 from collections import deque
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -545,7 +548,20 @@ if tr_ns and _tt:
 #     and the first row AFTER the window carrying the same pid, so one process ran to the window's end even if the sampler's
 #     rows stop early. A run of a non-frozen simulator setup (sim_setup.json in --pre-resume-dir, written by run_one.sh for
 #     such runs only) without procmem.csv fails: the Level 2 sampler is required there (batch.sh asks for L2_PROCMEM=1).
+# 27A (DEVIATIONS 17.87): the RGB-D cell. slam.type orbslam3 with rgbd_node_cpp in slam.command (Amar's ORB-SLAM3 RGB-D
+#     command) expects the ORB-SLAM3 RGB-D node under the same rule as ov2slam_node: sidecar started, no library error, one
+#     of its threads in the last topthreads sample of the mission window or in the first sample after it, and, where the
+#     Level 2 sampler ran, its procmem row (orbslam3_node in level2_procmem.py) continuous with one pid as above. Its threads
+#     are found by name: ORB-SLAM3 names its own orb_* (ThreadNaming.h callers at the pin; the main thread at its first
+#     TrackRGBD), an unnamed thread keeps its creator's name, Fast DDS's dds.* threads match neither. The stack log must also
+#     carry run_stack_hil.sh's line for camera.rgbd (the left chain keeps the MATLAB stamp), without which rgbd_node_cpp
+#     pairs no colour frame with its depth (review round 1, note a). The library-error test sees the ORB-SLAM3 container's
+#     console because the runner's save_logs appends /tmp/slam_sidecar_slam_orbslam3.log to the stack log when it exists
+#     (integration patch, 27A review round 2), as it appends the OV2SLAM one. Any other orbslam3 command still has no
+#     expected process (False). Every other branch, the OV2SLAM one included, decides and reports as before.
 SLAM_START_MAX_S = 10.0
+ORB3_RGBD_THREADS = ("orb_", "rgbd_node_cpp")
+ORB3_RGBD_STAMP_LOG = "RGB-D: left image keeps the MATLAB source stamp"
 def _yaml_block(txt, name):
     out, on = {}, False
     for ln in txt.splitlines():
@@ -560,7 +576,8 @@ def _yaml_block(txt, name):
     return out
 _slam_cfg = _yaml_block(rd(P + "_run_config.yaml"), "slam")
 _slam_off = _slam_cfg.get("enabled") == "false"
-_slam_other = not _slam_off and _slam_cfg.get("type") not in (None, "ov2slam")
+_orb3_rgbd = not _slam_off and _slam_cfg.get("type") == "orbslam3" and "rgbd_node_cpp" in _slam_cfg.get("command", "")
+_slam_other = not _slam_off and _slam_cfg.get("type") not in (None, "ov2slam") and not _orb3_rgbd
 _pm = sorted(glob.glob(os.path.join(d, "*_procmem.csv")))
 
 
@@ -607,20 +624,36 @@ elif _slam_other:
     SC["expected_slam_process"] = None
     SC["status"] = f"FAIL: no expected SLAM process is defined for slam.type {_slam_cfg.get('type')}"; C["slam_coload_alive"] = False
 else:
+    _proc, _in_last, _in_first = "ov2slam_node", SC["ov2slam_in_last_window_sample"], SC["ov2slam_in_first_sample_after_window"]
+    if _orb3_rgbd:   # 27A: the same presence test on the ORB-SLAM3 RGB-D node's threads
+        _proc = SC["expected_slam_process"] = "orbslam3_node"
+        _orb = lambda comms: any(c.startswith(ORB3_RGBD_THREADS) for c in comms)
+        _in_last = _in_first = None
+        if _tt:
+            SC["samples_in_window_with_orbslam3"] = sum(1 for t in _inwin if _orb(_samples[t]))
+            _in_last = _orb(_samples[_inwin[-1]]) if _inwin else None
+            _in_first = _orb(_samples[_after[0]]) if _after else None
+        SC["orbslam3_in_last_window_sample"], SC["orbslam3_in_first_sample_after_window"] = _in_last, _in_first
     SC["decided_by_sample"], SC["decided_sample_s_after_resume"] = (
-        ("last_in_window", SC.get("last_window_sample_s_after_resume")) if SC["ov2slam_in_last_window_sample"]
+        ("last_in_window", SC.get("last_window_sample_s_after_resume")) if _in_last
         else ("first_after_window", SC.get("first_sample_after_window_s_after_resume"))
-        if SC["ov2slam_in_first_sample_after_window"] else (None, None))
-    _present = bool(SC["ov2slam_in_last_window_sample"]) or bool(SC["ov2slam_in_first_sample_after_window"])
+        if _in_first else (None, None))
+    _present = bool(_in_last) or bool(_in_first)
     C["slam_coload_alive"] = bool(SC["sidecar_started"] and not SC["library_error"] and _present)
     SC["status"] = "ok" if C["slam_coload_alive"] else "FAIL: " + "; ".join(w for w, bad in (
         ("sidecar not started", not SC["sidecar_started"]), ("library error in the sidecar or stack log", SC["library_error"]),
         ("no topthreads sample", not _tt),
-        ("ov2slam_node absent from the last sample in the mission window and from the first sample after it",
+        (f"{_proc} absent from the last sample in the mission window and from the first sample after it",
          _tt and not _present)) if bad)
+    if _orb3_rgbd:   # 27A: without the source stamp (camera.rgbd) colour and depth never pair, whatever the node does
+        SC["log_says_source_stamp"] = ORB3_RGBD_STAMP_LOG in log
+        if not SC["log_says_source_stamp"]:
+            C["slam_coload_alive"] = False
+            SC["status"] = ("FAIL: " if SC["status"] == "ok" else SC["status"] + "; ") + (
+                "the stack log does not say the left image keeps the MATLAB source stamp (camera.rgbd not set)")
     if _pm:   # 25C: the Level 2 sampler ran, so presence is also asked of every 2 s row from the first one that found it
         _w = tr_ns + int(SC["mission_window_s"] * 1e9)
-        _pr = [r for r in _pm_rows(("ov2slam_node",)) if tr_ns <= r[0] <= _w]
+        _pr = [r for r in _pm_rows((_proc,)) if tr_ns <= r[0] <= _w]
         _i0 = next((k for k, r in enumerate(_pr) if r[2]), None)
         _run = _pr[_i0:] if _i0 is not None else []
         SC["procmem_rows_in_window"] = len(_pr)
@@ -629,7 +662,7 @@ else:
         SC["procmem_pids_after_start"] = len({r[2] for r in _run if r[2]})
         SC["procmem_first_present_max_s"] = SLAM_START_MAX_S
         _late = SC["procmem_first_present_s_after_resume"] is not None and SC["procmem_first_present_s_after_resume"] > SLAM_START_MAX_S
-        _nx = next((r for r in _pm_rows(("ov2slam_node",)) if r[0] > _w), None)
+        _nx = next((r for r in _pm_rows((_proc,)) if r[0] > _w), None)
         SC["procmem_first_row_after_window_s_after_resume"] = round((_nx[0] - tr_ns) / 1e9, 1) if _nx else None
         SC["procmem_same_pid_after_window"] = bool(_nx and _nx[2] and {r[2] for r in _run if r[2]} == {_nx[2]})
         _cont = (bool(_run) and not _late and SC["procmem_rows_missing_after_start"] == 0 and SC["procmem_pids_after_start"] == 1
@@ -637,11 +670,11 @@ else:
         if not _cont:
             C["slam_coload_alive"] = False
             SC["status"] = ("FAIL: " if SC["status"] == "ok" else SC["status"] + "; ") + (
-                "ov2slam_node in no procmem row of the mission window" if not _run else
-                f"ov2slam_node first present {SC['procmem_first_present_s_after_resume']} s after resume, later than {SLAM_START_MAX_S} s" if _late else
-                "ov2slam_node not continuous in the procmem rows after its start (a gap or a second pid)"
+                f"{_proc} in no procmem row of the mission window" if not _run else
+                f"{_proc} first present {SC['procmem_first_present_s_after_resume']} s after resume, later than {SLAM_START_MAX_S} s" if _late else
+                f"{_proc} not continuous in the procmem rows after its start (a gap or a second pid)"
                 if SC["procmem_rows_missing_after_start"] or SC["procmem_pids_after_start"] != 1 else
-                "no procmem row after the mission window with the same ov2slam_node pid")
+                f"no procmem row after the mission window with the same {_proc} pid")
     elif pre_dir and os.path.exists(os.path.join(pre_dir, "sim_setup.json")):   # 25C: a non-frozen setup run needs the sampler
         C["slam_coload_alive"] = False
         SC["status"] = ("FAIL: " if SC["status"] == "ok" else SC["status"] + "; ") + "no procmem.csv in a run of a non-frozen simulator setup"
