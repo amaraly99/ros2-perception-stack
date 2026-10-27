@@ -93,8 +93,10 @@ function publish_frame_LT_rgbd(pub, msg, pub_d, msg_d)
             % 25W/26W (sim_25W copy): off only while the supervisor reports the model
             % held, so held colour + depth are re-sent every tick, as hil_publish_frame
             % does in mono. Otherwise on, as in Amar's file: in flight a repeat is a stale frame.
+            % 27W: env HIL_FLIGHT_REPEATS=on (wrapper option 'flight_repeats', 'on') keeps it off
+            % in flight too, as the 3652892 copy did.
             try, held = strcmp(evalin('base', 'hil_supervisor_state'), 'held'); catch, held = false; end
-            SKIP_REPEATS = ~held;
+            SKIP_REPEATS = ~held && ~strcmp(getenv('HIL_FLIGHT_REPEATS'), 'on');
             cs = sum(uint32(frame(1:200:end)));
             if SKIP_REPEATS && cs == last_cs
                 d = evalin('base','sim_cam_drop_count_LT');

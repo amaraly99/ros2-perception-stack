@@ -1,5 +1,6 @@
-function hil_session_start_heldstart_mode(mode, opt)
-% hil_session_start_heldstart_mode.m  (prompt 25W, 2026-10-25; 'rate16' and 'check' added in 26W, 2026-10-26)
+function hil_session_start_heldstart_mode(mode, varargin)
+% hil_session_start_heldstart_mode.m  (prompt 25W, 2026-10-25; 'rate16' and 'check' added in 26W, 2026-10-26;
+% 'flight_repeats' added in 27W, 2026-10-27)
 % One sensing-mode session at our 20 m held start. Models and scripts load from .\matlab next to
 % this file: copies of matlab\ at 28114bd (Amar's sim/unified-start-2026-10-04), byte-identical except
 % that the three camera publishers keep sending a held frame at their timer rate (25W follow-up), and,
@@ -32,15 +33,30 @@ function hil_session_start_heldstart_mode(mode, opt)
 % then, once held, records the publisher's send intervals for 60 s and prints their mode. It stops with an
 % error, before READY, unless the mode is near 62.5 ms. Tell the Pi to go only after "16 Hz state: OK".
 %   >> hil_session_start_heldstart_mode('check')            % the 60 s check again, on the running session
+%
+% Flight repeats (27W): since 26W the stereo and RGB-D copies skip a repeated frame in flight. With
+%   >> hil_session_start_heldstart_mode('rgbd', 'rate16', 'flight_repeats', 'on')   % or 'stereo'
+% they send it in flight too, as the 3652892 copies did (and as hil_publish_frame does in mono, which
+% this option does not touch). It sets env HIL_FLIGHT_REPEATS=on, read by both copies every tick; any
+% other call clears it. Held behaviour, the 'rate16' start and its check are unchanged.
 
-if nargin < 2, opt = ''; end
 if strcmpi(mode, 'check')
     hm_rate_check(60);
     return;
 end
-rate16 = strcmpi(opt, 'rate16');
-if ~isempty(opt) && ~rate16
-    error('[heldstart] option must be ''rate16'' (got "%s")', opt);
+rate16 = false;
+flight_repeats = false;
+k = 1;
+while k <= numel(varargin)
+    if strcmpi(varargin{k}, 'rate16')
+        rate16 = true;
+    elseif strcmpi(varargin{k}, 'flight_repeats') && k < numel(varargin) && any(strcmpi(varargin{k + 1}, {'on', 'off'}))
+        flight_repeats = strcmpi(varargin{k + 1}, 'on');
+        k = k + 1;
+    else
+        error('[heldstart] options are ''rate16'' and ''flight_repeats'', ''on'' | ''off'' (got "%s")', char(varargin{k}));
+    end
+    k = k + 1;
 end
 
 MODELS = struct('mono',   'hil_closed_loop_unified', ...
@@ -65,6 +81,16 @@ setenv('ROS_DOMAIN_ID', '0');
 setenv('HIL_MODEL', model);
 setenv('CAM_LEFT_IMAGE', 'rgb');  setenv('CAM_RIGHT_IMAGE', 'rgb');  setenv('RGBD_COLOUR_MONO', '');
 setenv('RGBD_DROP_DUP_STAMPS', '');           % held RGB-D pairs share one stamp; never drop them
+if flight_repeats
+    setenv('HIL_FLIGHT_REPEATS', 'on');       % stereo / RGB-D copies send repeats in flight (3652892)
+    if strcmp(mode, 'mono')
+        fprintf('[heldstart] flight_repeats on: no effect in mono (hil_publish_frame unchanged)\n');
+    else
+        fprintf('[heldstart] flight_repeats on: repeated frames are sent in flight too\n');
+    end
+else
+    setenv('HIL_FLIGHT_REPEATS', '');
+end
 gen = fullfile(here, 'simgen');               % build cache, kept out of .\matlab
 Simulink.fileGenControl('set', 'CacheFolder', gen, 'CodeGenFolder', gen, 'createDir', true);
 cd(src);
