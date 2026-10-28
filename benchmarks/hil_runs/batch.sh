@@ -19,6 +19,12 @@
 #   gate, one terminal frame), L2_PROCMEM=1 (check_run.py's SLAM co-load rule reads procmem.csv), SIM_MODEL_SHA256 unset
 #   (no hash it never checked goes into a pin record), HIL_SIM_SETUPS at the committed config/sim_setups.json, and every
 #   plan line's stack config must have camera.stereo true exactly when HIL_SIM_MODE is stereo.
+#   27C: a third mode, rgbd (ORB-SLAM3 RGB-D): every plan line's stack config must have camera.rgbd true, and camera.stereo
+#   not true, exactly when HIL_SIM_MODE is rgbd; a mono or stereo session runs the check above unchanged for every other
+#   config. sim_setup.py accepts the mode only once config/sim_setups.json pins its model_info reply.
+#   27D: camera.rgbd (and, for these lines, camera.stereo) is read with parse_stack.py's own get and as_bool, so batch.sh
+#   and the launch agree on every value; in an rgbd session the config must also run the ORB-SLAM3 rgbd_node_cpp node
+#   (check_run.py's R3 test for that arm). camera.stereo of the mono and stereo check below is read as before.
 # Order of work:
 #   0. refuse an existing batch_dir; our repo must be clean, and its HEAD is pinned for the whole batch (HIL_OURS_PIN);
 #      SIM_MODEL_SHA256 must equal the model in sim_geometry.json and held_reference.json; runtime files must verify.
@@ -88,6 +94,16 @@ else                                                            # 25C R4: the mo
     case "$BK0" in npu) P0=A ;; cpu) P0=B ;; *) continue ;; esac   # a bad backend is refused per line below, as before
     CF0="${CF0:-ours_fx554_${P0}_ibvs}"
     ST=$(python3 "$HIL_WT/scripts/parse_stack.py" "$HIL_WT/config/hil/stack/$CF0.yaml" --get camera.stereo 2>/dev/null)
+    read -r RG RS <<< "$(python3 -B -c 'import sys, yaml; sys.path.insert(0, sys.argv[1]); from parse_stack import get, as_bool; c = yaml.safe_load(open(sys.argv[2])) or {}; print(as_bool(get(c, "camera.rgbd"), False), as_bool(get(c, "camera.stereo"), False))' \
+      "$HIL_WT/scripts" "$HIL_WT/config/hil/stack/$CF0.yaml" 2>/dev/null)"   # 27D: parse_stack.py's own rule, as its RGBD_ON and STEREO_ON lines
+    if [ "$RG" = True ] || [ "$HIL_SIM_MODE" = rgbd ]; then   # 27C: camera.rgbd true (and stereo not) exactly in an rgbd session
+      { [ "$RG" = True ] && [ "$RS" != True ] && [ "$HIL_SIM_MODE" = rgbd ]; } \
+        || stop "plan: stack config $CF0 (camera.rgbd ${RG:-unset}, camera.stereo ${RS:-unset}) does not match HIL_SIM_MODE $HIL_SIM_MODE" 1
+      EV=$(python3 "$HIL_WT/scripts/parse_stack.py" "$HIL_WT/config/hil/stack/$CF0.yaml" --emit-env 2>/dev/null)   # 27D: the SLAM arm
+      { grep -qx 'SLAM_ENABLED=true' <<< "$EV" && grep -qx 'SLAM_TYPE=orbslam3' <<< "$EV" && grep -q '^SLAM_COMMAND=.*rgbd_node_cpp' <<< "$EV"; } \
+        || stop "plan: stack config $CF0 does not run the ORB-SLAM3 RGB-D node (an rgbd session needs slam.enabled true, slam.type orbslam3 and rgbd_node_cpp in slam.command)" 1
+      continue
+    fi
     { [ "$ST" = True ] && [ "$HIL_SIM_MODE" = stereo ]; } || { [ "$ST" != True ] && [ "$HIL_SIM_MODE" = mono ]; } \
       || stop "plan: stack config $CF0 (camera.stereo ${ST:-unset}) does not match HIL_SIM_MODE $HIL_SIM_MODE" 1
   done < "$BD/plan.tsv"
