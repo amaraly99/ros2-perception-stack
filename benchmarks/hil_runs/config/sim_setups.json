@@ -10,6 +10,10 @@
     },
     "stereo": {
      "model_info": "model_info model=hil_closed_loop_baseline_061 x_ic=15.12 y_ic=3.84 z_ic=7.5 yaw_ic=6.23718531 fx_left=554 fx_right=554 right_cam=on right_y=-0.61 depth_port=off left_image=rgb right_image=rgb"
+    },
+    "rgbd": {
+     "model_info": "model_info model=hil_closed_loop_baseline_RGBD x_ic=15.12 y_ic=3.84 z_ic=7.5 yaw_ic=6.23718531 fx_left=554 fx_right=554 right_cam=off right_y=-0.11 depth_port=on left_image=rgb right_image=rgb",
+     "source": "prompt 27D, 2026-10-27: the rgbd reply that 26W's MODEL_PIN.md records from its held runs (copy: stage6/sensing_26B/MODEL_PIN_26B_pasted.txt; byte-identical to 25W's), equal to the live reply of 2026-10-25T22:22:36Z (stage6/slam_mode_25A/rgbd.nohup.out). Not yet compared with a reply on the sim host's commit 171095c (27W, tag paper-batch-171095c, model byte-identical to Amar's): the batch's model_info check makes that comparison before any run, and a different reply stops the batch before its power marker. model_pin_md above records the 25W commit 36528927 and its file hashes, not 171095c."
     }
    },
    "model_pin_md": {

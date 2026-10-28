@@ -3,7 +3,7 @@
 
   frozen  the setup of every reported run before 25C (model a38a664c). Its check is the SIM_MODEL_SHA256 comparison in
           batch.sh and smoke_run_hold.sh, unchanged; this file plays no part in it.
-  sim25w  25W's wrapper on the sim host (branch sim-25w, MODEL_PIN.md), mode mono or stereo. Its check is the supervisor's
+  sim25w  25W's wrapper on the sim host (branch sim-25w, MODEL_PIN.md), mode mono, stereo or rgbd (27D). Its check is the supervisor's
           model_info reply: the same keys as the reply pinned for that mode in config/sim_setups.json, every value equal as
           text, no key missing and no other key. No tolerance, and no setup or mode outside the file.
 
