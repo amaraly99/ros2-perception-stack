@@ -15,7 +15,7 @@ HIL_RUNS="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"                    # be
                                                                              # 27D: + ours_fx554_{A,B}_ibvs_rgbd_orb3.yaml and Amar's flown HIL_SIM_RGBD.yaml (1beef72: Stereo.b
                                                                              # 0.61, ThDepth 72.1); df967e68 before. HIL_WT has the settings file (27D step 4); the two configs come
                                                                              # from stage6/rgbd_27D/step5/deploy_27D_two_configs.patch
-: "${HIL_CODE_COMMIT:=20813a021858474b81ae89aad3f487fec45c394c}"            # commit of the run code; batch.sh refuses a HEAD whose
+: "${HIL_CODE_COMMIT:=f86f19c0f1b58aee7bea247dca84ea9b415abb2e}"            # commit of the run code; batch.sh refuses a HEAD whose
                                                                              # hil_runs, scorer or integration/ differ from it
 : "${HIL_GEOM:=$HIL_RUNS/config/sim_geometry.json}"                         # sim geometry, read by every check
 : "${HIL_HELD_REF:=$HIL_RUNS/config/held_reference.json}"                   # the fixed held render (5Q)
