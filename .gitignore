@@ -1,0 +1,39 @@
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# Claude Code local state
+CLAUDE.local.md
+.claude/settings.local.json
+.claude/worktrees/
+
+# ROS 2 / colcon build output
+build/
+install/
+log/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# MATLAB / Simulink generated
+slprj/
+*.slxc
+*.autosave
+
+# Run output and data (fetched, never committed)
+reports/
+bags/
+data/
+results/
+
+# Machine-specific values (copy config/site.example.yaml)
+config/site.yaml
+
+# Large binaries
+*.hef
+*.onnx
+*.pt
+*.tar.gz
