@@ -166,6 +166,7 @@ private:
     double safety_pose_max_age_;
 
     double watchdog_period_sec_;
+    double detection_lost_sec_;   // 14A ablation: loss window, default 2 x watchdog_period_sec_
     double diag_period_sec_;
     int    smoothing_window_;
 

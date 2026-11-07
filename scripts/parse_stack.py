@@ -89,6 +89,8 @@ def emit_env(cfg):
         # ── camera (stereo toggle — default false so all existing mono configs
         # keep working unmodified; see docs/STEREO_INTERFACE_CONTRACT.md) ──
         ("STEREO_ON", as_bool(get(cfg, "camera.stereo"), False)),
+        # per-frame stamp CSV from sim_camera_bridge (left eye); "" = off
+        ("CAM_STAMP_LOG", get(cfg, "camera.stamp_log", "")),
 
         # ── detector (runs in main container; host_cpu is for yolo_producer) ──
         ("DETECTOR",          get(cfg, "detector.type", "yolo")),
@@ -98,6 +100,13 @@ def emit_env(cfg):
         ("DETECTOR_OUT",      get(cfg, "detector.topics.out", "/yolo/detections")),
         ("YOLO_HEF",          get(cfg, "detector.yolo.hef", "")),
         ("YOLO_CONF",         get(cfg, "detector.yolo.confidence", "")),
+        # Registry-selected producer (models/model_registry.json). Empty YOLO_MODEL =
+        # the original fixed-HEF yolo_producer command, unchanged.
+        ("YOLO_MODEL",        get(cfg, "detector.yolo.model", "")),
+        ("YOLO_BACKEND",      get(cfg, "detector.yolo.backend", "npu")),
+        ("YOLO_MODELS_DIR",   get(cfg, "detector.yolo.models_dir", "")),
+        ("YOLO_TELEMETRY_CSV", get(cfg, "detector.yolo.telemetry_csv", "")),
+        ("CLASS_NAME_MAP",    get(cfg, "detector.class_name_map", "")),
 
         # ── controller (runs in main container) ──
         ("CONTROLLER",            get(cfg, "controller.type", "proportional")),
@@ -107,6 +116,10 @@ def emit_env(cfg):
         ("CONTROLLER_CMD_OUT",    get(cfg, "controller.topics.cmd_out", "/cmd_vel")),
         ("CONTROLLER_USE_SLAM_DEPTH", as_bool(get(cfg, "controller.use_slam_depth"), False)),
         ("CONTROLLER_USE_SLAM_POSE",  as_bool(get(cfg, "controller.use_slam_pose"),  False)),
+        # cam_fx = cam_fy override for the FSM; "" = bench_fsm.yaml's value (554)
+        ("CONTROLLER_CAM_FX", get_num(cfg, "controller.cam_fx", float)),
+        # 14A ablation: detection-loss window (s); "" = the node default, 2 x watchdog_period_sec
+        ("CONTROLLER_DETECTION_LOST_SEC", get_num(cfg, "controller.detection_lost_sec", float)),
 
         # ── slam (separate sidecar container) ──
         ("SLAM_ENABLED",   as_bool(get(cfg, "slam.enabled"), False)),

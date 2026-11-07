@@ -73,6 +73,11 @@ def launch_setup(context, *args, **kwargs):
     detector_cpu   = s('detector_cpu').strip()
     use_slam_depth = s('use_slam_depth').lower() in ('true', '1', 'yes')
     use_slam_pose  = s('use_slam_pose').lower()  in ('true', '1', 'yes')
+    # Optional per-run overrides; each empty by default = node defaults / config files.
+    cam_stamp_log  = s('cam_stamp_log').strip()
+    class_name_map = s('class_name_map').strip()
+    cam_fx         = s('cam_fx').strip()
+    detection_lost_sec = s('detection_lost_sec').strip()   # 14A ablation; empty = node default
 
     # Stereo (optional right eye). Kept as an unresolved LaunchConfiguration
     # (not run through s()) so IfCondition/ParameterValue can defer evaluation
@@ -109,6 +114,7 @@ def launch_setup(context, *args, **kwargs):
                 'shm_name': '/ovcam_frames',
                 'sem_name': '/ovcam_ready',
                 'use_source_stamp': use_source_stamp,
+                'stamp_log': cam_stamp_log,
             }],
         ))
 
@@ -177,6 +183,8 @@ def launch_setup(context, *args, **kwargs):
         dparams = [cfg(p) for p in dparam_files]
         if dwants_class:
             dparams.append({'target_class': target_class})
+        if detector == 'yolo' and class_name_map:
+            dparams.append({'class_name_map': class_name_map})
         nodes.append(Node(
             package=dpkg,
             executable=dexe,
@@ -205,17 +213,24 @@ def launch_setup(context, *args, **kwargs):
             raise RuntimeError(
                 f"Unknown controller='{controller}'. Valid: {list(CTRL_MAP)}")
         pkg, exe, ctrl_cfg = CTRL_MAP[controller]
+        # cam_fx override goes last so it wins over bench_fsm.yaml (whose 554 stays
+        # the default for every run that does not pass it). fy follows fx.
+        ctrl_params = [cfg('bench_fsm.yaml'), cfg(ctrl_cfg),
+                       {'target_class': target_class,
+                        'benchmark_mode': benchmark_mode,
+                        'use_slam_depth': use_slam_depth,
+                        'use_slam_pose':  use_slam_pose}]
+        if cam_fx:
+            ctrl_params.append({'cam_fx': float(cam_fx), 'cam_fy': float(cam_fx)})
+        if detection_lost_sec:
+            ctrl_params.append({'detection_lost_sec': float(detection_lost_sec)})
         nodes.append(Node(
             package=pkg,
             executable=exe,
             name=exe,
             output='screen',
             prefix=pfx(controller_cpu),
-            parameters=[cfg('bench_fsm.yaml'), cfg(ctrl_cfg),
-                        {'target_class': target_class,
-                         'benchmark_mode': benchmark_mode,
-                         'use_slam_depth': use_slam_depth,
-                         'use_slam_pose':  use_slam_pose}],
+            parameters=ctrl_params,
         ))
 
     return nodes
@@ -263,6 +278,14 @@ def generate_launch_description():
                         'one simulation timestamp. Default false = mono, byte-identical to '
                         'every published mono result. NOTE: stereo doubles the inbound stream '
                         'to ~295 Mbit/s and requires wired Ethernet.'),
+        DeclareLaunchArgument('cam_stamp_log', default_value='',
+            description='sim_camera_bridge per-frame stamp CSV path; empty = off'),
+        DeclareLaunchArgument('class_name_map', default_value='',
+            description='yolo_bridge "id:name,..." class overrides; empty = COCO only'),
+        DeclareLaunchArgument('cam_fx', default_value='',
+            description='controller cam_fx = cam_fy override; empty = bench_fsm.yaml value'),
+        DeclareLaunchArgument('detection_lost_sec', default_value='',
+            description='14A ablation: controller detection-loss window (s); empty = 2 x watchdog_period_sec'),
         DeclareLaunchArgument('calib_yaml',
             default_value=PathJoinSubstitution(
                 [EnvironmentVariable('WORKSPACE_DIR', default_value='/workspace'),

@@ -35,6 +35,8 @@
 #   --build           colcon build all HIL stack packages first, then launch
 #   --no-slam         override: skip the SLAM sidecar even if config enables it
 #   --debug-image     override: publish /visp/debug_image (921 KB/frame extra)
+#   --model <id>      override detector.yolo.model (a models/model_registry.json id);
+#                      only used when the config selects the registry producer
 #
 # Config is the NESTED schema (config/hil/stack/full_ov2slam.yaml is the reference):
 #   mode (benchmark|scout), network{matlab_host_ip,interface,dds,ros_domain_id},
@@ -83,6 +85,13 @@ sep()  { echo "━━━━━━━━━━━━━━━━━━━━━�
 # it standalone dies with "Unknown CMake command ocv_define_module". We restrict
 # discovery to src/ (--base-paths src) and select only these leaves.
 STACK_PKGS="sim_camera_bridge ovcam_bridge yolo_bridge oracle_detector hil_servo visp_servo h_vs_servo ov2slam visp_pbvs_servo init_gate"
+# ov2slam is built in its own pass with OpenCV_DIR preset. Its CMakeLists forces the vendored
+# OpenCV (src/ov2slam_ros/CMakeLists.txt:94) only AFTER find_package(cv_bridge) (:63), whose
+# exported find_package(OpenCV) has already imported the system 4.6 targets by then; the result
+# compiles against 4.10 headers but links 4.6 core/imgproc/features2d (mixed ABI). Presetting
+# the cache makes both lookups resolve the vendored 4.10. Only ov2slam gets it, so every other
+# package links exactly as before.
+OV2SLAM_PASS="colcon build --symlink-install --base-paths src --packages-select ov2slam --cmake-args -DOpenCV_DIR=/workspace/opencv/build"
 
 # ── start_slam_sidecar — separate docker-run container, config-driven ────────
 # Defined as a function (not inline) so it can be called either early, right
@@ -124,9 +133,16 @@ mode: ${MODE}
 detector:
   type: ${DETECTOR}
   cpu: "${DETECTOR_CPU:-}"
+  host_cpu: "${DETECTOR_HOST_CPU:-}"
+  model: "${YOLO_MODEL:-}"
+  backend: "${YOLO_MODEL:+${YOLO_BACKEND:-npu}}"
+  artifact: "${YOLO_ARTIFACT:-}"
+  producer: "${YOLO_PRODUCER:-}"
 controller:
   type: ${CONTROLLER}
   cpu: "${CONTROLLER_CPU:-}"
+  cam_fx: "${CONTROLLER_CAM_FX:-}"
+  detection_lost_sec: "${CONTROLLER_DETECTION_LOST_SEC:-}"
   use_slam_depth: ${CONTROLLER_USE_SLAM_DEPTH:-false}
   use_slam_pose: ${CONTROLLER_USE_SLAM_POSE:-false}
 slam:
@@ -340,6 +356,7 @@ _NO_SLAM_FLAG=false
 _DEBUG_FLAG=false
 _MODE_OVERRIDE=""
 RUN_TAG=""
+_MODEL_OVERRIDE=""
 
 _BUILD_FIRST=false
 HOLD_FSM=false
@@ -361,6 +378,10 @@ while [[ $_i -le $# ]]; do
             _i=$((_i + 1))
             [[ $_i -le $# ]] || die "--config requires a name argument"
             CONFIG_NAME="${!_i}" ;;
+        --model)
+            _i=$((_i + 1))
+            [[ $_i -le $# ]] || die "--model requires a registry id"
+            _MODEL_OVERRIDE="${!_i}" ;;
         --run-tag)
             _i=$((_i + 1))
             [[ $_i -le $# ]] || die "--run-tag requires a name argument (e.g. run3, ab_baseline)"
@@ -377,6 +398,7 @@ done
 [[ "$_NO_SLAM_FLAG"    == "true" ]] && SLAM_ENABLED=false
 [[ "$_DEBUG_FLAG"      == "true" ]] && DEBUG_IMAGE_ON=true
 [[ -n "$_MODE_OVERRIDE"          ]] && MODE="$_MODE_OVERRIDE"
+[[ -n "$_MODEL_OVERRIDE"         ]] && YOLO_MODEL="$_MODEL_OVERRIDE"
 
 # Env-var defaults for anything not set by config or caller
 MODE="${MODE:-scout}"                      # benchmark | scout
@@ -420,10 +442,11 @@ fi
 if [[ "$OPT" == "build" ]]; then
     PKG="${2:-}"
     if [[ -n "$PKG" ]]; then
-        BUILD_SEL="--packages-select ${PKG}"
+        BUILD_CMD="colcon build --symlink-install --base-paths src --packages-select ${PKG}"
+        [[ "$PKG" == "ov2slam" ]] && BUILD_CMD="${OV2SLAM_PASS}"
         log "Building '${PKG}' in Docker..."
     else
-        BUILD_SEL="--packages-up-to ${STACK_PKGS}"
+        BUILD_CMD="colcon build --symlink-install --base-paths src --packages-up-to ${STACK_PKGS} --packages-skip ov2slam && ${OV2SLAM_PASS}"
         log "Building HIL stack packages in Docker (${STACK_PKGS})..."
     fi
     sudo docker run --rm \
@@ -432,7 +455,7 @@ if [[ "$OPT" == "build" ]]; then
         ros2_perception_stack bash -lc "
             source /opt/ros/jazzy/setup.bash
             cd /workspace
-            colcon build --symlink-install --base-paths src ${BUILD_SEL} 2>&1
+            ${BUILD_CMD} 2>&1
         " || die "colcon build failed — fix errors above"
     log "Build done. install/ updated on host disk — run the stack normally now."
     exit 0
@@ -665,7 +688,8 @@ if [[ "$_BUILD_FIRST" == "true" ]]; then
         ros2_perception_stack bash -lc "
             source /opt/ros/jazzy/setup.bash
             cd /workspace
-            colcon build --symlink-install --base-paths src --packages-up-to ${STACK_PKGS} 2>&1
+            colcon build --symlink-install --base-paths src --packages-up-to ${STACK_PKGS} --packages-skip ov2slam 2>&1 \
+                && ${OV2SLAM_PASS} 2>&1
         " || die "colcon build failed — fix errors above before launching"
     log "Build complete."
     sep
@@ -735,6 +759,14 @@ LAUNCH_ARGS+=" controller_cpu:=${CONTROLLER_CPU:-} detector_cpu:=${DETECTOR_CPU:
 LAUNCH_ARGS+=" use_slam_depth:=${CONTROLLER_USE_SLAM_DEPTH:-false}"
 LAUNCH_ARGS+=" use_slam_pose:=${CONTROLLER_USE_SLAM_POSE:-false}"
 LAUNCH_ARGS+=" stereo:=${STEREO_ON:-false}"
+# Optional overrides (each empty = launch-file default = previous behaviour).
+[[ -n "${CAM_STAMP_LOG:-}"     ]] && LAUNCH_ARGS+=" cam_stamp_log:=${CAM_STAMP_LOG}" \
+    && log "Camera stamp log → ${CAM_STAMP_LOG}"
+[[ -n "${CLASS_NAME_MAP:-}"    ]] && LAUNCH_ARGS+=" class_name_map:='${CLASS_NAME_MAP}'"
+[[ -n "${CONTROLLER_CAM_FX:-}" ]] && LAUNCH_ARGS+=" cam_fx:=${CONTROLLER_CAM_FX}" \
+    && log "Controller cam_fx = cam_fy = ${CONTROLLER_CAM_FX} (overrides bench_fsm.yaml)"
+[[ -n "${CONTROLLER_DETECTION_LOST_SEC:-}" ]] && LAUNCH_ARGS+=" detection_lost_sec:=${CONTROLLER_DETECTION_LOST_SEC}" \
+    && log "Controller detection_lost_sec = ${CONTROLLER_DETECTION_LOST_SEC} (14A ablation)"
 if [[ "$DETECTOR" == "oracle" ]]; then
     log "Detector: oracle (yolo_bridge skipped, oracle_detector_node starts in Docker)"
 else
@@ -790,15 +822,54 @@ if [[ "$HOLD_FSM" == "true" ]]; then
     log "3/5  Detector deferred — FSM held (--hold-fsm); starts on --resume-fsm"
 elif [[ "$DETECTOR" == "yolo" ]]; then
     DETECTOR_HOST_CPU="${DETECTOR_HOST_CPU:-1}"
-    log "3/4  yolo_producer  →  core ${DETECTOR_HOST_CPU} (host, native)"
     # Ensure log file is writable (may have been left root-owned by a prior sudo run)
     sudo chmod 666 /tmp/yolo_producer.log 2>/dev/null || true
+    if [[ -z "${YOLO_MODEL:-}" ]]; then
+    log "3/4  yolo_producer  →  core ${DETECTOR_HOST_CPU} (host, native)"
     # --conf 0.20: publish detections down to 0.20 so the controller (min_confidence=0.20)
     #   can act on low-confidence stop signs.
     # python3 -u: unbuffered stdout so per-stage timing/fps log is readable live.
     taskset -c "${DETECTOR_HOST_CPU}" /usr/bin/python3 -u "${WS}/src/yolo_producer/yolo_producer.py" \
         --hef "${WS}/models/yolo26n_10h.hef" --no-image --conf 0.20 \
         > /tmp/yolo_producer.log 2>&1 &
+    else
+    # Registry-selected producer: detector.yolo.{model,backend,models_dir,confidence,
+    # telemetry_csv}. The artifact path comes from models/model_registry.json, resolved
+    # against models_dir (default ${WS}/models). A registry entry may name its own NPU
+    # producer (npu_producer) for a non-YOLO HEF the YOLO parser cannot read.
+    YOLO_BACKEND="${YOLO_BACKEND:-npu}"
+    YOLO_MODELS_DIR="${YOLO_MODELS_DIR:-${WS}/models}"
+    YOLO_TELEMETRY_CSV="${YOLO_TELEMETRY_CSV:-/tmp/yolo_telemetry.csv}"
+    case "$YOLO_BACKEND" in npu|cpu) ;; *) die "detector.yolo.backend must be npu|cpu (got '${YOLO_BACKEND}')" ;; esac
+    _REG=$(python3 - "${WS}/models/model_registry.json" "$YOLO_MODEL" "$YOLO_BACKEND" <<'PYEOF'
+import json, sys
+m = json.load(open(sys.argv[1]))["models"].get(sys.argv[2])
+if m is None:
+    sys.exit(1)
+npu = sys.argv[3] == "npu"
+print(m.get("hef" if npu else "onnx") or "-", (m.get("npu_producer") or "-") if npu else "-")
+PYEOF
+    ) || die "model '${YOLO_MODEL}' not in models/model_registry.json"
+    read -r _ART _NPU_PRODUCER <<< "$_REG"
+    [[ "$_ART" != "-" ]] || die "registry entry '${YOLO_MODEL}' has no ${YOLO_BACKEND} artifact"
+    YOLO_ARTIFACT="${YOLO_MODELS_DIR}/${_ART}"
+    [[ -f "$YOLO_ARTIFACT" ]] || die "model artifact not found: ${YOLO_ARTIFACT}"
+    if [[ "$_NPU_PRODUCER" != "-" ]]; then
+        YOLO_PRODUCER="${_NPU_PRODUCER}"
+        PRODUCER_CMD=(python3 -u "${WS}/src/yolo_producer/${_NPU_PRODUCER}"
+                      --model_id "$YOLO_MODEL" --hef "$YOLO_ARTIFACT"
+                      --conf "${YOLO_CONF:-0.20}" --telemetry_csv "$YOLO_TELEMETRY_CSV")
+    else
+        YOLO_PRODUCER="yolo_shm_producer.py"
+        PRODUCER_CMD=(python3 -u "${WS}/src/yolo_producer/yolo_shm_producer.py"
+                      --model_id "$YOLO_MODEL" --model_path "$YOLO_ARTIFACT"
+                      --backend "$YOLO_BACKEND" --conf "${YOLO_CONF:-0.20}" --no-image
+                      --telemetry_csv "$YOLO_TELEMETRY_CSV")
+    fi
+    log "3/4  ${YOLO_PRODUCER} model=${YOLO_MODEL} backend=${YOLO_BACKEND} conf=${YOLO_CONF:-0.20}  →  core(s) ${DETECTOR_HOST_CPU} (host, native)"
+    log "     artifact: ${YOLO_ARTIFACT}"
+    taskset -c "${DETECTOR_HOST_CPU}" "${PRODUCER_CMD[@]}" > /tmp/yolo_producer.log 2>&1 &
+    fi
     YOLO_PID=$!
     for i in $(seq 1 20); do
         [[ -e /dev/shm/yolo_shm ]] && break

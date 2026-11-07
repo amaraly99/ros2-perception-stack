@@ -130,6 +130,9 @@ void ServoFsmNode::declare_parameters() {
     declare_parameter("safety_pose_max_age",  2.0);
 
     declare_parameter("watchdog_period_sec",  0.20);
+    // 14A ablation: the detection-loss window as its own parameter. <= 0 (the default) keeps the
+    // pinned rule, 2 x watchdog_period_sec; the watchdog timer period is unchanged either way.
+    declare_parameter("detection_lost_sec",  -1.0);
     declare_parameter("diag_period_sec",      2.0);
     declare_parameter("smoothing_window",     5);
 }
@@ -217,6 +220,13 @@ void ServoFsmNode::load_parameters() {
     safety_pose_max_age_ = get_parameter("safety_pose_max_age").as_double();
 
     watchdog_period_sec_ = get_parameter("watchdog_period_sec").as_double();
+    {
+        double dl = get_parameter("detection_lost_sec").as_double();
+        detection_lost_sec_ = dl > 0.0 ? dl : 2.0 * watchdog_period_sec_;
+        RCLCPP_INFO(get_logger(), "Detection-loss window: %.3f s (%s), watchdog period %.3f s",
+            detection_lost_sec_, dl > 0.0 ? "detection_lost_sec" : "2 x watchdog_period_sec",
+            watchdog_period_sec_);
+    }
     diag_period_sec_     = get_parameter("diag_period_sec").as_double();
     smoothing_window_    = get_parameter("smoothing_window").as_int();
 }
@@ -489,9 +499,9 @@ void ServoFsmNode::on_detections(const DetectionArray::SharedPtr msg) {
     // The pre-fix code omitted this factor entirely and yawed AWAY from the target;
     // image_x_yaw_sign=+1.0 reproduces that legacy behaviour exactly for A/B runs.
     //
-    // 30 deg is the half-FOV implied by cam_fx=554 / image_width=640
-    // (atan(320/554) = 30.01 deg), i.e. ex_norm=1 at the image edge maps to the edge
-    // of the frustum. It is hardcoded, NOT derived — it goes stale if either changes.
+    // Derived, not hardcoded: bearing_from_ex() returns atan(ex_norm*(image_width/2)/cam_fx),
+    // so ex_norm=1 at the image edge maps to the half-FOV of the run's own cam_fx
+    // (30.0 deg at 554, 14.9 deg at 1200, image_width 640).
     //
     // Reaches further than these two lines: this writes last_bearing_to_sign_rad_,
     // which seed_search_from_last_bearing() (~line 749) uses as the SEARCH yaw target,
@@ -805,7 +815,7 @@ void ServoFsmNode::ramp_velocity(Twist& cmd) {
 // ─────────────────────────────────────────────────────────────────
 void ServoFsmNode::watchdog_tick() {
     double det_age = (now() - last_det_callback_time_).seconds();
-    if (det_age > 2.0 * watchdog_period_sec_) {
+    if (det_age > detection_lost_sec_) {
         consecutive_dets_ = 0;
         handle_no_detection();
     }
