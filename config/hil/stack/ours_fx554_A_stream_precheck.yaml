@@ -1,0 +1,67 @@
+# ours_fx554_A_stream_precheck.yaml -- Ahmed's Level 2 stream pre-check (exp/detector-accuracy), prompt 20C.
+# Cells P0, P1, P2: the cost of the camera streams alone. No detector, no controller, no SLAM,
+# no NPU open. Run as `run_stack_hil.sh --config ours_fx554_A_stream_precheck --hold-fsm`, which
+# takes the HOLD_FSM branch, launches `bridge_nodes:=true stack_nodes:=false` and exits at the log
+# line that ends "FSM NOT launched (--hold-fsm)." and then exits 0, so the detector and
+# controller lines below are parsed and never acted on. Those two log strings, not line numbers, are
+# the anchors: our own integration patch shifts run_stack_hil.sh's numbering.
+# NOT a batch run and NOT a plan line: this name is deliberately OUTSIDE batch.sh's admissible
+# 5th-column list, so it cannot become a scored run by accident. It forgoes the sentinel, the scorer,
+# check_run.py and the power marker, and it consumes no NPU open.
+# camera.stereo: false is P0 (left only). P1 sets it true and needs the stereo variant; P2 needs
+# the RGB-D model and set_rgbd(1), and neither variant exists yet.
+# Shared Simulink model from 2026-10-04 (sha256 b8ec8250...): the camera renders at fx = fy = 554,
+# start (5.13, 4.30, 10, 2*pi-0.0460). cam_fx 554 is set explicitly (same as bench_fsm.yaml) so the
+# run record shows it. Same as ours_fx1200_A_ibvs.yaml in every other line.
+# Bags (mode: record) carry /sim/drone_pose, /sim/target_pose and /yolo/detections for the
+# in-loop scorer, plus /bench/state for the mission metrics.
+mode: record
+
+network:
+  matlab_host_ip: 192.168.56.1
+  interface:      eth0
+  dds:            fastrtps
+  ros_domain_id:  0
+
+camera:
+  stereo:    false
+  stamp_log: /tmp/sim_cam_stamps.csv
+
+detector:
+  type:     yolo
+  cpu:      "0-3"         # yolo_bridge: taskset -c 0-3 = all four Pi 5 cores, the same allowed set as
+                          # unpinned and the same prefix the detector sweep used (node_cores 0-3)
+  host_cpu: "1"
+  yolo:
+    model:         yolo26n            # models/model_registry.json id (run_stack_hil.sh --model overrides)
+    backend:       npu
+    models_dir:    /home/ahmed/ROS2-PROJECT-SPRING2026/models
+    confidence:    0.20
+    telemetry_csv: /tmp/yolo_telemetry.csv
+
+controller:
+  type: ibvs
+  cpu:  "0-3"             # all four cores, equivalent to unpinned (an empty value is rejected by ros2 launch)
+  cam_fx: 554.0
+  use_slam_depth: false
+  use_slam_pose:  false
+
+slam:
+  enabled:           false
+  type:              ov2slam
+  image:             ros2_perception_stack
+  container_name:    slam_ov2slam
+  cpu:               "2,3"
+  startup_delay_sec: 5
+  restart:           unless-stopped
+  command:           "ros2 run ov2slam ov2slam_node /workspace/camera_calib/hil_sim_ov2slam.yaml"
+  topics:
+    image_in: /ovcam/image_raw
+    pose_out: /slam/pose
+  remap:
+    - "/ovcam/image_raw:=/ovcam/image_raw"
+    - "vo_pose:=/slam/pose"
+    - "slam_tracking_state:=/slam/tracking_state"
+
+init_gate:
+  enabled: false

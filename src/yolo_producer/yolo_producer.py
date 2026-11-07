@@ -24,8 +24,12 @@ from typing import List, Tuple
 import cv2
 import numpy as np
 
-# ─── Hailo imports ────────────────────────────────────────────────
-from hailo_platform import VDevice, FormatType, HailoSchedulingAlgorithm
+# ─── Hailo imports (optional: only needed for --backend npu; this module is
+#     also imported for its SHM classes on CPU-only hosts without hailo_platform)
+try:
+    from hailo_platform import VDevice, FormatType, HailoSchedulingAlgorithm
+except ModuleNotFoundError:
+    VDevice = FormatType = HailoSchedulingAlgorithm = None
 
 # ─── POSIX shm / sem via ctypes ──────────────────────────────────
 _rt = ctypes.CDLL("librt.so.1", use_errno=True)
@@ -335,10 +339,25 @@ def postprocess(outputs: dict, img_h: int, img_w: int,
                 conf_thresh: float = 0.25,
                 iou_thresh: float = 0.45,
                 grids: dict = None,
-                timing: dict = None) -> list:
+                timing: dict = None,
+                max_dets: int = YOLO_MAX_DETS,
+                float_coords: bool = False) -> list:
     """
     Post-process YOLO outputs from 6 tensors (3 scales × bbox+classes).
     Returns list of dicts with keys: class_id, confidence, x1, y1, x2, y2.
+
+    max_dets / float_coords exist for OFFLINE ACCURACY MEASUREMENT ONLY and
+    default to the deployed behaviour, so the live pipeline is unaffected:
+
+      max_dets     the robot keeps 64 (YOLO_MAX_DETS is an SHM ABI constant --
+                   YOLO_DETS_PAD = 64*16, mirrored in include/yolo_shm.hpp).
+                   COCO evaluates at maxDets=100, so a benchmark must be able
+                   to ask for more or it silently truncates the tail of the
+                   precision/recall curve.
+      float_coords the robot wants integer pixels. int() TRUNCATES, biasing
+                   every box inward by ~0.5 px, which depresses mAP75/mAP50-95
+                   and confounds NPU-vs-CPU comparisons because only the NPU
+                   paths do it. Pass True to keep sub-pixel boxes.
     If timing dict is provided, records per-stage durations (ms).
     """
     names = sorted(outputs.keys())
@@ -475,14 +494,15 @@ def postprocess(outputs: dict, img_h: int, img_w: int,
         if len(indices) > 0:
             # indices may be [[i]] or [i] depending on OpenCV version
             keep = indices.flatten()
+            _c = float if float_coords else int
             for k in keep:
                 dets.append({
                     "class_id": int(cls_id),
                     "confidence": float(cls_scores[k]),
-                    "x1": int(cls_boxes[k, 0]),
-                    "y1": int(cls_boxes[k, 1]),
-                    "x2": int(cls_boxes[k, 2]),
-                    "y2": int(cls_boxes[k, 3]),
+                    "x1": _c(cls_boxes[k, 0]),
+                    "y1": _c(cls_boxes[k, 1]),
+                    "x2": _c(cls_boxes[k, 2]),
+                    "y2": _c(cls_boxes[k, 3]),
                 })
 
     t_nms_end = time.monotonic()
@@ -498,7 +518,7 @@ def postprocess(outputs: dict, img_h: int, img_w: int,
         timing["coord_rescale_ms"] = t_coord_rescale / 1e6
 
     dets.sort(key=lambda d: -d["confidence"])
-    return dets[:YOLO_MAX_DETS]
+    return dets[:max_dets]
 
 
 def postprocess_ondevice_nms(output_flat: np.ndarray,
@@ -509,27 +529,38 @@ def postprocess_ondevice_nms(output_flat: np.ndarray,
                              num_classes: int = 80,
                              max_per_class: int = 100,
                              conf_thresh: float = 0.25,
-                             timing: dict = None) -> list:
+                             timing: dict = None,
+                             max_dets: int = YOLO_MAX_DETS,
+                             float_coords: bool = False) -> list:
     """
-    Parse on-device NMS output from Hailo (yolov8m/yolov11m).
+    Parse on-device NMS output from Hailo (yolov8/yolov11, HAILO NMS BY CLASS).
 
-    Output tensor is flat: num_classes * (1 + max_per_class * 5) floats.
-    Per class: float32 count, then count × {y_min, x_min, y_max, x_max, score}
-    all normalized to [0, 1] relative to the 640×640 input (including letterbox).
+    The output is VARIABLE-LENGTH, packed back-to-back per class:
+      [count_c][count_c × {y_min, x_min, y_max, x_max, score}] for c = 0..79,
+    boxes normalized to [0, 1] relative to the 640×640 input (incl. letterbox).
+    The buffer is only zero-padded up to num_classes*(1+max_per_class*5) floats.
+
+    NOTE: this parser previously assumed FIXED 501-float strides per class,
+    which coincides with the real layout only for class 0 (person) — every
+    other class read a padding zero as its count and was silently dropped.
+    That bug masqueraded as "v8/v11 HEFs only detect persons" (old Finding 9).
     """
     t0 = time.perf_counter_ns()
-    stride = 1 + max_per_class * 5  # 501 floats per class
     dets = []
 
+    off = 0
+    total = output_flat.shape[0]
     for cls_id in range(num_classes):
-        base = cls_id * stride
-        count = int(output_flat[base])
+        if off >= total:
+            break
+        count = int(output_flat[off])
+        off += 1
         if count == 0:
             continue
         count = min(count, max_per_class)
         for j in range(count):
-            off = base + 1 + j * 5
-            y_min, x_min, y_max, x_max, score = output_flat[off:off + 5]
+            y_min, x_min, y_max, x_max, score = output_flat[off + j * 5:
+                                                            off + j * 5 + 5]
             if score < conf_thresh:
                 continue
             # Convert from normalized [0,1] in 640×640 space → source image pixels
@@ -537,14 +568,25 @@ def postprocess_ondevice_nms(output_flat: np.ndarray,
             py1 = (y_min * input_size - pad_top) / scale
             px2 = (x_max * input_size - pad_left) / scale
             py2 = (y_max * input_size - pad_top) / scale
-            dets.append({
-                "class_id": cls_id,
-                "confidence": float(score),
-                "x1": max(0, min(int(px1), img_w - 1)),
-                "y1": max(0, min(int(py1), img_h - 1)),
-                "x2": max(0, min(int(px2), img_w - 1)),
-                "y2": max(0, min(int(py2), img_h - 1)),
-            })
+            if float_coords:
+                dets.append({
+                    "class_id": cls_id,
+                    "confidence": float(score),
+                    "x1": max(0.0, min(float(px1), float(img_w - 1))),
+                    "y1": max(0.0, min(float(py1), float(img_h - 1))),
+                    "x2": max(0.0, min(float(px2), float(img_w - 1))),
+                    "y2": max(0.0, min(float(py2), float(img_h - 1))),
+                })
+            else:
+                dets.append({
+                    "class_id": cls_id,
+                    "confidence": float(score),
+                    "x1": max(0, min(int(px1), img_w - 1)),
+                    "y1": max(0, min(int(py1), img_h - 1)),
+                    "x2": max(0, min(int(px2), img_w - 1)),
+                    "y2": max(0, min(int(py2), img_h - 1)),
+                })
+        off += count * 5
 
     t1 = time.perf_counter_ns()
     if timing is not None:
@@ -558,7 +600,7 @@ def postprocess_ondevice_nms(output_flat: np.ndarray,
         timing["coord_rescale_ms"] = (t1 - t0) / 1e6  # all time is parse+rescale
 
     dets.sort(key=lambda d: -d["confidence"])
-    return dets[:YOLO_MAX_DETS]
+    return dets[:max_dets]
 
 
 def _nms(boxes: np.ndarray, scores: np.ndarray,

@@ -489,9 +489,9 @@ void ServoFsmNode::on_detections(const DetectionArray::SharedPtr msg) {
     // The pre-fix code omitted this factor entirely and yawed AWAY from the target;
     // image_x_yaw_sign=+1.0 reproduces that legacy behaviour exactly for A/B runs.
     //
-    // 30 deg is the half-FOV implied by cam_fx=554 / image_width=640
-    // (atan(320/554) = 30.01 deg), i.e. ex_norm=1 at the image edge maps to the edge
-    // of the frustum. It is hardcoded, NOT derived — it goes stale if either changes.
+    // Derived, not hardcoded: bearing_from_ex() returns atan(ex_norm*(image_width/2)/cam_fx),
+    // so ex_norm=1 at the image edge maps to the half-FOV of the run's own cam_fx
+    // (30.0 deg at 554, 14.9 deg at 1200, image_width 640).
     //
     // Reaches further than these two lines: this writes last_bearing_to_sign_rad_,
     // which seed_search_from_last_bearing() (~line 749) uses as the SEARCH yaw target,

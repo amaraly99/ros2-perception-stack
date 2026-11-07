@@ -1,0 +1,73 @@
+# ours_fx554_A_proportional_stereo061.yaml -- Ahmed's Level 2 cell C1 (exp/detector-accuracy), prompt 20C.
+# Placement A: YOLO on the NPU, producer on core 1; OV2SLAM on cores 2,3; controller proportional.
+# Differs from ours_fx554_A_ibvs_stereo061.yaml in exactly one line: controller.type.
+# hil_servo_node is built in the pinned worktree (install/hil_servo). The forward law is the
+# same line as IBVS (proportional_controller.cpp:29-30 against ibvs_controller.cpp:94); only the
+# lateral and yaw channels differ (proportional_controller.cpp:33,41, wz literally 0.0).
+# Differs from ours_fx554_A_ibvs.yaml in four places: camera.stereo true (parse_stack.py:91 sets
+# STEREO_ON=1; run_stack_hil.sh passes it on as the launch argument `stereo:=` and guards the
+# right-eye SHM wait with it; needs the simulator variant with the right camera at y = -0.61 and
+# MATLAB set_stereo(1)), the SLAM calibration path, the right-eye remap, and controller.type.
+# use_slam_pose / use_slam_depth stay off: on a SLAM row the arm is measured, never flown on.
+# REQUIRES the stereo simulator variant. On model a38a664c (left camera only) this config cannot
+# run: under STEREO_ON run_stack_hil.sh waits for /dev/shm/ovcam_frames_right ("Waiting for
+# /dev/shm/ovcam_frames_right to appear...") and dies on the sim_camera_bridge_right message
+# without it.
+# Line numbers are deliberately not cited for run_stack_hil.sh: our own integration patch shifts
+# them, so the log strings and the variable names above are the stable anchors.
+# Shared Simulink model from 2026-10-04 (sha256 b8ec8250...): the camera renders at fx = fy = 554,
+# start (5.13, 4.30, 10, 2*pi-0.0460). cam_fx 554 is set explicitly (same as bench_fsm.yaml) so the
+# run record shows it. Same as ours_fx1200_A_ibvs.yaml in every other line.
+# Bags (mode: record) carry /sim/drone_pose, /sim/target_pose and /yolo/detections for the
+# in-loop scorer, plus /bench/state for the mission metrics.
+mode: record
+
+network:
+  matlab_host_ip: 192.168.56.1
+  interface:      eth0
+  dds:            fastrtps
+  ros_domain_id:  0
+
+camera:
+  stereo:    true
+  stamp_log: /tmp/sim_cam_stamps.csv
+
+detector:
+  type:     yolo
+  cpu:      "0-3"         # yolo_bridge: taskset -c 0-3 = all four Pi 5 cores, the same allowed set as
+                          # unpinned and the same prefix the detector sweep used (node_cores 0-3)
+  host_cpu: "1"
+  yolo:
+    model:         yolo26n            # models/model_registry.json id (run_stack_hil.sh --model overrides)
+    backend:       npu
+    models_dir:    /home/ahmed/ROS2-PROJECT-SPRING2026/models
+    confidence:    0.20
+    telemetry_csv: /tmp/yolo_telemetry.csv
+
+controller:
+  type: proportional
+  cpu:  "0-3"             # all four cores, equivalent to unpinned (an empty value is rejected by ros2 launch)
+  cam_fx: 554.0
+  use_slam_depth: false
+  use_slam_pose:  false
+
+slam:
+  enabled:           true
+  type:              ov2slam
+  image:             ros2_perception_stack
+  container_name:    slam_ov2slam
+  cpu:               "2,3"
+  startup_delay_sec: 5
+  restart:           unless-stopped
+  command:           "ros2 run ov2slam ov2slam_node /workspace/camera_calib/ours_hil_sim_ov2slam_stereo061_accurate.yaml"
+  topics:
+    image_in: /ovcam/image_raw
+    pose_out: /slam/pose
+  remap:
+    - "/ovcam/image_raw:=/ovcam/image_raw"
+    - "/ovcam/right/image_raw:=/ovcam/right/image_raw"
+    - "vo_pose:=/slam/pose"
+    - "slam_tracking_state:=/slam/tracking_state"
+
+init_gate:
+  enabled: false

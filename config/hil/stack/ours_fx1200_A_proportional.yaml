@@ -1,0 +1,56 @@
+# ours_fx1200_A_proportional.yaml -- Ahmed's detector runs on this launcher (exp/detector-accuracy).
+# Placement A: YOLO on the NPU, producer on core 1; OV2SLAM on cores 2,3 as
+# co-load only (use_slam_pose / use_slam_depth off); controller proportional.
+# The Simulink camera renders at fx = fy = 1200, so this config sets cam_fx 1200 for the
+# FSM. bench_fsm.yaml keeps its 554 default for every config that does not set it.
+# Bags (mode: record) carry /sim/drone_pose, /sim/target_pose and /yolo/detections for the
+# in-loop scorer, plus /bench/state for the mission metrics.
+mode: record
+
+network:
+  matlab_host_ip: 192.168.56.1
+  interface:      eth0
+  dds:            fastrtps
+  ros_domain_id:  0
+
+camera:
+  stamp_log: /tmp/sim_cam_stamps.csv
+
+detector:
+  type:     yolo
+  cpu:      "0-3"         # yolo_bridge: taskset -c 0-3 = all four Pi 5 cores, the same allowed set as
+                          # unpinned and the same prefix the detector sweep used (node_cores 0-3)
+  host_cpu: "1"
+  yolo:
+    model:         yolo26n            # models/model_registry.json id (run_stack_hil.sh --model overrides)
+    backend:       npu
+    models_dir:    /home/ahmed/ROS2-PROJECT-SPRING2026/models
+    confidence:    0.20
+    telemetry_csv: /tmp/yolo_telemetry.csv
+
+controller:
+  type: proportional
+  cpu:  "0-3"             # all four cores, equivalent to unpinned (an empty value is rejected by ros2 launch)
+  cam_fx: 1200.0
+  use_slam_depth: false
+  use_slam_pose:  false
+
+slam:
+  enabled:           true
+  type:              ov2slam
+  image:             ros2_perception_stack
+  container_name:    slam_ov2slam
+  cpu:               "2,3"
+  startup_delay_sec: 5
+  restart:           unless-stopped
+  command:           "ros2 run ov2slam ov2slam_node /workspace/camera_calib/hil_sim_ov2slam.yaml"
+  topics:
+    image_in: /ovcam/image_raw
+    pose_out: /slam/pose
+  remap:
+    - "/ovcam/image_raw:=/ovcam/image_raw"
+    - "vo_pose:=/slam/pose"
+    - "slam_tracking_state:=/slam/tracking_state"
+
+init_gate:
+  enabled: false

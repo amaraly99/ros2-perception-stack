@@ -28,6 +28,10 @@
 #                     eye on one simulation timestamp. Default false = mono, byte-identical
 #                     to every published mono result. Stereo doubles the inbound stream to
 #                     ~295 Mbit/s and requires wired Ethernet.)
+#   rgbd            true | false  (default: false. true = the left chain keeps the MATLAB
+#                     source stamp, so rgbd_node_cpp can pair /ovcam/image_raw with
+#                     /sim/camera/depth/image_raw on one stamp; the job of
+#                     hil_simulation_rgbd.launch.py, as a switch. false = unchanged.)
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, OpaqueFunction
@@ -73,6 +77,10 @@ def launch_setup(context, *args, **kwargs):
     detector_cpu   = s('detector_cpu').strip()
     use_slam_depth = s('use_slam_depth').lower() in ('true', '1', 'yes')
     use_slam_pose  = s('use_slam_pose').lower()  in ('true', '1', 'yes')
+    # Optional per-run overrides; each empty by default = node defaults / config files.
+    cam_stamp_log  = s('cam_stamp_log').strip()
+    class_name_map = s('class_name_map').strip()
+    cam_fx         = s('cam_fx').strip()
 
     # Stereo (optional right eye). Kept as an unresolved LaunchConfiguration
     # (not run through s()) so IfCondition/ParameterValue can defer evaluation
@@ -82,6 +90,11 @@ def launch_setup(context, *args, **kwargs):
     # left/right pair carries one identical stamp — required for stereo,
     # a no-op when stereo is off (the node's own default is also false).
     use_source_stamp = ParameterValue(stereo_lc, value_type=bool)
+    # RGB-D: rgbd_node_cpp pairs colour and depth only on an IDENTICAL stamp
+    # (common_rgbd.cpp TryMatchRgbdPair), and depth arrives with MATLAB's stamp,
+    # so the left chain must keep it too. Off by default: the line above stands.
+    if s('rgbd').lower() in ('true', '1', 'yes'):
+        use_source_stamp = True
 
     cfg = lambda name: f'{workspace}/config/hil/{name}'
     # taskset prefix for a node, or None when the cpu arg is empty (no pinning).
@@ -109,6 +122,7 @@ def launch_setup(context, *args, **kwargs):
                 'shm_name': '/ovcam_frames',
                 'sem_name': '/ovcam_ready',
                 'use_source_stamp': use_source_stamp,
+                'stamp_log': cam_stamp_log,
             }],
         ))
 
@@ -177,6 +191,8 @@ def launch_setup(context, *args, **kwargs):
         dparams = [cfg(p) for p in dparam_files]
         if dwants_class:
             dparams.append({'target_class': target_class})
+        if detector == 'yolo' and class_name_map:
+            dparams.append({'class_name_map': class_name_map})
         nodes.append(Node(
             package=dpkg,
             executable=dexe,
@@ -205,17 +221,22 @@ def launch_setup(context, *args, **kwargs):
             raise RuntimeError(
                 f"Unknown controller='{controller}'. Valid: {list(CTRL_MAP)}")
         pkg, exe, ctrl_cfg = CTRL_MAP[controller]
+        # cam_fx override goes last so it wins over bench_fsm.yaml (whose 554 stays
+        # the default for every run that does not pass it). fy follows fx.
+        ctrl_params = [cfg('bench_fsm.yaml'), cfg(ctrl_cfg),
+                       {'target_class': target_class,
+                        'benchmark_mode': benchmark_mode,
+                        'use_slam_depth': use_slam_depth,
+                        'use_slam_pose':  use_slam_pose}]
+        if cam_fx:
+            ctrl_params.append({'cam_fx': float(cam_fx), 'cam_fy': float(cam_fx)})
         nodes.append(Node(
             package=pkg,
             executable=exe,
             name=exe,
             output='screen',
             prefix=pfx(controller_cpu),
-            parameters=[cfg('bench_fsm.yaml'), cfg(ctrl_cfg),
-                        {'target_class': target_class,
-                         'benchmark_mode': benchmark_mode,
-                         'use_slam_depth': use_slam_depth,
-                         'use_slam_pose':  use_slam_pose}],
+            parameters=ctrl_params,
         ))
 
     return nodes
@@ -263,6 +284,14 @@ def generate_launch_description():
                         'one simulation timestamp. Default false = mono, byte-identical to '
                         'every published mono result. NOTE: stereo doubles the inbound stream '
                         'to ~295 Mbit/s and requires wired Ethernet.'),
+        DeclareLaunchArgument('cam_stamp_log', default_value='',
+            description='sim_camera_bridge per-frame stamp CSV path; empty = off'),
+        DeclareLaunchArgument('class_name_map', default_value='',
+            description='yolo_bridge "id:name,..." class overrides; empty = COCO only'),
+        DeclareLaunchArgument('cam_fx', default_value='',
+            description='controller cam_fx = cam_fy override; empty = bench_fsm.yaml value'),
+        DeclareLaunchArgument('rgbd', default_value='false',
+            description='true = left chain keeps the MATLAB source stamp (RGB-D colour/depth pairing)'),
         DeclareLaunchArgument('calib_yaml',
             default_value=PathJoinSubstitution(
                 [EnvironmentVariable('WORKSPACE_DIR', default_value='/workspace'),

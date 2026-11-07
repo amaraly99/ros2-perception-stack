@@ -1,0 +1,60 @@
+# ours_fx554_A_ibvs_slamoff.yaml -- Ahmed's system-level sensing-mode cell 'SLAM off, NPU' (exp/detector-accuracy), prompt 25C.
+# Placement A: YOLO on the NPU, producer on core 1; no SLAM; controller ibvs.
+# ONE line differs from ours_fx554_A_ibvs_mono_accurate.yaml (cell S1, the mono NPU cell of this block): slam.enabled
+# true -> false, so the SLAM-off and mono cells differ in the SLAM arm only. With slam.enabled false run_stack_hil.sh
+# starts no SLAM sidecar and, with debug off, no ovcam_bridge either (its log line "ovcam_bridge will be skipped (slam
+# off + debug off)"); the detector reads the camera SHM ring directly and does not use /ovcam/image_raw. The rest of
+# the slam block is kept as in S1 and is not read.
+# Start pose, fx and the simulator setup are checked by the run code, not set here (benchmarks/hil_runs:
+# config/sim_geometry.json, HIL_SIM_SETUP). cam_fx 554 is set explicitly so the run record shows it.
+# Bags (mode: record) carry /sim/drone_pose, /sim/target_pose and /yolo/detections for the
+# in-loop scorer, plus /bench/state for the mission metrics.
+mode: record
+
+network:
+  matlab_host_ip: 192.168.56.1
+  interface:      eth0
+  dds:            fastrtps
+  ros_domain_id:  0
+
+camera:
+  stamp_log: /tmp/sim_cam_stamps.csv
+
+detector:
+  type:     yolo
+  cpu:      "0-3"         # yolo_bridge: taskset -c 0-3 = all four Pi 5 cores, the same allowed set as
+                          # unpinned and the same prefix the detector sweep used (node_cores 0-3)
+  host_cpu: "1"
+  yolo:
+    model:         yolo26n            # models/model_registry.json id (run_stack_hil.sh --model overrides)
+    backend:       npu
+    models_dir:    /home/ahmed/ROS2-PROJECT-SPRING2026/models
+    confidence:    0.20
+    telemetry_csv: /tmp/yolo_telemetry.csv
+
+controller:
+  type: ibvs
+  cpu:  "0-3"             # all four cores, equivalent to unpinned (an empty value is rejected by ros2 launch)
+  cam_fx: 554.0
+  use_slam_depth: false
+  use_slam_pose:  false
+
+slam:
+  enabled:           false
+  type:              ov2slam
+  image:             ros2_perception_stack
+  container_name:    slam_ov2slam
+  cpu:               "2,3"
+  startup_delay_sec: 5
+  restart:           unless-stopped
+  command:           "ros2 run ov2slam ov2slam_node /workspace/camera_calib/hil_sim_ov2slam_accurate.yaml"
+  topics:
+    image_in: /ovcam/image_raw
+    pose_out: /slam/pose
+  remap:
+    - "/ovcam/image_raw:=/ovcam/image_raw"
+    - "vo_pose:=/slam/pose"
+    - "slam_tracking_state:=/slam/tracking_state"
+
+init_gate:
+  enabled: false

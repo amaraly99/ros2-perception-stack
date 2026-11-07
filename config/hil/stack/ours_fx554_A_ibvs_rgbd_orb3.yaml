@@ -1,0 +1,68 @@
+# ours_fx554_A_ibvs_rgbd_orb3.yaml: the sensing-mode cell 'RGB-D ORB-SLAM3, NPU' (prompt 27A draft, finalised in 27D, 2026-10-27).
+# Placement A: YOLO on the NPU, producer on core 1; ORB-SLAM3 RGB-D on cores 2,3; controller ibvs.
+# Differs from ours_fx554_A_ibvs_mono_accurate.yaml in camera.rgbd and the slam block only. camera.rgbd true: the left
+# chain keeps the MATLAB stamp (integration patch, 27A), so rgbd_node_cpp pairs each colour frame with its depth frame.
+# Images: the sim sends colour on /sim/camera/image_raw (bgr8, read by sim_camera_bridge as in every cell) and depth on
+# /sim/camera/depth/image_raw (16-bit millimetres, the colour frame's stamp). The node reads the gray left image
+# /ovcam/image_raw (ovcam_bridge) and the depth topic directly: the two remaps of Amar's flown command.
+# slam block: Amar's flown config/hil/stack/unified_orbslam3_rgbd.yaml:50-82 at 28114bd, with the block's values for cpu
+# ("2,3") and startup_delay_sec (5), as in every SLAM cell of the block. Image orbslam3_container (:latest, loaded in 27C).
+# Settings: src/orbslam3/orb_slam3/config/RGB-D/HIL_SIM_RGBD.yaml as Amar flew it (1beef72, sha256 c708d72a...,
+# Stereo.b 0.61, Stereo.ThDepth 72.1), carried by the integration patch.
+mode: record
+
+network:
+  matlab_host_ip: 192.168.56.1
+  interface:      eth0
+  dds:            fastrtps
+  ros_domain_id:  0
+
+camera:
+  rgbd:      true
+  stamp_log: /tmp/sim_cam_stamps.csv
+
+detector:
+  type:     yolo
+  cpu:      "0-3"         # yolo_bridge: taskset -c 0-3 = all four Pi 5 cores, the same allowed set as
+                          # unpinned and the same prefix the detector sweep used (node_cores 0-3)
+  host_cpu: "1"
+  yolo:
+    model:         yolo26n            # models/model_registry.json id (run_stack_hil.sh --model overrides)
+    backend:       npu
+    models_dir:    /home/ahmed/ROS2-PROJECT-SPRING2026/models
+    confidence:    0.20
+    telemetry_csv: /tmp/yolo_telemetry.csv
+
+controller:
+  type: ibvs
+  cpu:  "0-3"             # all four cores, equivalent to unpinned (an empty value is rejected by ros2 launch)
+  cam_fx: 554.0
+  use_slam_depth: false
+  use_slam_pose:  false
+
+slam:
+  enabled:           true
+  type:              orbslam3
+  image:             orbslam3_container
+  container_name:    slam_orbslam3
+  cpu:               "2,3"
+  startup_delay_sec: 5
+  restart:           unless-stopped
+  setup_overlay:     /workspace/src/orbslam3/install_rgbd/setup.bash
+  ld_prefix:         /workspace/src/orbslam3/Pangolin/build:/usr/local/lib:/opt/ros/jazzy/lib
+  command: >-
+    bash -c "python3 /workspace/src/orbslam3/scripts/hil_handshake_node.py
+    --ros-args -p settings_name:=HIL_SIM_RGBD -p topic_prefix:=/rgbd_py_driver &
+    exec ros2 run ros2_orb_slam3 rgbd_node_cpp --ros-args
+    -p voc_file_arg:=/workspace/src/orbslam3/orb_slam3/Vocabulary/ORBvoc.txt.bin
+    -p settings_file_path_arg:=/workspace/src/orbslam3/orb_slam3/config/RGB-D/
+    -r /rgbd_py_driver/rgb_img_msg:=/ovcam/image_raw
+    -r /rgbd_py_driver/depth_img_msg:=/sim/camera/depth/image_raw
+    -r slam_pose:=/slam/pose
+    -r slam_tracking_state:=/slam/tracking_state"
+  topics:
+    image_in: /ovcam/image_raw
+    pose_out: /slam/pose
+
+init_gate:
+  enabled: false
